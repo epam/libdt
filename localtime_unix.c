@@ -1,5 +1,7 @@
-#include "time.h"   /* for struct tm */
-#include "stdlib.h" /* for exit, malloc, atoi */
+#include <time.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
 
 struct tm * getLocalTime(const char *tzName, time_t time)
 {
@@ -12,6 +14,7 @@ struct tm * getLocalTime(const char *tzName, time_t time)
     int to = 0;
     int i = 0;
     struct tm *result = NULL;
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     for (i = 0; environ[i] != NULL; ++i)
         continue;
@@ -27,6 +30,7 @@ struct tm * getLocalTime(const char *tzName, time_t time)
             fakeenv[to++] = environ[from];
     fakeenv[to] = NULL;
 
+    pthread_mutex_lock(&mutex);
     oldenv = environ;
     environ = fakeenv;
 
@@ -36,5 +40,7 @@ struct tm * getLocalTime(const char *tzName, time_t time)
 
     environ = oldenv;
     free(fakeenv);
+    pthread_mutex_unlock(&mutex);
+
     return result;
 }
