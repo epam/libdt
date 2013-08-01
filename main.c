@@ -7,23 +7,28 @@ static char *abbr(struct tm * tmp);
 static void dumptime(const struct tm * tmp);
 static void show(char *zone, struct tm *tmp);
 
-struct tm getLocalTime(const char *tzName, time_t time)
+/** function for convert time_t to struct tm with specific Time Zone.
+ * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
+ * @param time - time to format
+ * @return NULL in error case, local time in other case
+ */
+struct tm * getLocalTime(const char *tzName, time_t time)
 {
     extern char **  environ;
 
     size_t longest = 1024;
-    struct tm result;
     char ** fakeenv = NULL;
+    char ** oldenv = NULL;
     int from = 0;
     int to = 0;
     int i = 0;
+    struct tm *result = NULL;
 
     for (i = 0; environ[i] != NULL; ++i)
         continue;
     fakeenv = malloc((i + 2) * sizeof *fakeenv);
     if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL) {
-        (void) perror("progname");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     to = 0;
@@ -32,10 +37,16 @@ struct tm getLocalTime(const char *tzName, time_t time)
         if (strncmp(environ[from], "TZ=", 3) != 0)
             fakeenv[to++] = environ[from];
     fakeenv[to] = NULL;
+
+    oldenv = environ;
     environ = fakeenv;
+
     strcpy(&fakeenv[0][3], tzName);
     tzset();
-    localtime_r(&time, &result);
+    result = localtime(&time);
+
+    environ = oldenv;
+    free(fakeenv);
     return result;
 }
 
@@ -49,12 +60,15 @@ main(int argc, char *argv[])
 
     // create new environment
     for (i = 1; i < argc; ++i) {
-        struct tm ltime = getLocalTime(argv[i], now);
-        show(argv[i], &ltime);
+        struct tm *ltime = getLocalTime(argv[i], now);
+        if (ltime)
+            show(argv[i], ltime);
     }
 
     return EXIT_FAILURE;
 }
+
+// for example
 static void
 show(char *zone, struct tm *tmp)
 {
@@ -102,14 +116,6 @@ dumptime(register const struct tm *timeptr)
         (void) printf("NULL");
         return;
     }
-    /*
-     *  ** The packaged versions of localtime and gmtime never put
-     *  out-of-range
-     *      ** values in tm_wday or tm_mon, but since this code
-     *      might be compiled
-     *          ** with other (perhaps experimental) versions,
-     *          paranoia is in order.
-     *              */
     if (timeptr->tm_wday < 0 || timeptr->tm_wday >=
             (int) (sizeof wday_name / sizeof wday_name[0]))
         wn = "???";
