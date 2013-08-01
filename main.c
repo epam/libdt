@@ -1,54 +1,12 @@
 #include "stdio.h"  /* for stdout, stderr, perror */
 #include "time.h"   /* for struct tm */
 #include "stdlib.h" /* for exit, malloc, atoi */
-#include "string.h"
+
+#include "localtime.h"
 
 static char *abbr(struct tm * tmp);
 static void dumptime(const struct tm * tmp);
 static void show(char *zone, struct tm *tmp);
-
-/** function for convert time_t to struct tm with specific Time Zone.
- * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
- * @param time - time to format
- * @return NULL in error case, local time in other case
- */
-struct tm * getLocalTime(const char *tzName, time_t time)
-{
-    extern char **  environ;
-
-    size_t longest = 1024;
-    char ** fakeenv = NULL;
-    char ** oldenv = NULL;
-    int from = 0;
-    int to = 0;
-    int i = 0;
-    struct tm *result = NULL;
-
-    for (i = 0; environ[i] != NULL; ++i)
-        continue;
-    fakeenv = malloc((i + 2) * sizeof *fakeenv);
-    if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL) {
-        return NULL;
-    }
-
-    to = 0;
-    strcpy(fakeenv[to++], "TZ=");
-    for (from = 0; environ[from] != NULL; ++from)
-        if (strncmp(environ[from], "TZ=", 3) != 0)
-            fakeenv[to++] = environ[from];
-    fakeenv[to] = NULL;
-
-    oldenv = environ;
-    environ = fakeenv;
-
-    strcpy(&fakeenv[0][3], tzName);
-    tzset();
-    result = localtime(&time);
-
-    environ = oldenv;
-    free(fakeenv);
-    return result;
-}
 
 int
 main(int argc, char *argv[])
