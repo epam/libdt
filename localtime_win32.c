@@ -30,6 +30,7 @@ typedef struct _REG_TZI_FORMAT
 
 int getLocalTime(const char *tzName, time_t time, struct tm *result)
 {
+
     DWORD dw;
     SYSTEMTIME ;
     SYSTEMTIME tLocalTime;
@@ -96,6 +97,7 @@ int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
     tm->tm_year = pTime->wYear;
     tm->tm_mon = pTime->wMonth - 1;
     tm->tm_mday = pTime->wDay;
+    tm->tm_wday = pTime->wDayOfWeek;
 
     tm->tm_hour = pTime->wHour;
     tm->tm_min = pTime->wMinute;

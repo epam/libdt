@@ -30,11 +30,13 @@ main(int argc, char *argv[])
 static void
 show(char *zone, struct tm *tmp)
 {
+
     (void) printf("%s  ", zone);
     dumptime(tmp);
     (void) printf(" UTC");
     (void) printf(" = ");
     dumptime(tmp);
+
     if (tmp != NULL) {
         if (*abbr(tmp) != '\0')
             (void) printf(" %s", abbr(tmp));
