@@ -16,4 +16,6 @@
  */
 int getLocalTime(const char *tzName, time_t time, struct tm *result);
 
+int getUTCTime(const char *tzName, struct tm time, time_t *result);
+
 #endif // LOCALTIME_H
