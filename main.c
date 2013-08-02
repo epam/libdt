@@ -1,6 +1,6 @@
-#include "stdio.h"  /* for stdout, stderr, perror */
-#include "time.h"   /* for struct tm */
-#include "stdlib.h" /* for exit, malloc, atoi */
+#include <stdio.h>  /* for stdout, stderr, perror */
+#include <time.h>   /* for struct tm */
+#include <stdlib.h> /* for exit, malloc, atoi */
 
 #include "localtime.h"
 
@@ -18,9 +18,9 @@ main(int argc, char *argv[])
 
     // create new environment
     for (i = 1; i < argc; ++i) {
-        struct tm *ltime = getLocalTime(argv[i], now);
-        if (ltime)
-            show(argv[i], ltime);
+        struct tm ltime;
+        if (!getLocalTime(argv[i], now, &ltime))
+            show(argv[i], &ltime);
     }
 
     return EXIT_FAILURE;

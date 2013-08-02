@@ -3,7 +3,7 @@
 #include <string.h>
 #include <pthread.h>
 
-struct tm * getLocalTime(const char *tzName, time_t time)
+int getLocalTime(const char *tzName, time_t time, struct tm *result)
 {
     extern char **  environ;
 
@@ -13,14 +13,16 @@ struct tm * getLocalTime(const char *tzName, time_t time)
     int from = 0;
     int to = 0;
     int i = 0;
-    struct tm *result = NULL;
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    if (!result)
+        return EXIT_FAILURE;
 
     for (i = 0; environ[i] != NULL; ++i)
         continue;
     fakeenv = malloc((i + 2) * sizeof *fakeenv);
     if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL) {
-        return NULL;
+        return EXIT_FAILURE;
     }
 
     to = 0;
@@ -30,17 +32,19 @@ struct tm * getLocalTime(const char *tzName, time_t time)
             fakeenv[to++] = environ[from];
     fakeenv[to] = NULL;
 
-    pthread_mutex_lock(&mutex);
+    if (pthread_mutex_lock(&mutex))
+        return EXIT_FAILURE;
     oldenv = environ;
     environ = fakeenv;
 
     strcpy(&fakeenv[0][3], tzName);
     tzset();
-    result = localtime(&time);
+    localtime_r(&time, result);
 
     environ = oldenv;
     free(fakeenv);
-    pthread_mutex_unlock(&mutex);
+    if (pthread_mutex_unlock(&mutex))
+        return EXIT_FAILURE;
 
-    return result;
+    return EXIT_SUCCESS;
 }

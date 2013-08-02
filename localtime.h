@@ -6,8 +6,9 @@
 /** function for convert time_t to struct tm with specific Time Zone.
  * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
  * @param time - time to format
- * @return NULL in error case, local time in other case
+ * @param result - variable for result. Value will be set to local time representation
+ * @return on success, EXIT_SUCCES is returned or EXIT_FAILURE in error case.
  */
-struct tm * getLocalTime(const char *tzName, time_t time);
+int getLocalTime(const char *tzName, time_t time, struct tm *result);
 
 #endif // LOCALTIME_H
