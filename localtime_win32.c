@@ -5,22 +5,19 @@
 #include <memory.h> /* for malloc, free*/
 
 //for winapi
-#include <windows.h>
+#include <Windows.h>
 #include <WinReg.h>
+#include <WinBase.h>
+#include <winnt.h>
 
 //interface
 #include "localtime.h"
 
 //Registry timezones database path
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
-int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char StandardName[]);
-
-int getLocalTime(const char *tzName, time_t time, struct tm *result)
-{
-    return EXIT_FAILURE;
-}
-
-
+int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
+int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
+void UnixTimeToSystemTime(time_t t, LPSYSTEMTIME pst);
 
 typedef struct _REG_TZI_FORMAT
 {
@@ -31,17 +28,38 @@ typedef struct _REG_TZI_FORMAT
     SYSTEMTIME DaylightDate;
 } REG_TZI_FORMAT;
 
+int getLocalTime(const char *tzName, time_t time, struct tm *result)
+{
+    DWORD dw;
+    SYSTEMTIME ;
+    SYSTEMTIME tLocalTime;
+    SYSTEMTIME tUniversalTime;
+    TIME_ZONE_INFORMATION tzi;
 
+    if(tzName == NULL || result == NULL) {
+        return EXIT_FAILURE;
+    }
 
-int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char StandardName[]) {
+    dw = GetTimeZoneInformationByName(&tzi, tzName);
+    if (dw != 0) {
+        return EXIT_FAILURE;
+    }
+
+    UnixTimeToSystemTime(time, &tUniversalTime);
+    SystemTimeToTzSpecificLocalTime(&tzi, &tUniversalTime, &tLocalTime);
+
+    return TimeFromSystemTime(&tLocalTime, result);
+}
+
+int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]) {
     int rc;
     HKEY hkey_tz;
     DWORD dw;
     REG_TZI_FORMAT regtzi;
-    size_t subKeySize = strlen(REG_TIME_ZONES) + strlen(StandardName) + 1;
+    size_t subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
     char* tszSubkey = (char *)malloc(subKeySize);
-    memset(tszSubkey, NULL, subKeySize );
-    sprintf_s(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, StandardName);
+    memset(tszSubkey, (int)NULL, subKeySize );
+    sprintf_s(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
 
     if (ERROR_SUCCESS != (dw = RegOpenKeyA(HKEY_LOCAL_MACHINE, tszSubkey, &hkey_tz))) {
         rc = -1;
@@ -67,4 +85,38 @@ ennd:
     RegCloseKey(hkey_tz);
     free(tszSubkey);
     return rc;
+}
+
+int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
+{
+    if(tm == NULL) return EXIT_FAILURE;
+
+    memset(tm, 0, sizeof(tm));
+
+    tm->tm_year = pTime->wYear;
+    tm->tm_mon = pTime->wMonth - 1;
+    tm->tm_mday = pTime->wDay;
+
+    tm->tm_hour = pTime->wHour;
+    tm->tm_min = pTime->wMinute;
+    tm->tm_sec = pTime->wSecond;
+
+    return EXIT_SUCCES;
+}
+
+//was gotten from microsoft support
+void UnixTimeToFileTime(time_t t, LPFILETIME pft) {
+    // Note that LONGLONG is a 64-bit value
+    INT64 ll;
+    ll = Int32x32To64(t, 10000000) + 116444736000000000;
+    pft->dwLowDateTime = (DWORD)ll;
+    pft->dwHighDateTime = ll >> 32;
+}
+
+//was gotten from microsoft support
+void UnixTimeToSystemTime(time_t t, LPSYSTEMTIME pst) {
+    FILETIME ft;
+
+    UnixTimeToFileTime(t, &ft);
+    FileTimeToSystemTime(&ft, pst);
 }
