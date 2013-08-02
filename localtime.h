@@ -2,7 +2,12 @@
 #define LOCALTIME_H
 
 #include <time.h>
-
+#ifndef EXIT_SUCCES
+    #define EXIT_SUCCES 0
+#endif
+#ifndef EXIT_FAILURE
+    #define EXIT_FAILURE -1
+#endif
 /** function for convert time_t to struct tm with specific Time Zone.
  * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
  * @param time - time to format
