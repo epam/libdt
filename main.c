@@ -30,15 +30,18 @@ main(int argc, char *argv[])
 static void
 show(char *zone, struct tm *tmp)
 {
-    (void) printf("%s  ", zone);
-    dumptime(tmp);
-    (void) printf(" UTC");
-    (void) printf(" = ");
+    (void) printf("%s = ", zone);
     dumptime(tmp);
     if (tmp != NULL) {
         if (*abbr(tmp) != '\0')
             (void) printf(" %s", abbr(tmp));
     }
+
+    time_t nowTime = 0;
+    (void) printf(", UTC");
+    (void) printf(" = ");
+    getUTCTime(zone, *tmp, &nowTime);
+    printf("%s", asctime(gmtime(&nowTime)));
     (void) printf("\n");
 }
 
