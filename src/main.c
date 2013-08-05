@@ -2,7 +2,7 @@
 #include <time.h>   /* for struct tm */
 #include <stdlib.h> /* for exit, malloc, atoi */
 
-#include "localtime.h"
+#include "libtz/localtime.h"
 
 static char *abbr(struct tm * tmp);
 static void dumptime(const struct tm * tmp);
