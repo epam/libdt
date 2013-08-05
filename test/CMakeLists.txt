@@ -6,7 +6,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 find_package( Threads )
 aux_source_directory(. SRC_LIST)
 add_executable(${TESTS_EXECUTABLE} ${SRC_LIST})
-target_link_libraries(${TESTS_EXECUTABLE} ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
+target_link_libraries(${TESTS_EXECUTABLE} ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${PROJECT_NAME} )
 add_test(AllTests tests)
 endif()
 

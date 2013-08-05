@@ -52,8 +52,6 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
 }
 
 
-
-
 int mktime_tz(const struct tm *tm, const char * tzName, time_t *result) {
 
     extern char **  environ;
