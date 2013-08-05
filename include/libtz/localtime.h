@@ -24,7 +24,7 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result);
  * @param result - variable for result. Value will be set to local time representation
  * @return on success, EXIT_SUCCES is returned or EXIT_FAILURE in error case.
  */
-int mktime_tz(const struct tm *tm, const char * tzname, time_t *result);
+int mktime_tz(const struct tm *tm, const char * tzName, time_t *result);
 
 
 #endif // LOCALTIME_H

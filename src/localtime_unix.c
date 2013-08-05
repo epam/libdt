@@ -1,3 +1,4 @@
+#include "libtz/localtime.h"
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +6,7 @@
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int getLocalTime(const char *tzName, time_t time, struct tm *result)
+int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
 {
     extern char **  environ;
 
@@ -40,7 +41,7 @@ int getLocalTime(const char *tzName, time_t time, struct tm *result)
 
     strcpy(&fakeenv[0][3], tzName);
     tzset();
-    localtime_r(&time, result);
+    localtime_r(time, result);
 
     environ = oldenv;
     free(fakeenv);
@@ -51,8 +52,10 @@ int getLocalTime(const char *tzName, time_t time, struct tm *result)
 }
 
 
-int getUTCTime(const char *tzName, struct tm time, time_t *result)
-{
+
+
+int mktime_tz(const struct tm *tm, const char * tzName, time_t *result) {
+
     extern char **  environ;
 
     size_t longest = 1024;
@@ -86,7 +89,7 @@ int getUTCTime(const char *tzName, struct tm time, time_t *result)
 
     strcpy(&fakeenv[0][3], tzName);
     tzset();
-    *result = mktime(&time);
+    *result = mktime((struct tm *)tm);
 
     environ = oldenv;
     free(fakeenv);
