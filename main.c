@@ -19,7 +19,7 @@ main(int argc, char *argv[])
     // create new environment
     for (i = 1; i < argc; ++i) {
         struct tm ltime;
-        if (!getLocalTime(argv[i], now, &ltime))
+        if (!localtime_tz(&now, argv[i], &ltime))
             show(argv[i], &ltime);
     }
 
@@ -30,6 +30,7 @@ main(int argc, char *argv[])
 static void
 show(char *zone, struct tm *tmp)
 {
+    time_t nowTime = 0;
     (void) printf("%s = ", zone);
     printf("%s", asctime(tmp));
     if (tmp != NULL) {
@@ -37,10 +38,10 @@ show(char *zone, struct tm *tmp)
             (void) printf(" %s", abbr(tmp));
     }
 
-    time_t nowTime = 0;
+
     (void) printf(", UTC");
     (void) printf(" = ");
-    getUTCTime(zone, *tmp, &nowTime);
+    mktime_tz(tmp, zone, &nowTime);
     printf("%s", asctime(gmtime(&nowTime)));
     (void) printf("\n");
 }

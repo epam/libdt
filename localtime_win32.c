@@ -17,10 +17,9 @@
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
 int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
 int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
-void UnixTimeToSystemTime(time_t t, LPSYSTEMTIME pst);
+void UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst);
 
-typedef struct _REG_TZI_FORMAT
-{
+typedef struct _REG_TZI_FORMAT {
     LONG Bias;
     LONG StandardBias;
     LONG DaylightBias;
@@ -28,8 +27,7 @@ typedef struct _REG_TZI_FORMAT
     SYSTEMTIME DaylightDate;
 } REG_TZI_FORMAT;
 
-int getLocalTime(const char *tzName, time_t time, struct tm *result)
-{
+int localtime_tz(const time_t *time, const char *tzName, struct tm *result) {
 
     DWORD dw;
     SYSTEMTIME ;
@@ -50,6 +48,10 @@ int getLocalTime(const char *tzName, time_t time, struct tm *result)
     SystemTimeToTzSpecificLocalTime(&tzi, &tUniversalTime, &tLocalTime);
 
     return TimeFromSystemTime(&tLocalTime, result);
+}
+
+int mktime_tz(const struct tm *tm, const char *tzname, time_t *result) {
+    return EXIT_FAILURE;
 }
 
 int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]) {
@@ -107,16 +109,16 @@ int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
 }
 
 //was gotten from microsoft support
-void UnixTimeToFileTime(time_t t, LPFILETIME pft) {
+void UnixTimeToFileTime(const time_t *t, LPFILETIME pft) {
     // Note that LONGLONG is a 64-bit value
     INT64 ll;
-    ll = Int32x32To64(t, 10000000) + 116444736000000000;
+    ll = Int32x32To64(*t, 10000000) + 116444736000000000;
     pft->dwLowDateTime = (DWORD)ll;
     pft->dwHighDateTime = ll >> 32;
 }
 
 //was gotten from microsoft support
-void UnixTimeToSystemTime(time_t t, LPSYSTEMTIME pst) {
+void UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst) {
     FILETIME ft;
 
     UnixTimeToFileTime(t, &ft);
