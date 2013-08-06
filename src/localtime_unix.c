@@ -6,8 +6,8 @@
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
-{
+int localtime_tz(const time_t *time, const char *tzName, struct tm *result) {
+
     extern char **  environ;
 
     size_t longest = 1024;
@@ -17,8 +17,10 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
     int to = 0;
     int i = 0;
 
-    if (!result)
+    if(time == NULL || tzName == NULL || result == NULL) {
         return EXIT_FAILURE;
+    }
+
 
     for (i = 0; environ[i] != NULL; ++i)
         continue;

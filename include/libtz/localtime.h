@@ -9,6 +9,9 @@
     #define EXIT_FAILURE -1
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** function for convert time_t to local time with specific Time Zone.
  * @param time - time to format
@@ -26,5 +29,7 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result);
  */
 int mktime_tz(const struct tm *tm, const char * tzName, time_t *result);
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif // LOCALTIME_H
