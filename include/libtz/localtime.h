@@ -2,7 +2,7 @@
 #define LOCALTIME_H
 
 #include <time.h>
-#ifndef EXIT_SUCCES
+#ifndef EXIT_SUCCESS
     #define EXIT_SUCCESS 0
 #endif
 #ifndef EXIT_FAILURE
@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-/** function for convert time_t to local time with specific Time Zone.
+/** Converts time_t to local time in specific Time Zone.
  * @param time - time to format
  * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
  * @param result - variable for result. Value will be set to local time representation
@@ -21,13 +21,13 @@ extern "C" {
  */
 int localtime_tz(const time_t *time, const char *tzName, struct tm *result);
 
-/** function for convert local time with specific Time Zone, to time_t.
+/** Converts local time in specific Time Zone to time_t.
  * @param time - time to format
  * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
  * @param result - variable for result. Value will be set to local time representation
  * @return on success, EXIT_SUCCESS is returned or EXIT_FAILURE in error case.
  */
-int mktime_tz(const struct tm *tm, const char * tzName, time_t *result);
+int mktime_tz(const struct tm *tm, const char *tzName, time_t *result);
 
 #ifdef __cplusplus
 }

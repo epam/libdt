@@ -105,7 +105,7 @@ int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
     tm->tm_min = pTime->wMinute;
     tm->tm_sec = pTime->wSecond;
 
-    return EXIT_SUCCES;
+    return EXIT_SUCCESS;
 }
 
 //was gotten from microsoft support

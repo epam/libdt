@@ -1,6 +1,7 @@
 #include "basiccase.h"
 #include "libtz/localtime.h"
-static const char* notRealtimezone = "notreal/timezone/where/no/light";
+
+static const char* unrealTimezone = "notreal/timezone/where/no/light";
 static const char* testMoscowTimeZone = "Europe/Moscow";
 static const char* testUTCTimeZone = "Etc/UTC";
 static const char* testGMTNeg5TimeZone = "GMT-5";
@@ -29,7 +30,7 @@ TEST_F(BasicCase, localtime_tz)
     EXPECT_TRUE(localtime_tz(&testTime, NULL, &tm) == EXIT_FAILURE);
     EXPECT_TRUE(localtime_tz(&testTime, testMoscowTimeZone, NULL) == EXIT_FAILURE);
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_TRUE(localtime_tz(&testTime, notRealtimezone, &tm) == EXIT_FAILURE);
+    EXPECT_TRUE(localtime_tz(&testTime, unrealTimezone, &tm) == EXIT_FAILURE);
     memset(&tm, 0, sizeof (struct tm));
     testTime = 0;
 
@@ -64,7 +65,7 @@ TEST_F(BasicCase, mktime_tz)
     EXPECT_TRUE(mktime_tz(&tm, NULL, &testTime) == EXIT_FAILURE);
     EXPECT_TRUE(mktime_tz(NULL, testMoscowTimeZone, &testTime) == EXIT_FAILURE);
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_TRUE(mktime_tz(&tm, notRealtimezone, &testTime) == EXIT_FAILURE);
+    EXPECT_TRUE(mktime_tz(&tm, unrealTimezone, &testTime) == EXIT_FAILURE);
 
     //Useful behaivor :
     struct tm utcTime;
