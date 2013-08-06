@@ -65,7 +65,7 @@ int mktime_tz(const struct tm *tm, const char * tzName, time_t *result) {
     int to = 0;
     int i = 0;
 
-    if (!result)
+    if (!result || tm == NULL || tzName == NULL)
         return EXIT_FAILURE;
 
     for (i = 0; environ[i] != NULL; ++i)
