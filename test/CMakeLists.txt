@@ -1,4 +1,3 @@
-enable_testing()
 find_package(GTest)
 if(GTEST_FOUND)
 set(TESTS_EXECUTABLE tests)
@@ -7,6 +6,6 @@ find_package( Threads )
 aux_source_directory(. SRC_LIST)
 add_executable(${TESTS_EXECUTABLE} ${SRC_LIST})
 target_link_libraries(${TESTS_EXECUTABLE} ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${PROJECT_NAME})
-add_test(AllTests tests)
+add_test(tests ${TESTS_EXECUTABLE})
 endif()
 
