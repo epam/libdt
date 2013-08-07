@@ -1,4 +1,4 @@
-#include "libtz/localtime.h"
+#include "libtz/timezone.h"
 #include "private.h"
 #include "tzfile.h"
 #include <fcntl.h>

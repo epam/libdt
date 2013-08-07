@@ -1,5 +1,5 @@
 #include "basiccase.h"
-#include "libtz/localtime.h"
+#include "libtz/timezone.h"
 
 static const char* unrealTimezone = "notreal/timezone/where/no/light";
 static const char* testMoscowTimeZone = "Europe/Moscow";

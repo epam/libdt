@@ -11,7 +11,7 @@
 #include <winnt.h>
 
 //interface
-#include "libtz/localtime.h"
+#include "libtz/timezone.h"
 
 //Registry timezones database path
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
