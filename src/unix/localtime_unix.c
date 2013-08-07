@@ -3,6 +3,7 @@
 #include "tzfile.h"
 #include <fcntl.h>
 #include <float.h>	/* for FLT_MAX and DBL_MAX */
+#include <timezones_map.h>
 
 //------------------------------------------------------------------------------
 // The code below is from https://github.com/nullie/libtz
