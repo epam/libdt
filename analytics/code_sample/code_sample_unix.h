@@ -1,4 +1,6 @@
+#include <string.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 #define UTC_TZ_NAME "UTC"
 #define MOSCOW_TZ_NAME "Europe/Moscow"
