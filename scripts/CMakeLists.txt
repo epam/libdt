@@ -1,5 +1,5 @@
 #make timezones map
-include(FindPythonInterp)
+find_package(PythonInterp 2.7 REQUIRED )
 set(LIBTZ_TIMEZONES_MAPPING_HEADER ${CMAKE_SOURCE_DIR}/src/timezones_map.h)
 set(LIBTZ_TIMEZONES_MAPPING_GENERATOR_SCRIPT ${CMAKE_SOURCE_DIR}/scripts/transform.py)
 set(LIBTZ_TIMEZONES_MAPPING_GENERATOR_FALLBACK_SOURCE ${CMAKE_SOURCE_DIR}/resources/windowsZones.xml)
