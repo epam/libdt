@@ -37,10 +37,11 @@ void dump_tm(const struct tm *tm)
 void test_tm(const struct tm *tm, const char *tz_name)
 {
         time_t tm_ts;
-        assert(mktime_tz(tm, tz_name, &tm_ts) == 0);
         struct tm tm_ts_tm;
-        assert(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
         struct tm tm_ts_tm_utc;
+
+        assert(mktime_tz(tm, tz_name, &tm_ts) == 0);
+        assert(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
         assert(localtime_tz(&tm_ts, UTC_TZ_NAME, &tm_ts_tm_utc) == 0);
         printf("Datetime representation '");
         dump_tm(tm);

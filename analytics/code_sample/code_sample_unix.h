@@ -1,3 +1,5 @@
+#include <pthread.h>
+
 #define UTC_TZ_NAME "UTC"
 #define MOSCOW_TZ_NAME "Europe/Moscow"
 #define BERLIN_TZ_NAME "Europe/Berlin"
