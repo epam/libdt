@@ -15,9 +15,13 @@
 
 //Registry timezones database path
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
+
+//Helper functions prototypes
 int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
-int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
-void UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst);
+int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
+int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm);
+int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst);
+int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime);
 
 typedef struct _REG_TZI_FORMAT {
     LONG Bias;
@@ -27,34 +31,62 @@ typedef struct _REG_TZI_FORMAT {
     SYSTEMTIME DaylightDate;
 } REG_TZI_FORMAT;
 
-int localtime_tz(const time_t *time, const char *tzName, struct tm *result) {
+int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
+{
 
-    DWORD dw;
-    SYSTEMTIME ;
+    DWORD dwError;
     SYSTEMTIME tLocalTime;
     SYSTEMTIME tUniversalTime;
     TIME_ZONE_INFORMATION tzi;
 
-    if(tzName == NULL || result == NULL) {
+    if (tzName == NULL || result == NULL) {
         return EXIT_FAILURE;
     }
 
-    dw = GetTimeZoneInformationByName(&tzi, tzName);
-    if (dw != 0) {
+    dwError = GetTimeZoneInformationByName(&tzi, tzName);
+    if (dwError != 0) {
         return EXIT_FAILURE;
     }
 
-    UnixTimeToSystemTime(time, &tUniversalTime);
-    SystemTimeToTzSpecificLocalTime(&tzi, &tUniversalTime, &tLocalTime);
+    if (UnixTimeToSystemTime(time, &tUniversalTime) != EXIT_SUCCESS) {
+        return EXIT_FAILURE;
+    }
 
-    return TimeFromSystemTime(&tLocalTime, result);
+    if (SystemTimeToTzSpecificLocalTime(&tzi, &tUniversalTime, &tLocalTime) == FALSE) {
+        return EXIT_FAILURE;
+    }
+
+    return TmFromSystemTime(&tLocalTime, result);
 }
 
-int mktime_tz(const struct tm *tm, const char *tzname, time_t *result) {
-    return EXIT_FAILURE;
+int mktime_tz(const struct tm *tm, const char *tzname, time_t *result)
+{
+    DWORD dwError;
+    TIME_ZONE_INFORMATION tzi;
+    SYSTEMTIME tUniversalTime;
+    SYSTEMTIME tLocalTime;
+    if (tm == NULL || tzname == NULL || result == NULL) {
+        return EXIT_FAILURE;
+    }
+
+    dwError = GetTimeZoneInformationByName(&tzi, tzname);
+    if (dwError != 0) {
+        return EXIT_FAILURE;
+    }
+
+    if (SystemTimeFromTm(&tLocalTime, tm) != EXIT_SUCCESS) {
+        return EXIT_FAILURE;
+    }
+
+    if (TzSpecificLocalTimeToSystemTime(&tzi, &tLocalTime, &tUniversalTime) == FALSE) {
+        return EXIT_FAILURE;
+    }
+
+    return SystemTimeToUnixTime(&tUniversalTime, result);
 }
 
-int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]) {
+int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
+{
     int rc;
     HKEY hkey_tz;
     DWORD dw;
@@ -90,9 +122,9 @@ ennd:
     return rc;
 }
 
-int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
+int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
 {
-    if(tm == NULL) return EXIT_FAILURE;
+    if (tm == NULL || pTime == NULL) return EXIT_FAILURE;
 
     memset(tm, 0, sizeof(tm));
 
@@ -111,16 +143,56 @@ int TimeFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
 //was gotten from microsoft support
 void UnixTimeToFileTime(const time_t *t, LPFILETIME pft) {
     // Note that LONGLONG is a 64-bit value
-    INT64 ll;
+    UINT64 ll;
     ll = Int32x32To64(*t, 10000000) + 116444736000000000;
     pft->dwLowDateTime = (DWORD)ll;
     pft->dwHighDateTime = ll >> 32;
 }
 
 //was gotten from microsoft support
-void UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst) {
+int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst) {
     FILETIME ft;
 
     UnixTimeToFileTime(t, &ft);
-    FileTimeToSystemTime(&ft, pst);
+    if (FileTimeToSystemTime(&ft, pst) == FALSE) {
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+//was gotten from microsoft support
+int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime)
+
+{
+    LARGE_INTEGER jan1970FT = {0};
+    LARGE_INTEGER utcFT = {0};
+    UINT64 utcDosTime = 0;
+    jan1970FT.QuadPart = 116444736000000000I64; // january 1st 1970
+
+
+    if (SystemTimeToFileTime(systemTime, (FILETIME*)&utcFT) == FALSE) {
+        return EXIT_FAILURE;
+    }
+     utcDosTime = (utcFT.QuadPart - jan1970FT.QuadPart)/10000000;
+    *dosTime = (time_t)utcDosTime;
+     return EXIT_SUCCESS;
+}
+
+
+int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm)
+{
+    if (tm == NULL || pTime == NULL) return EXIT_FAILURE;
+
+    memset(pTime, 0, sizeof(SYSTEMTIME));
+
+    pTime->wYear = tm->tm_year;
+    pTime->wMonth = tm->tm_mon + 1;
+    pTime->wDay = tm->tm_mday;
+    pTime->wDayOfWeek = tm->tm_wday;
+
+    pTime->wHour = tm->tm_hour;
+    pTime->wMinute = tm->tm_min;
+    pTime->wSecond = tm->tm_sec;
+
+    return EXIT_SUCCESS;
 }
