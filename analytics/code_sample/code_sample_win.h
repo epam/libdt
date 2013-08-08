@@ -22,7 +22,7 @@
 #endif
 
 //Registry timezones database path
-const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
+static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
 
 //Helper functions prototypes
 int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
@@ -47,7 +47,7 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
     SYSTEMTIME tUniversalTime;
     TIME_ZONE_INFORMATION tzi;
 
-    if (tzName == NULL || result == NULL) {
+    if (time == NULL || tzName == NULL || result == NULL) {
         return EXIT_FAILURE;
     }
 
@@ -71,23 +71,29 @@ int mktime_tz(const struct tm *tm, const char *tzname, time_t *result)
 {
     DWORD dwError;
     TIME_ZONE_INFORMATION tzi;
-    SYSTEMTIME tUniversalTime;
-    SYSTEMTIME tLocalTime;
+    SYSTEMTIME tUniversalTime = {0};
+    SYSTEMTIME tLocalTime = {0};
+
+
     if (tm == NULL || tzname == NULL || result == NULL) {
         return EXIT_FAILURE;
     }
-
-    dwError = GetTimeZoneInformationByName(&tzi, tzname);
-    if (dwError != 0) {
-        return EXIT_FAILURE;
-    }
-
     if (SystemTimeFromTm(&tLocalTime, tm) != EXIT_SUCCESS) {
         return EXIT_FAILURE;
     }
 
-    if (TzSpecificLocalTimeToSystemTime(&tzi, &tLocalTime, &tUniversalTime) == FALSE) {
-        return EXIT_FAILURE;
+    if (strcmp(tzname, "UTC") == 0) {
+        return SystemTimeToUnixTime(&tLocalTime, result);
+    } else {
+        dwError = GetTimeZoneInformationByName(&tzi, tzname);
+        if (dwError != 0) {
+            return EXIT_FAILURE;
+        }
+
+        if (TzSpecificLocalTimeToSystemTime(&tzi, &tLocalTime, &tUniversalTime) == FALSE) {
+            return EXIT_FAILURE;
+        }
+
     }
 
     return SystemTimeToUnixTime(&tUniversalTime, result);
@@ -152,7 +158,8 @@ int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
 void UnixTimeToFileTime(const time_t *t, LPFILETIME pft) {
     // Note that LONGLONG is a 64-bit value
     UINT64 ll;
-    ll = Int32x32To64(*t, 10000000) + 116444736000000000;
+    UINT64 time = *t;
+    ll = (time * 10000000) + 116444736000000000;
     pft->dwLowDateTime = (DWORD)ll;
     pft->dwHighDateTime = ll >> 32;
 }
@@ -193,7 +200,7 @@ int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm)
 
     memset(pTime, 0, sizeof(SYSTEMTIME));
 
-    pTime->wYear = tm->tm_year;
+    pTime->wYear = 1900 + tm->tm_year;
     pTime->wMonth = tm->tm_mon + 1;
     pTime->wDay = tm->tm_mday;
     pTime->wDayOfWeek = tm->tm_wday;
