@@ -1,10 +1,9 @@
 #include <stdio.h>  /* for stdout, stderr, perror */
-#include <time.h>   /* for struct tm */
 #include <stdlib.h> /* for exit, malloc, atoi */
 #include <string.h> /* for strlen, strcpy_s, strcat_s*/
 #include <memory.h> /* for malloc, free*/
 
-//for winapi
+// For WinAPI
 #include <Windows.h>
 #include <WinReg.h>
 #include <WinBase.h>
@@ -21,10 +20,10 @@
     #define EXIT_FAILURE -1
 #endif
 
-//Registry timezones database path
+// Registry timezones database path
 const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
 
-//Helper functions prototypes
+// Helper functions prototypes
 int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
 int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
 int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm);
@@ -148,7 +147,7 @@ int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
     return EXIT_SUCCESS;
 }
 
-//was gotten from microsoft support
+// Has been got from microsoft support
 void UnixTimeToFileTime(const time_t *t, LPFILETIME pft) {
     // Note that LONGLONG is a 64-bit value
     UINT64 ll;
@@ -157,7 +156,7 @@ void UnixTimeToFileTime(const time_t *t, LPFILETIME pft) {
     pft->dwHighDateTime = ll >> 32;
 }
 
-//was gotten from microsoft support
+// Has been got from microsoft support
 int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst) {
     FILETIME ft;
 
@@ -168,7 +167,7 @@ int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst) {
     return EXIT_SUCCESS;
 }
 
-//was gotten from microsoft support
+// Has been got from microsoft support
 int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime)
 
 {

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-#Creates from windowsZones.xml(http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml)
-#header file with mapping which can be used to map Windows Standard Times to olsen database
-#timezones names and/or territory abbreviations
+# Creates from windowsZones.xml (http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml)
+# header file with mapping which can be used to map Windows Standard Times to olsen database
+# timezones names and/or territory abbreviations
 #
-#Tryes to get windowsZones.xml by internet, another case tryes to get it by local file which must be
-#pointed as first argument of script, if argument not setted, tryes to find it by relative path
-#'../resources/windowsZones.xml'
+# Tryes to get windowsZones.xml by internet, another case tryes to get it by local file which must be
+# pointed as first argument of script, if argument not setted, tryes to find it by relative path
+# '../resources/windowsZones.xml'
 
 import sys
 import os

@@ -2,6 +2,7 @@
 #define CODE_SAMPLE_H
 
 #include <stdio.h>
+#include <time.h>
 
 #if defined(_WIN32)
 

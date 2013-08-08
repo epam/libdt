@@ -8,9 +8,6 @@
  * $ cl code_sample.c /link Adwapi32.lib
  */
 
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include "code_sample.h"
 
