@@ -5,7 +5,7 @@
  * $ gcc -o code_sample code_sample.c
  *
  * Windows:
- * $ cl code_sample.c /link Adwapi32.lib
+ * $ cl code_sample.c /link Advapi32.lib
  */
 
 #include "code_sample.h"

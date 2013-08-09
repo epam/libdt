@@ -6,10 +6,34 @@
 #define BERLIN_TZ_NAME "Europe/Berlin"
 
 static const char* unrealTimezone = "notreal/timezone/where/no/light";
-static const char* testMoscowTimeZone = "Europe/Moscow";
-static const char* testUTCTimeZone = "Etc/UTC";
-static const char* testGMTNeg5TimeZone = "GMT-5";
-static const char* testGMT5TimeZone = "GMT+5";
+static const char* testMoscowTimeZone =
+        #ifdef _WIN32
+        "Russian Standard Time"
+        #else
+        "Europe/Moscow"
+        #endif
+        ;
+static const char* testUTCTimeZone =
+        #ifdef _WIN32
+        "UTC"
+        #else
+        "Etc/UTC"
+        #endif
+        ;
+static const char* testGMTNeg5TimeZone =
+        #ifdef _WIN32
+        "West Asia Standard Time"
+        #else
+        "GMT-5"
+        #endif
+        ;
+static const char* testGMT5TimeZone =
+        #ifdef _WIN32
+        "SA Pacific Standard Time"
+        #else
+        "GMT+5"
+        #endif
+        ;
 
 // Fills tm structure
 static void fillTm(struct tm *output, int tm_gmtoff,
