@@ -134,7 +134,7 @@ int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
 
     memset(tm, 0, sizeof(tm));
 
-    tm->tm_year = pTime->wYear;
+    tm->tm_year = pTime->wYear - 1900;
     tm->tm_mon = pTime->wMonth - 1;
     tm->tm_mday = pTime->wDay;
     tm->tm_wday = pTime->wDayOfWeek;
@@ -192,7 +192,7 @@ int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm)
 
     memset(pTime, 0, sizeof(SYSTEMTIME));
 
-    pTime->wYear = 1900 + tm->tm_year;
+    pTime->wYear = tm->tm_year + 1900;
     pTime->wMonth = tm->tm_mon + 1;
     pTime->wDay = tm->tm_mday;
     pTime->wDayOfWeek = tm->tm_wday;
