@@ -44,12 +44,12 @@ static void fillTm(struct tm *output, int tm_gmtoff,
 
 
 // Fills only representation fields in tm structure
-static void fill_tm(struct tm *output, int tm_year, int tm_mon, int tm_mday,
+static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon, int tm_mday,
                 int tm_hour, int tm_min, int tm_sec);
 
 static void dump_tm(const struct tm *tm);
 
-void test_tm(const struct tm *tm, const char *tz_name);
+void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc);
 
 BasicCase::BasicCase()
 {
@@ -58,25 +58,34 @@ BasicCase::BasicCase()
 TEST_F(BasicCase, historic_tz_check)
 {
         struct tm tm;
+        struct tm tmUtc;
 
-        fill_tm(&tm, 2009, 7, 15, 8, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME);
-        fill_tm(&tm, 2009, 1, 15, 8, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME);
-        fill_tm(&tm, 2013, 7, 15, 8, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME);
-        fill_tm(&tm, 2013, 1, 15, 8, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME);
+        fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 4, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 4, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 4, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
 
 
-        fill_tm(&tm, 2009, 7, 15, 8, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME);
-        fill_tm(&tm, 2009, 1, 15, 8, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME);
-        fill_tm(&tm, 2013, 7, 15, 8, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME);
-        fill_tm(&tm, 2013, 1, 15, 8, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME);
+        fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);//TODO: fix for historical case
+        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
 }
 
 TEST_F(BasicCase, localtime_tz)
@@ -174,7 +183,7 @@ static void fillTm(struct tm *output, int tm_gmtoff,
 
 }
 
-static void fill_tm(struct tm *output, int tm_year, int tm_mon, int tm_mday,
+static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon, int tm_mday,
                 int tm_hour, int tm_min, int tm_sec)
 {
         if (output == NULL) {
@@ -195,20 +204,23 @@ static void dump_tm(const struct tm *tm)
         printf("%04d-%02d-%02d %02d:%02d:%02d", tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 }
 
-void test_tm(const struct tm *tm, const char *tz_name)
+void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
 {
         time_t tm_ts;
         struct tm tm_ts_tm;
-        struct tm tm_ts_tm_utc;
-        assert(mktime_tz(tm, tz_name, &tm_ts) == 0);
-        assert(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
-        assert(localtime_tz(&tm_ts, UTC_TZ_NAME, &tm_ts_tm_utc) == 0);
+        struct tm tmUtcToEquasion = {0};
+        EXPECT_TRUE(mktime_tz(tm, tz_name, &tm_ts) == 0);
+        EXPECT_TRUE(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
+        EXPECT_TRUE(localtime_tz(&tm_ts, UTC_TZ_NAME, &tmUtcToEquasion) == 0);
+
+        EXPECT_TRUE(memcmp(&tmUtcToEquasion, tmUtc, sizeof(struct tm)) == 0);
+
         printf("Datetime representation '");
         dump_tm(tm);
         printf("' in '%s' timezone is an %ld timestamp, round-up converted representation is '", tz_name, tm_ts);
         dump_tm(&tm_ts_tm);
         printf("', UTC representation is '");
-        dump_tm(&tm_ts_tm_utc);
+        dump_tm(tmUtc);
         printf("'\n");
 }
 
