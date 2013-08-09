@@ -93,6 +93,9 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
         }
         fakeenv[to] = NULL;
 
+        struct tm * tm_modifiable = (struct tm *)tm;
+        tm_modifiable->tm_isdst = -1;
+
         if (pthread_mutex_lock(&mutex)) {
                 return -1;
         }
@@ -101,7 +104,7 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
 
         strcpy(&fakeenv[0][3], tz_name);
         tzset();
-        *result = mktime((struct tm *)tm);
+        *result = mktime(tm_modifiable);
 
         environ = oldenv;
         free(fakeenv);
