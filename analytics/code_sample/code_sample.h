@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <assert.h>
 
 #if defined(_WIN32)
 
@@ -40,7 +41,6 @@ void test_tm(const struct tm *tm, const char *tz_name)
         time_t tm_ts;
         struct tm tm_ts_tm;
         struct tm tm_ts_tm_utc;
-
         assert(mktime_tz(tm, tz_name, &tm_ts) == 0);
         assert(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
         assert(localtime_tz(&tm_ts, UTC_TZ_NAME, &tm_ts_tm_utc) == 0);
