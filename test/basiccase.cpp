@@ -61,30 +61,30 @@ TEST_F(BasicCase, historic_tz_check)
         struct tm tmUtc;
 
         fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
         test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
         fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 4, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
         test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 4, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 4, 0, 0);
         test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 4, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 4, 0, 0);
         test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
 
 
         fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);
         test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
         fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
         test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
         test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);//TODO: fix for historical case
+        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
         test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
 }
 
