@@ -1,9 +1,6 @@
 #include "basiccase.h"
 #include "libtz/timezone.h"
 
-#define UTC_TZ_NAME "UTC"
-#define MOSCOW_TZ_NAME "Europe/Moscow"
-#define BERLIN_TZ_NAME "Europe/Berlin"
 
 static const char* unrealTimezone = "notreal/timezone/where/no/light";
 static const char* testMoscowTimeZone =
@@ -34,6 +31,13 @@ static const char* testGMT5TimeZone =
         "GMT+5"
         #endif
         ;
+static const char* testBerlinTimeZone =
+        #ifdef _WIN32
+        "W. Europe Standard Time"
+        #else
+        "Europe/Berlin"
+        #endif
+        ;
 
 // Fills tm structure
 static void fillTm(struct tm *output, int tm_gmtoff,
@@ -49,7 +53,7 @@ static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon,
 
 static void dump_tm(const struct tm *tm);
 
-void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc);
+void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmExpected);
 
 BasicCase::BasicCase()
 {
@@ -62,30 +66,30 @@ TEST_F(BasicCase, historic_tz_check)
 
         fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
+        test_tm(&tm, testMoscowTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
+        test_tm(&tm, testMoscowTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 4, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
+        test_tm(&tm, testMoscowTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 4, 0, 0);
-        test_tm(&tm, MOSCOW_TZ_NAME, &tmUtc);
+        test_tm(&tm, testMoscowTimeZone, &tmUtc);
 
 
         fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
+        test_tm(&tm, testBerlinTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
+        test_tm(&tm, testBerlinTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
+        test_tm(&tm, testBerlinTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
-        test_tm(&tm, BERLIN_TZ_NAME, &tmUtc);
+        test_tm(&tm, testBerlinTimeZone, &tmUtc);
 }
 
 TEST_F(BasicCase, localtime_tz)
@@ -137,11 +141,11 @@ TEST_F(BasicCase, mktime_tz)
 
     //Useful behaivor :
     struct tm utcTime;
-    fillTm(&utcTime, 0, 0, 0, 1, 0, 0, 0, 4, 0, 70, 0);// 1 january of 1970 (UTC)
+    fillTm(&utcTime, 0, 0, 0, 1, 0, 0, 0, 4, 0, 1970, 0);// 1 january of 1970 (UTC)
     struct tm gmt5Time;
-    fillTm(&gmt5Time, -18000, 19, 0, 31, 0, 11, 0, 3, 364, 69, 0);// 31 december of 1969
+    fillTm(&gmt5Time, -18000, 19, 0, 31, 0, 11, 0, 3, 364, 1969, 0);// 31 december of 1969
     struct tm gmtNeg5Time;
-    fillTm(&gmtNeg5Time, 18000, 5, 0, 1, 0, 0, 0, 4, 0, 70, 0);// 1 january of 1970 (GMT-5)
+    fillTm(&gmtNeg5Time, 18000, 5, 0, 1, 0, 0, 0, 4, 0, 1970, 0);// 1 january of 1970 (GMT-5)
 
     testTime = 666; // not a 0
     EXPECT_TRUE(mktime_tz(&utcTime, testUTCTimeZone, &testTime) == EXIT_SUCCESS);
@@ -179,7 +183,7 @@ static void fillTm(struct tm *output, int tm_gmtoff,
     output->tm_sec = tm_sec;
     output->tm_wday = tm_wday;
     output->tm_yday = tm_yday;
-    output->tm_year = tm_year;
+    output->tm_year = tm_year - 1900;
 
 }
 
@@ -195,7 +199,7 @@ static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon,
         output->tm_min = tm_min;
         output->tm_mon = tm_mon;
         output->tm_sec = tm_sec;
-        output->tm_year = tm_year;
+        output->tm_year = tm_year - 1900;
 
 }
 
@@ -211,9 +215,9 @@ void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
         struct tm tmUtcToEquasion = {0};
         EXPECT_TRUE(mktime_tz(tm, tz_name, &tm_ts) == 0);
         EXPECT_TRUE(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
-        EXPECT_TRUE(localtime_tz(&tm_ts, UTC_TZ_NAME, &tmUtcToEquasion) == 0);
+        EXPECT_TRUE(localtime_tz(&tm_ts, testUTCTimeZone, &tmUtcToEquasion) == 0);
 
-        EXPECT_TRUE(memcmp(&tmUtcToEquasion, tmUtc, sizeof(struct tm)) == 0);
+        EXPECT_TRUE(tmUtc->tm_hour == tmUtcToEquasion.tm_hour);
 
         printf("Datetime representation '");
         dump_tm(tm);

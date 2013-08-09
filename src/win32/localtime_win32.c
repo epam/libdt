@@ -10,6 +10,7 @@
 #include <WinBase.h>
 #include <winnt.h>
 
+
 //interface
 #include "libtz/timezone.h"
 
@@ -17,7 +18,7 @@
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
 
 //Helper functions prototypes
-int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
+int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
 int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
 int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm);
 int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst);
@@ -34,17 +35,22 @@ typedef struct _REG_TZI_FORMAT {
 int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
 {
 
-    DWORD dwError;
-    SYSTEMTIME tLocalTime;
-    SYSTEMTIME tUniversalTime;
-    TIME_ZONE_INFORMATION tzi;
+    DWORD dwError = -1;
+    SYSTEMTIME tLocalTime = {0};
+    SYSTEMTIME tUniversalTime = {0};
+    DYNAMIC_TIME_ZONE_INFORMATION dtzi = {0};
+    TIME_ZONE_INFORMATION tzi = {0};
 
     if (time == NULL || tzName == NULL || result == NULL) {
         return EXIT_FAILURE;
     }
 
-    dwError = GetTimeZoneInformationByName(&tzi, tzName);
+    dwError = GetTimeZoneInformationByName(&dtzi, tzName);
     if (dwError != 0) {
+        return EXIT_FAILURE;
+    }
+
+    if (GetTimeZoneInformationForYear(tLocalTime.wYear, &dtzi, &tzi) == FALSE) {
         return EXIT_FAILURE;
     }
 
@@ -63,6 +69,7 @@ int mktime_tz(const struct tm *tm, const char *tzname, time_t *result)
 {
     DWORD dwError;
     TIME_ZONE_INFORMATION tzi;
+    DYNAMIC_TIME_ZONE_INFORMATION dtzi;
     SYSTEMTIME tUniversalTime = {0};
     SYSTEMTIME tLocalTime = {0};
 
@@ -77,8 +84,11 @@ int mktime_tz(const struct tm *tm, const char *tzname, time_t *result)
     if (strcmp(tzname, "UTC") == 0) {
         return SystemTimeToUnixTime(&tLocalTime, result);
     } else {
-        dwError = GetTimeZoneInformationByName(&tzi, tzname);
+        dwError = GetTimeZoneInformationByName(&dtzi, tzname);
         if (dwError != 0) {
+            return EXIT_FAILURE;
+        }
+        if (GetTimeZoneInformationForYear(tLocalTime.wYear, &dtzi, &tzi) == FALSE) {
             return EXIT_FAILURE;
         }
 
@@ -91,7 +101,7 @@ int mktime_tz(const struct tm *tm, const char *tzname, time_t *result)
     return SystemTimeToUnixTime(&tUniversalTime, result);
 }
 
-int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
+int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
 {
     int rc;
     HKEY hkey_tz;
@@ -99,7 +109,12 @@ int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStand
     REG_TZI_FORMAT regtzi;
     size_t subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
     char* tszSubkey = (char *)malloc(subKeySize);
+    if (ptzi == NULL || szStandardName == NULL) {
+        return EXIT_FAILURE;
+    }
     memset(tszSubkey, (int)NULL, subKeySize );
+    memset(ptzi, 0, sizeof(DYNAMIC_TIME_ZONE_INFORMATION));
+
     sprintf_s(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
 
     if (ERROR_SUCCESS != (dw = RegOpenKeyA(HKEY_LOCAL_MACHINE, tszSubkey, &hkey_tz))) {
@@ -122,6 +137,7 @@ int GetTimeZoneInformationByName(TIME_ZONE_INFORMATION *ptzi, const char szStand
     ptzi->DaylightDate = regtzi.DaylightDate;
     ptzi->StandardBias = regtzi.StandardBias;
     ptzi->StandardDate = regtzi.StandardDate;
+    MultiByteToWideChar(CP_ACP, MB_COMPOSITE, szStandardName, -1 , ptzi->TimeZoneKeyName, sizeof(ptzi->TimeZoneKeyName));
 ennd:
     RegCloseKey(hkey_tz);
     free(tszSubkey);
