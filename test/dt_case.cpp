@@ -66,7 +66,7 @@ TEST_F(DtCase, validate_representation)
         EXPECT_EQ(dt_validate_representation(1582, 10, 10, 8, 30, 45, 123456789), DT_FALSE);
 }
 
-TEST_F(DtCase, now_compare_timestamp)
+TEST_F(DtCase, now_compare_timestamps)
 {
         dt_timestamp_t ts_01;
         EXPECT_EQ(dt_now(NULL), DT_INVALID_ARGUMENT);
@@ -83,6 +83,143 @@ TEST_F(DtCase, now_compare_timestamp)
         EXPECT_GT(cr, 0);
         EXPECT_EQ(dt_compare_timestamps(&ts_01, &ts_01, &cr), DT_OK);
         EXPECT_EQ(cr, 0);
+}
+
+
+TEST_F(DtCase, timestamps_offset)
+{
+        dt_timestamp_t ts_01;
+        dt_timestamp_t ts_02;
+        dt_offset_t o;
+
+        EXPECT_EQ(dt_timestamps_offset(NULL, &ts_02, &o), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_timestamps_offset(&ts_01, NULL, &o), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
+
+        dt_representation_t r;
+        assert(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
+        assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
+        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_01, &o), DT_OK);
+        EXPECT_EQ(o.is_forward, DT_TRUE);
+        EXPECT_EQ(o.duration.seconds, 0L);
+        EXPECT_EQ(o.duration.nano_seconds, 0L);
+        
+        assert(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r) == DT_OK);
+        assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
+        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_02, &o), DT_OK);
+        EXPECT_EQ(o.is_forward, DT_TRUE);
+        EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
+        EXPECT_EQ(o.duration.nano_seconds, 100L);
+        EXPECT_EQ(dt_timestamps_offset(&ts_02, &ts_01, &o), DT_OK);
+        EXPECT_EQ(o.is_forward, DT_FALSE);
+        EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
+        EXPECT_EQ(o.duration.nano_seconds, 100L);
+
+        assert(dt_init_representation(2012, 12, 22, 8, 30, 45, 100L, &r) == DT_OK);
+        assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
+        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_02, &o), DT_OK);
+        EXPECT_EQ(o.is_forward, DT_TRUE);
+        EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
+        EXPECT_EQ(o.duration.nano_seconds, 876543311L);
+        EXPECT_EQ(dt_timestamps_offset(&ts_02, &ts_01, &o), DT_OK);
+        EXPECT_EQ(o.is_forward, DT_FALSE);
+        EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
+        EXPECT_EQ(o.duration.nano_seconds, 876543311L);
+}
+
+TEST_F(DtCase, apply_offset)
+{
+        dt_timestamp_t ts_01;
+        dt_timestamp_t ts_02;
+        dt_offset_t o;
+
+        EXPECT_EQ(dt_apply_offset(NULL, &o, &ts_02), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_apply_offset(&ts_01, NULL, &ts_02), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_apply_offset(&ts_01, &o, NULL), DT_INVALID_ARGUMENT);
+
+        dt_representation_t r;
+        assert(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
+        assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
+        dt_representation_t rr;
+
+        assert(dt_init_interval(DT_SECONDS_PER_DAY, 100L, &o.duration) == DT_OK);
+        o.is_forward = DT_TRUE;
+        EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
+        assert(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+        EXPECT_EQ(rr.year, 2012);
+        EXPECT_EQ(rr.month, 12);
+        EXPECT_EQ(rr.day, 22);
+        EXPECT_EQ(rr.hour, 8);
+        EXPECT_EQ(rr.minute, 30);
+        EXPECT_EQ(rr.second, 45);
+        EXPECT_EQ(rr.nano_second, 123456889L);
+
+        assert(dt_init_interval(DT_SECONDS_PER_DAY, 900000000L, &o.duration) == DT_OK);
+        o.is_forward = DT_TRUE;
+        EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
+        assert(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+        EXPECT_EQ(rr.year, 2012);
+        EXPECT_EQ(rr.month, 12);
+        EXPECT_EQ(rr.day, 22);
+        EXPECT_EQ(rr.hour, 8);
+        EXPECT_EQ(rr.minute, 30);
+        EXPECT_EQ(rr.second, 46);
+        EXPECT_EQ(rr.nano_second, 23456789L);
+
+        assert(dt_init_interval(DT_SECONDS_PER_DAY, 100L, &o.duration) == DT_OK);
+        o.is_forward = DT_FALSE;
+        EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
+        assert(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+        EXPECT_EQ(rr.year, 2012);
+        EXPECT_EQ(rr.month, 12);
+        EXPECT_EQ(rr.day, 20);
+        EXPECT_EQ(rr.hour, 8);
+        EXPECT_EQ(rr.minute, 30);
+        EXPECT_EQ(rr.second, 45);
+        EXPECT_EQ(rr.nano_second, 123456689L);
+
+        assert(dt_init_interval(DT_SECONDS_PER_DAY, 900000000L, &o.duration) == DT_OK);
+        o.is_forward = DT_FALSE;
+        EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
+        assert(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+        EXPECT_EQ(rr.year, 2012);
+        EXPECT_EQ(rr.month, 12);
+        EXPECT_EQ(rr.day, 20);
+        EXPECT_EQ(rr.hour, 8);
+        EXPECT_EQ(rr.minute, 30);
+        EXPECT_EQ(rr.second, 44);
+        EXPECT_EQ(rr.nano_second, 223456789L);
+}
+
+TEST_F(DtCase, posix_time_to_and_from_timestamp)
+{
+        time_t tm;
+        time_t rtm;
+        time_t now = time(NULL);
+        dt_timestamp_t ts;
+        unsigned long nano_second;
+
+        EXPECT_EQ(dt_posix_time_to_timestamp(-1, 123456789L, &ts), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_posix_time_to_timestamp(0, 123456789L, NULL), DT_INVALID_ARGUMENT);
+
+        EXPECT_EQ(dt_timestamp_to_posix_time(NULL, &rtm, NULL), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_timestamp_to_posix_time(&ts, NULL, NULL), DT_INVALID_ARGUMENT);
+
+        EXPECT_EQ(dt_posix_time_to_timestamp(0, 123456789L, &ts), DT_OK);
+        dt_offset_t o;
+        assert(dt_init_interval(DT_SECONDS_PER_DAY, 0, &o.duration) == DT_OK);
+        o.is_forward = DT_FALSE;
+        dt_timestamp_t nts;
+        assert(dt_apply_offset(&ts, &o, &nts) == DT_OK);
+        EXPECT_EQ(dt_timestamp_to_posix_time(&nts, &rtm, &nano_second), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_timestamp_to_posix_time(&ts, &rtm, &nano_second), DT_OK);
+        EXPECT_EQ(rtm, 0);
+        EXPECT_EQ(nano_second, 123456789L);
+
+        EXPECT_EQ(dt_posix_time_to_timestamp(now, 123456789L, &ts), DT_OK);
+        EXPECT_EQ(dt_timestamp_to_posix_time(&ts, &rtm, &nano_second), DT_OK);
+        EXPECT_EQ(rtm, now);
+        EXPECT_EQ(nano_second, 123456789L);
 }
 
 TEST_F(DtCase, init_interval)
@@ -270,6 +407,8 @@ TEST_F(DtCase, representation_timestamp_conversion)
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
         EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
         EXPECT_EQ(urr.hour, 6);
+
+        // TODO: Case for current time zone!
 }
 
 TEST_F(DtCase, representation_day_of_week)
@@ -280,28 +419,28 @@ TEST_F(DtCase, representation_day_of_week)
         EXPECT_EQ(dt_representation_day_of_week(NULL, &dow), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_representation_day_of_week(&r, NULL), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 0);
+        EXPECT_EQ(dow, 1);
         assert(dt_init_representation(2013, 8, 12, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 1);
+        EXPECT_EQ(dow, 2);
         assert(dt_init_representation(2013, 8, 13, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 2);
+        EXPECT_EQ(dow, 3);
         assert(dt_init_representation(2013, 8, 14, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 3);
+        EXPECT_EQ(dow, 4);
         assert(dt_init_representation(2013, 8, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 4);
+        EXPECT_EQ(dow, 5);
         assert(dt_init_representation(2013, 8, 16, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 5);
+        EXPECT_EQ(dow, 6);
         assert(dt_init_representation(2013, 8, 17, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 6);
+        EXPECT_EQ(dow, 7);
         assert(dt_init_representation(2013, 8, 18, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
-        EXPECT_EQ(dow, 0);
+        EXPECT_EQ(dow, 1);
 }
 
 TEST_F(DtCase, representation_day_of_year)
@@ -337,20 +476,20 @@ TEST_F(DtCase, representation_to_tm)
         assert(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_tm(&r, &tm), DT_OK);
         EXPECT_EQ(tm.tm_year, 2012);
-        EXPECT_EQ(tm.tm_mon, 12);
+        EXPECT_EQ(tm.tm_mon, 11);
         EXPECT_EQ(tm.tm_mday, 21);
         EXPECT_EQ(tm.tm_hour, 8);
         EXPECT_EQ(tm.tm_min, 30);
         EXPECT_EQ(tm.tm_sec, 45);
         EXPECT_EQ(tm.tm_wday, 5);
-        EXPECT_EQ(tm.tm_yday, 356);
+        EXPECT_EQ(tm.tm_yday, 355);
 }
 
 TEST_F(DtCase, tm_to_representation)
 {
         struct tm tm;
         tm.tm_year = 2012;
-        tm.tm_mon = 12;
+        tm.tm_mon = 11;
         tm.tm_mday = 21;
         tm.tm_hour = 8;
         tm.tm_min = 30;

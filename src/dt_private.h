@@ -12,7 +12,7 @@
 
 #include <dt.h>
 
-//! Timezone object
+//! Timezone object. TODO: Do we need it at all?
 typedef struct dt_timezone {
         const char * name;              //!< Timezone name
 #if defined(_WIN32)
@@ -26,6 +26,15 @@ typedef struct dt_timezone {
 extern "C" {
 #endif
 
+//! Converts a localized representation to POSIX breakdown time structure
+/*!
+ * This function does not set tm.tm_wday and tm.tm_yday fields.
+ * \param representation Representation object
+ * \param tm POSIX breakdown time structure for the representation [OUT]
+ * \return Result status of the operation
+ */
+dt_status_t dt_representation_to_tm_private(const dt_representation_t *representation, struct tm *tm);
+
 //! Initializes timezone with data
 /*!
  * \note dt_cleanup_timezone() sould be called on timezone object at the end of it's use on successful operation
@@ -33,14 +42,14 @@ extern "C" {
  * \param timezone Pointer to timezone data structure to fill [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_init_timezone(const char *name, dt_timezone_t *timezone);
+//dt_status_t dt_init_timezone(const char *name, dt_timezone_t *timezone);
 
 //! Cleans up timezone structure
 /*!
  * \param timezone Pointer to timezone to clean up
  * \return Result status of the operation
  */
-dt_status_t dt_cleanup_timezone(dt_timezone_t *timezone);
+//dt_status_t dt_cleanup_timezone(dt_timezone_t *timezone);
 
 //! Represents a timestamp using a timezone object
 /*!
@@ -49,7 +58,7 @@ dt_status_t dt_cleanup_timezone(dt_timezone_t *timezone);
  * \param result Timestamp representation [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_timestamp_to_representation_tz(const dt_timestamp_t *timestamp, const dt_timezone_t *timezone, dt_representation_t *result);
+//dt_status_t dt_timestamp_to_representation_tz(const dt_timestamp_t *timestamp, const dt_timezone_t *timezone, dt_representation_t *result);
 
 //! Returns a timestamps for a representation in timezone by it's object
 /*!
@@ -61,8 +70,8 @@ dt_status_t dt_timestamp_to_representation_tz(const dt_timestamp_t *timestamp, c
  * \param second_timestamp Optional second representation's timestamp (can be NULL) [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_representation_to_timestamp_tz(const dt_representation_t *representation, const dt_timezone_t *timezone,
-                dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
+//dt_status_t dt_representation_to_timestamp_tz(const dt_representation_t *representation, const dt_timezone_t *timezone,
+//                dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
 
 #ifdef __cplusplus
 }

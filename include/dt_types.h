@@ -29,19 +29,21 @@ typedef char dt_bool_t;
 #define DT_SECONDS_PER_HOUR 3600
 #define DT_SECONDS_PER_MINUTE 60
 
-//! Timestamp object
+//! Timestamp object, which is opaque to user
+/*!
+ * This timestamp provides a nano-second precision and has no lower limit as time_t has.
+ * Do not access it's fields directly and/or in any way rely on it's structure as it is
+ * a subject to change w/o any announcement.
+ */
 typedef struct dt_timestamp {
-#if defined(_WIN32)
-        // TODO
-#else
-        struct timespec ts;                     //!< Timespec structure to store timestamp on Unix platform
-#endif
+        long second;                            //!< Seconds from some particular moment on Time Continuum (platform-specific)
+        unsigned long nano_second;              //!< Nano-second part (0L-999999999L)
 } dt_timestamp_t;
 
 //! Interval object
 typedef struct dt_interval {
-        unsigned long seconds;                  //!< Seconds part
-        unsigned long nano_seconds;             //!< Nano-seconds part
+        unsigned long seconds;                  //!< Seconds part (>=0L)
+        unsigned long nano_seconds;             //!< Nano-seconds part (0L-999999999L)
 } dt_interval_t;
 
 //! Offset object

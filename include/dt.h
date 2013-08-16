@@ -105,21 +105,24 @@ dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, d
 
 //! Loads timestamp from POSIX time
 /*!
+ * \note POSIX time (time_t) supports greater than zero values only
  * \param time POSIX time value
  * \param result Timestamp for the POSIX time value [OUT]
- * \param nano_seconds Nano-seconds part of the timestamp
+ * \param nano_second Nano-seconds part of the timestamp
  * \return Result status of the operation
  */
-dt_status_t dt_posix_time_to_timestamp(time_t time, long nano_seconds, dt_timestamp_t *result);
+dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result);
 
 //! Converts timestamp to POSIX time value
 /*!
+ * Function returns DT_INVALID_ARGUMENT if a timestamp could not be represented by POSIX time.
+ * \note POSIX time (time_t) supports greater than zero values only
  * \param timestamp Timestamp to convert
  * \param time POSIX time for the timestamp [OUT]
- * \param nano_seconds Nano-seconds part of the timestamp, could be NULL if not used [OUT]
+ * \param nano_second Optional nano-seconds part of the timestamp (0L-999999999L), could be NULL if not used [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, long *nano_seconds);
+dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second);
 
 /*!@}*/
 
@@ -250,10 +253,10 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
 dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const char *tz_name,
                 dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
 
-//! Returns representation's number of days since Sunday (0-6)
+//! Returns representation's week day number
 /*!
  * \param representation Representation object
- * \param dow Representation's day of week [OUT]
+ * \param dow Representation's day of week (1-7, 1 is Sunday) [OUT]
  * \return Result status of the operation
  */
 dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *dow);
@@ -261,7 +264,7 @@ dt_status_t dt_representation_day_of_week(const dt_representation_t *representat
 //! Returns representation's day of year
 /*!
  * \param representation Representation object
- * \param doy Representation's day of year [OUT]
+ * \param doy Representation's day of year (1-365/366) [OUT]
  * \return Result status of the operation
  */
 dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *doy);

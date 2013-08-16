@@ -6,6 +6,7 @@
 #include "../dt_private.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 /*
  * Cross-platform date/time handling library for C.
@@ -45,35 +46,33 @@ dt_status_t dt_now(dt_timestamp_t *result)
         if (!result) {
                 return DT_INVALID_ARGUMENT;
         }
-        if (clock_gettime(CLOCK_MONOTONIC, &result->ts) < 0) {
+        struct timespec ts;
+        if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
                 return DT_SYSTEM_CALL_ERROR;
         }
+        result->second = ts.tv_sec;
+        result->nano_second = ts.tv_nsec;
         return DT_OK;
 }
 
-dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, int *result)
+dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result)
 {
-        if (!lhs || !rhs || !result) {
+        if (time < 0 || !result) {
                 return DT_INVALID_ARGUMENT;
         }
-        if (lhs->ts.tv_sec > rhs->ts.tv_sec) {
-                *result = 1;
-                return DT_OK;
+        result->second = time;
+        result->nano_second = nano_second;
+        return DT_OK;
+}
+
+dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
+{
+        if (!timestamp || !time || timestamp->second < 0) {
+                return DT_INVALID_ARGUMENT;
         }
-        if (lhs->ts.tv_sec < rhs->ts.tv_sec) {
-                *result = -1;
-                return DT_OK;
-        }
-        if (lhs->ts.tv_nsec > rhs->ts.tv_nsec) {
-                *result = 1;
-                return DT_OK;
-        }
-        if (lhs->ts.tv_nsec < rhs->ts.tv_nsec) {
-                *result = -1;
-                return DT_OK;
-        }
-        *result = 0;
-        return 0;
+        *time = timestamp->second;
+        *nano_second = timestamp->nano_second;
+        return DT_OK;
 }
 
 dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const char *tz_name, dt_representation_t *representation)
@@ -128,12 +127,11 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
         }
 
         struct tm tm;
-        if (localtime_r(&(timestamp->ts.tv_sec), &tm) == NULL) {
+        if (localtime_r(&(timestamp->second), &tm) == NULL) {
                 result = DT_INVALID_ARGUMENT;
         } else {
                 result = DT_OK;
         }
-
         if (tz_name) {
                 // Restoring environment
                 environ = oldenv;
@@ -149,8 +147,7 @@ cleanup_fakeenv:
                 free(fakeenv);
         }
         if (result == DT_OK) {
-                result = dt_init_representation(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour,
-                                tm.tm_min, tm.tm_sec, timestamp->ts.tv_nsec, representation);
+                result = dt_tm_to_representation(&tm, timestamp->nano_second, representation);
         }
         return result;
 }
@@ -208,13 +205,8 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         }
 
         struct tm tm;
-        tm.tm_year = representation->year;
-        tm.tm_mon = representation->month;
-        tm.tm_mday = representation->day;
-        tm.tm_hour = representation->hour;
-        tm.tm_min = representation->minute;
-        tm.tm_sec = representation->second;
-        tm.tm_isdst = -1;
+        dt_representation_to_tm_private(representation, &tm);
+
         time_t posix_time = mktime(&tm);
         if (posix_time < 0) {
                 result = DT_INVALID_ARGUMENT;
@@ -237,48 +229,8 @@ cleanup_fakeenv:
                 free(fakeenv);
         }
         if (result == DT_OK) {
-                first_timestamp->ts.tv_sec = posix_time;
-                first_timestamp->ts.tv_nsec = representation->nano_second;
+                first_timestamp->second = posix_time;
+                first_timestamp->nano_second = representation->nano_second;
         }
         return result;
 }
-
-/*dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *dow)
-{
-        if (!representation || !dow) {
-                return DT_INVALID_ARGUMENT;
-        }
-
-        dt_status_t result = DT_UNKNOWN_ERROR;
-        if (pthread_mutex_lock(&mutex)) {
-                result = DT_SYSTEM_CALL_ERROR;
-                goto return_result;
-        }
-        struct tm tm;
-        tm.tm_year = representation->year;
-        tm.tm_mon = representation->month;
-        tm.tm_mday = representation->day;
-        tm.tm_hour = representation->hour;
-        tm.tm_min = representation->minute;
-        tm.tm_sec = representation->second;
-        tm.tm_isdst = -1;
-
-        printf("%d-%d-%d %d:%d:%d, day of week: %d, day of year: %d\n", tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, tm.tm_wday, tm.tm_yday);
-
-        time_t posix_time = mktime(&tm);
-
-        printf("%d-%d-%d %d:%d:%d, day of week: %d, day of year: %d\n", tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, tm.tm_wday, tm.tm_yday);
-
-        if (posix_time < 0) {
-                result = DT_INVALID_ARGUMENT;
-                goto return_result;
-        }
-        if (pthread_mutex_unlock(&mutex)) {
-                result = DT_SYSTEM_CALL_ERROR;
-        } else {
-                result = DT_OK;
-                *dow = tm.tm_wday;
-        }
-return_result:
-        return result;
-}*/
