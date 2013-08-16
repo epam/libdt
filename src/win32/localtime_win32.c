@@ -50,6 +50,7 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
         return EXIT_FAILURE;
     }
 
+    // TODO: tLocalTime is not initialized here!
     if (GetTimeZoneInformationForYear(tLocalTime.wYear, &dtzi, &tzi) == FALSE) {
         return EXIT_FAILURE;
     }
