@@ -35,10 +35,11 @@ static dt_status_t dt_timestamp_to_filetime(const dt_timestamp_t *ts, PFILETIME 
         li.QuadPart = ts->second * 10000000;
         li.QuadPart += ts->nano_second / 100;
         ft->dwLowDateTime = li.QuadPart;
-        li.QuadPart >> 32;
+        li.QuadPart >>= 32;
         ft->dwHighDateTime = li.QuadPart;
         return DT_OK;
 }
+
 dt_status_t dt_now(dt_timestamp_t *result)
 {
         FILETIME ft = {0};
