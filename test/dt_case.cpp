@@ -86,42 +86,42 @@ TEST_F(DtCase, now_compare_timestamps)
 }
 
 
-TEST_F(DtCase, timestamps_offset)
+TEST_F(DtCase, offset_to)
 {
         dt_timestamp_t ts_01;
         dt_timestamp_t ts_02;
         dt_offset_t o;
 
-        EXPECT_EQ(dt_timestamps_offset(NULL, &ts_02, &o), DT_INVALID_ARGUMENT);
-        EXPECT_EQ(dt_timestamps_offset(&ts_01, NULL, &o), DT_INVALID_ARGUMENT);
-        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_offset_to(NULL, &ts_02, &o), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_offset_to(&ts_01, NULL, &o), DT_INVALID_ARGUMENT);
+        EXPECT_EQ(dt_offset_to(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
 
         dt_representation_t r;
         assert(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
         assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
-        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_01, &o), DT_OK);
+        EXPECT_EQ(dt_offset_to(&ts_01, &ts_01, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_TRUE);
         EXPECT_EQ(o.duration.seconds, 0L);
         EXPECT_EQ(o.duration.nano_seconds, 0L);
         
         assert(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r) == DT_OK);
         assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
-        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_02, &o), DT_OK);
+        EXPECT_EQ(dt_offset_to(&ts_01, &ts_02, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_TRUE);
         EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
         EXPECT_EQ(o.duration.nano_seconds, 100L);
-        EXPECT_EQ(dt_timestamps_offset(&ts_02, &ts_01, &o), DT_OK);
+        EXPECT_EQ(dt_offset_to(&ts_02, &ts_01, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_FALSE);
         EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
         EXPECT_EQ(o.duration.nano_seconds, 100L);
 
         assert(dt_init_representation(2012, 12, 22, 8, 30, 45, 100L, &r) == DT_OK);
         assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
-        EXPECT_EQ(dt_timestamps_offset(&ts_01, &ts_02, &o), DT_OK);
+        EXPECT_EQ(dt_offset_to(&ts_01, &ts_02, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_TRUE);
         EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
         EXPECT_EQ(o.duration.nano_seconds, 876543311L);
-        EXPECT_EQ(dt_timestamps_offset(&ts_02, &ts_01, &o), DT_OK);
+        EXPECT_EQ(dt_offset_to(&ts_02, &ts_01, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_FALSE);
         EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
         EXPECT_EQ(o.duration.nano_seconds, 876543311L);

@@ -16,6 +16,7 @@ typedef enum {
         DT_INVALID_ARGUMENT,                    //!< Invalid argument
         DT_TIMEZONE_NOT_FOUND,                  //!< Timezone not found
         DT_SYSTEM_CALL_ERROR,                   //!< System call error
+        DT_TOO_SMALL_BUFFER,                    //!< Too small buffer has been provided to function
         DT_UNKNOWN_ERROR                        //!< Unknown error
 } dt_status_t;
 

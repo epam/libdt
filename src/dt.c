@@ -96,7 +96,7 @@ dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_
         return DT_OK;
 }
 
-dt_status_t dt_timestamps_offset(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
+dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
 {
         if (!lhs || !rhs || !result) {
                 return DT_INVALID_ARGUMENT;
