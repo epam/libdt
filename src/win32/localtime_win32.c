@@ -12,7 +12,7 @@
 
 
 //interface
-#include "libtz/timezone.h"
+#include "libtz/dt.h"
 
 //Registry timezones database path
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
@@ -100,6 +100,27 @@ int mktime_tz(const struct tm *tm, const char *tzname, time_t *result)
     }
 
     return SystemTimeToUnixTime(&tUniversalTime, result);
+}
+
+int dt_tm2string(const struct tm *representation, const char *tz_name, const char *fmt,
+                 char *str_buffer, size_t str_buffer_size) {
+    size_t size = 0;
+    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
+        return EXIT_FAILURE;
+
+    size = strftime(str_buffer, str_buffer_size, fmt, representation);
+    if (size > 0)
+        return EXIT_SUCCESS;
+    return EXIT_FAILURE;
+}
+
+int dt_string2tm(const char *str, const char *fmt, struct tm *representation) {
+    if (!representation || !str || !fmt)
+        return EXIT_FAILURE;
+
+    if (!strptime(str, fmt, representation))
+        return EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
 
 int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])

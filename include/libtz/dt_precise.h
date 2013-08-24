@@ -11,7 +11,7 @@
  */
 
 #include <time.h>
-#include <dt_types.h>
+#include <libtz/dt_types.h>
 
 #ifdef __cplusplus
 extern "C" {
