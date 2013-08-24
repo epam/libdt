@@ -153,10 +153,13 @@ int dt_tm2string(const struct tm *representation, const char *tz_name, const cha
 }
 
 int dt_string2tm(const char *str, const char *fmt, struct tm *representation) {
+    char *result = NULL;
     if (!representation || !str || !fmt)
         return EXIT_FAILURE;
-
-    if (!strptime(str, fmt, representation))
+    result = strptime(str, fmt, representation);
+    if (result == NULL)
+        return EXIT_FAILURE;
+    if (*result != 0)// end of string
         return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

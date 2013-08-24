@@ -1,6 +1,6 @@
 #make timezones map
 include(DefaultsSetup)
-find_package(PythonInterp 2.7 REQUIRED )
+find_package(PythonInterp 2.6 REQUIRED )
 if(PYTHON_VERSION_MAJOR GREATER 2)
     message(FATAL_ERROR "Python major version more then 2 not supported")
 endif()
