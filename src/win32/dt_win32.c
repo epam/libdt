@@ -20,7 +20,7 @@ static dt_status_t dt_filetime_to_timestamp(const PFILETIME ft, dt_timestamp_t *
         li.QuadPart = ft->dwHighDateTime;
         li.QuadPart <<= 32;
         li.QuadPart |= ft->dwLowDateTime;
-        ts->second = li.QuadPart / 10000000;
+        ts->second = (long)(li.QuadPart / 10000000);
         ts->nano_second = li.QuadPart % 10000000 * 100;
         return DT_OK;
 }
@@ -34,16 +34,15 @@ static dt_status_t dt_timestamp_to_filetime(const dt_timestamp_t *ts, PFILETIME 
         }
         li.QuadPart = ts->second * 10000000;
         li.QuadPart += ts->nano_second / 100;
-        ft->dwLowDateTime = li.QuadPart;
+        ft->dwLowDateTime = (long)li.QuadPart;
         li.QuadPart >>= 32;
-        ft->dwHighDateTime = li.QuadPart;
+        ft->dwHighDateTime = (long)li.QuadPart;
         return DT_OK;
 }
 
 dt_status_t dt_now(dt_timestamp_t *result)
 {
         FILETIME ft = {0};
-        LARGE_INTEGER li;
         dt_status_t s;
 
         if (!result) {
@@ -59,7 +58,7 @@ dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, d
         if (time < 0 || !result) {
                 return DT_INVALID_ARGUMENT;
         }
-        result->second = time;
+        result->second = (long)time;
         result->nano_second = nano_second;
         return DT_OK;
 }

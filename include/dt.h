@@ -186,7 +186,7 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
 typedef struct timespec {
         time_t tv_sec;                          //!< Seconds
         long tv_nsec;                           //!< Nano-seconds
-};
+} timespec_t;
 #endif
 
 //! Converts interval to timespec structure
