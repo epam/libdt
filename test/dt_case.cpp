@@ -1,5 +1,5 @@
 #include "dt_case.h"
-#include "dt_precise.h"
+#include "libtz/dt_precise.h"
 
 #ifdef _WIN32
 
@@ -97,15 +97,15 @@ TEST_F(DtCase, offset_to)
         EXPECT_EQ(dt_offset_to(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
 
         dt_representation_t r;
-        assert(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
-        assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
+        EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
         EXPECT_EQ(dt_offset_to(&ts_01, &ts_01, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_TRUE);
         EXPECT_EQ(o.duration.seconds, 0L);
         EXPECT_EQ(o.duration.nano_seconds, 0L);
         
-        assert(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r) == DT_OK);
-        assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r) == DT_OK);
+        EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
         EXPECT_EQ(dt_offset_to(&ts_01, &ts_02, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_TRUE);
         EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
@@ -115,8 +115,8 @@ TEST_F(DtCase, offset_to)
         EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
         EXPECT_EQ(o.duration.nano_seconds, 100L);
 
-        assert(dt_init_representation(2012, 12, 22, 8, 30, 45, 100L, &r) == DT_OK);
-        assert(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2012, 12, 22, 8, 30, 45, 100L, &r) == DT_OK);
+        EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
         EXPECT_EQ(dt_offset_to(&ts_01, &ts_02, &o), DT_OK);
         EXPECT_EQ(o.is_forward, DT_TRUE);
         EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
@@ -206,10 +206,10 @@ TEST_F(DtCase, posix_time_to_and_from_timestamp)
 
         EXPECT_EQ(dt_posix_time_to_timestamp(0, 123456789L, &ts), DT_OK);
         dt_offset_t o;
-        assert(dt_init_interval(DT_SECONDS_PER_DAY, 0, &o.duration) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 0, &o.duration) == DT_OK);
         o.is_forward = DT_FALSE;
         dt_timestamp_t nts;
-        assert(dt_apply_offset(&ts, &o, &nts) == DT_OK);
+        EXPECT_TRUE(dt_apply_offset(&ts, &o, &nts) == DT_OK);
         EXPECT_EQ(dt_timestamp_to_posix_time(&nts, &rtm, &nano_second), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_timestamp_to_posix_time(&ts, &rtm, &nano_second), DT_OK);
         EXPECT_EQ(rtm, 0);
@@ -238,22 +238,22 @@ TEST_F(DtCase, init_interval)
 TEST_F(DtCase, compare_interval)
 {
         dt_interval_t i_01;
-        assert(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
         dt_interval_t i_02;
-        assert(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
         int cr;
         EXPECT_EQ(dt_compare_intervals(NULL, &i_02, &cr), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_compare_intervals(&i_01, NULL, &cr), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_compare_intervals(&i_01, &i_02, NULL), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_compare_intervals(&i_01, &i_02, &cr), DT_OK);
         EXPECT_LT(cr, 0L);
-        assert(dt_init_interval(0L, 123456789L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(0L, 123456789L, &i_02) == DT_OK);
         EXPECT_EQ(dt_compare_intervals(&i_01, &i_02, &cr), DT_OK);
         EXPECT_GT(cr, 0L);
-        assert(dt_init_interval(1L, 123456790L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(1L, 123456790L, &i_02) == DT_OK);
         EXPECT_EQ(dt_compare_intervals(&i_01, &i_02, &cr), DT_OK);
         EXPECT_LT(cr, 0L);
-        assert(dt_init_interval(1L, 123456788L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(1L, 123456788L, &i_02) == DT_OK);
         EXPECT_EQ(dt_compare_intervals(&i_01, &i_02, &cr), DT_OK);
         EXPECT_GT(cr, 0L);
         EXPECT_EQ(dt_compare_intervals(&i_01, &i_01, &cr), DT_OK);
@@ -263,9 +263,9 @@ TEST_F(DtCase, compare_interval)
 TEST_F(DtCase, sum_intervals)
 {
         dt_interval_t i_01;
-        assert(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
         dt_interval_t i_02;
-        assert(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
         dt_interval_t ri;
         EXPECT_EQ(dt_sum_intervals(NULL, &i_02, &ri), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_sum_intervals(&i_01, NULL, &ri), DT_INVALID_ARGUMENT);
@@ -273,7 +273,7 @@ TEST_F(DtCase, sum_intervals)
         EXPECT_EQ(dt_sum_intervals(&i_01, &i_02, &ri), DT_OK);
         EXPECT_EQ(ri.seconds, 3L);
         EXPECT_EQ(ri.nano_seconds, 246913578L);
-        assert(dt_init_interval(2L, 900000000L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(2L, 900000000L, &i_02) == DT_OK);
         EXPECT_EQ(dt_sum_intervals(&i_01, &i_02, &ri), DT_OK);
         EXPECT_EQ(ri.seconds, 4L);
         EXPECT_EQ(ri.nano_seconds, 23456789L);
@@ -282,9 +282,9 @@ TEST_F(DtCase, sum_intervals)
 TEST_F(DtCase, sub_intervals)
 {
         dt_interval_t i_01;
-        assert(dt_init_interval(2L, 123456789L, &i_01) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_01) == DT_OK);
         dt_interval_t i_02;
-        assert(dt_init_interval(3L, 123456789L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(3L, 123456789L, &i_02) == DT_OK);
         dt_interval_t ri;
         EXPECT_EQ(dt_sub_intervals(NULL, &i_02, &ri), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_sub_intervals(&i_01, NULL, &ri), DT_INVALID_ARGUMENT);
@@ -292,7 +292,7 @@ TEST_F(DtCase, sub_intervals)
         EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, &ri), DT_OK);
         EXPECT_EQ(ri.seconds, 0L);
         EXPECT_EQ(ri.nano_seconds, 0L);
-        assert(dt_init_interval(1L, 900000000L, &i_02) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(1L, 900000000L, &i_02) == DT_OK);
         EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, &ri), DT_OK);
         EXPECT_EQ(ri.seconds, 0L);
         EXPECT_EQ(ri.nano_seconds, 223456789L);
@@ -301,7 +301,7 @@ TEST_F(DtCase, sub_intervals)
 TEST_F(DtCase, miltiply_interval)
 {
         dt_interval_t i;
-        assert(dt_init_interval(3L, 500000000L, &i) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(3L, 500000000L, &i) == DT_OK);
         dt_interval_t ri;
         EXPECT_EQ(dt_mul_interval(NULL, 2.5, &ri), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_mul_interval(&i, 2.5, NULL), DT_INVALID_ARGUMENT);
@@ -349,7 +349,7 @@ TEST_F(DtCase, representation_timestamp_conversion)
         dt_representation_t urr;
 
         // Europe/Moscow
-        assert(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
@@ -357,21 +357,21 @@ TEST_F(DtCase, representation_timestamp_conversion)
         EXPECT_EQ(urr.hour, 4);         // TODO: Remove it after history support enabled
         //EXPECT_EQ(urr.hour, 3);         // TODO: Uncomment it - here is a history check
 
-        assert(dt_init_representation(2013, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
         EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
         EXPECT_EQ(urr.hour, 4);
 
-        assert(dt_init_representation(2009, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2009, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
         EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
         EXPECT_EQ(urr.hour, 4);
 
-        assert(dt_init_representation(2013, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
@@ -379,28 +379,28 @@ TEST_F(DtCase, representation_timestamp_conversion)
         EXPECT_EQ(urr.hour, 4);
 
         // Europe/Berlin
-        assert(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
         EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
         EXPECT_EQ(urr.hour, 7);
 
-        assert(dt_init_representation(2013, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
         EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
         EXPECT_EQ(urr.hour, 7);
 
-        assert(dt_init_representation(2009, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2009, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
         EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
         EXPECT_EQ(urr.hour, 6);
 
-        assert(dt_init_representation(2013, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
         EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
@@ -414,30 +414,30 @@ TEST_F(DtCase, representation_day_of_week)
 {
         dt_representation_t r;
         int dow;
-        assert(dt_init_representation(2013, 8, 11, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 11, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(NULL, &dow), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_representation_day_of_week(&r, NULL), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 1);
-        assert(dt_init_representation(2013, 8, 12, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 12, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 2);
-        assert(dt_init_representation(2013, 8, 13, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 13, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 3);
-        assert(dt_init_representation(2013, 8, 14, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 14, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 4);
-        assert(dt_init_representation(2013, 8, 15, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 5);
-        assert(dt_init_representation(2013, 8, 16, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 16, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 6);
-        assert(dt_init_representation(2013, 8, 17, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 17, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 7);
-        assert(dt_init_representation(2013, 8, 18, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 18, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_week(&r, &dow), DT_OK);
         EXPECT_EQ(dow, 1);
 }
@@ -450,16 +450,16 @@ TEST_F(DtCase, representation_day_of_year)
         EXPECT_EQ(dt_representation_day_of_year(NULL, &doy), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_representation_day_of_year(&r, NULL), DT_INVALID_ARGUMENT);
 
-        assert(dt_init_representation(2013, 1, 1, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 1, 1, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_year(&r, &doy), DT_OK);
         EXPECT_EQ(doy, 1);
-        assert(dt_init_representation(2013, 8, 11, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 8, 11, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_year(&r, &doy), DT_OK);
         EXPECT_EQ(doy, 223);
-        assert(dt_init_representation(2013, 12, 31, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2013, 12, 31, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_year(&r, &doy), DT_OK);
         EXPECT_EQ(doy, 365);
-        assert(dt_init_representation(2012, 12, 31, 8, 0, 0, 0, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2012, 12, 31, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_day_of_year(&r, &doy), DT_OK);
         EXPECT_EQ(doy, 366);
 }
@@ -472,7 +472,7 @@ TEST_F(DtCase, representation_to_tm)
         EXPECT_EQ(dt_representation_to_tm(NULL, &tm), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_representation_to_tm(&r, NULL), DT_INVALID_ARGUMENT);
 
-        assert(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_tm(&r, &tm), DT_OK);
         EXPECT_EQ(tm.tm_year, 2012);
         EXPECT_EQ(tm.tm_mon, 11);

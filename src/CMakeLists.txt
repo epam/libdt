@@ -6,6 +6,7 @@ endif(UNIX)
 if (WIN32)
   include_directories(. win32)
   file(GLOB SRC_LIST ${SRC_LIST} "*win32/*.c")
+file(GLOB SRC_LIST ${SRC_LIST} "*win32/gnutimeutils/*.c")
 endif(WIN32)
 
 add_library(${PROJECT_NAME} ${SRC_LIST} )
