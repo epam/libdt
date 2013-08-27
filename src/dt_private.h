@@ -10,7 +10,7 @@
  * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
 
-#include <dt_precise.h>
+#include <libtz/dt_precise.h>
 
 //! Timezone object. TODO: Do we need it at all?
 typedef struct dt_timezone {
