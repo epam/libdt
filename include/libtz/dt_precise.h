@@ -183,7 +183,7 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t *result);
 
 #if defined(_WIN32)
-typedef struct timespec {
+struct timespec {
         time_t tv_sec;                          //!< Seconds
         long tv_nsec;                           //!< Nano-seconds
 };

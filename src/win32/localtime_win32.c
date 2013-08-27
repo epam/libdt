@@ -17,6 +17,15 @@
 //Registry timezones database path
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+char * strptime(const char *buf, const char *fmt, struct tm *tm);
+
+#ifdef __cplusplus
+}
+#endif
+
 //Helper functions prototypes
 int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
 int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
