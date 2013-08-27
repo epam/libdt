@@ -162,6 +162,85 @@ TEST_F(BasicCase, mktime_tz)
 
 }
 
+TEST_F(BasicCase, wrongStringConvert)
+{
+    const char *timeOnly = "08:31";
+    const char *timeOnlyWrong = "a08:31";
+    const char *timeOnlyFormat = "%H:%M";
+    const char *timeOnlyFormatWrong = "H:M";
+
+    struct tm tr = {0,};
+    size_t buf_size = 1024;
+    char buf[1024] = {0,};
+
+    tr.tm_hour = 8;
+    tr.tm_min = 612;
+
+    EXPECT_NE(dt_string2tm(NULL, timeOnlyFormat, &tr), EXIT_SUCCESS);
+    EXPECT_NE(dt_string2tm(timeOnlyWrong, NULL, NULL), EXIT_SUCCESS);
+    EXPECT_NE(dt_string2tm(timeOnlyWrong, timeOnlyFormat, &tr), EXIT_SUCCESS);
+    EXPECT_NE(dt_string2tm(timeOnly, timeOnlyFormatWrong, &tr), EXIT_SUCCESS);
+
+    EXPECT_NE(dt_tm2string(NULL, testUTCTimeZone, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(dt_tm2string(&tr, NULL, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(dt_tm2string(&tr, testUTCTimeZone, NULL, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(dt_tm2string(&tr, testUTCTimeZone, timeOnlyFormatWrong, NULL, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(dt_tm2string(&tr, testUTCTimeZone, timeOnlyFormatWrong, buf, 0), EXIT_SUCCESS);
+}
+
+TEST_F(BasicCase, toStringConvert)
+{
+    const char *timeOnly1 = "08:31";
+    const char *timeOnlyFormat1 = "%H:%M";
+    const char *timeOnly2 = "11/09/2001 16:54:12";
+    const char *timeOnlyFormat2 = "%d/%m/%Y %H:%M:%S";
+
+    struct tm tr1 = {0,};
+    struct tm tr2 = {0,};
+    size_t buf_size = 1024;
+    char buf[1024] = {0,};
+
+    tr1.tm_hour = 8;
+    tr1.tm_min = 31;
+
+    EXPECT_EQ(dt_tm2string(&tr1, testUTCTimeZone, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_STREQ(timeOnly1, buf);
+
+    tr2.tm_mday = 11;
+    tr2.tm_mon = 8;
+    tr2.tm_year = 2001 - 1900;
+    tr2.tm_min = 54;
+    tr2.tm_hour = 16;
+    tr2.tm_sec = 12;
+
+    EXPECT_EQ(dt_tm2string(&tr2, testUTCTimeZone, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_STREQ(timeOnly2, buf);
+}
+
+TEST_F(BasicCase, fromStringConvert)
+{
+    const char *timeOnly1 = "08:31";
+    const char *timeOnlyFormat1 = "%H:%M";
+    const char *timeOnly2 = "11/09/2001 16:54:12";
+    const char *timeOnlyFormat2 = "%d/%m/%Y %H:%M:%S";
+
+    struct tm tr1 = {0,};
+    struct tm tr2 = {0,};
+
+
+    EXPECT_EQ(dt_string2tm(timeOnly1, timeOnlyFormat1, &tr1), EXIT_SUCCESS);
+    EXPECT_EQ(tr1.tm_hour, 8);
+    EXPECT_EQ(tr1.tm_min, 31);
+
+
+    EXPECT_EQ(dt_string2tm(timeOnly2, timeOnlyFormat2, &tr2), EXIT_SUCCESS);
+    EXPECT_EQ(tr2.tm_mday, 11);
+    EXPECT_EQ(tr2.tm_mon, 8);
+    EXPECT_EQ(tr2.tm_year, 2001 - 1900);
+    EXPECT_EQ(tr2.tm_min, 54);
+    EXPECT_EQ(tr2.tm_hour, 16);
+    EXPECT_EQ(tr2.tm_sec, 12);
+}
 
 static void fillTm(struct tm *output, int tm_gmtoff,
                    int tm_hour, int tm_isdst, int tm_mday,

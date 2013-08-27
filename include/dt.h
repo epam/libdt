@@ -60,12 +60,9 @@ int dt_tm2string(const struct tm *representation, const char *tz_name, const cha
  * \param str A NULL-terminated string to parse
  * \param fmt Format string, see strptime()/strftime() plus "%f" for nano-seconds
  * \param representation Representation object to fill [OUT]
- * \param tz_name_buffer Optional buffer to fill in with timezone name, could be NULL [OUT]
- * \param tz_name_buffer_size Timezone name buffer size, ignored if tz_name_buffer == NULL
  * \return Result status of the operation
  */
-int dt_string2tm(const char *str, const char *fmt, struct tm *representation,
-                char *tz_name_buffer, size_t tz_name_buffer_size);
+int dt_string2tm(const char *str, const char *fmt, struct tm *representation);
 
 /*!@}*/
 
