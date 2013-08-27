@@ -13,20 +13,30 @@ import string
 import urllib2
 from xml.dom.minidom import *
 
-def getXml():
+def getXmlFromFile():
+    strXmlFile = '../resources/windowsZones.xml'
+    if len(sys.argv) > 2 :
+        strXmlFile = sys.argv[2]
+    xml = parse(strXmlFile)
+    print '//Obtained from local file'
+    return xml
+
+def getXmlFromWeb():
     strUrl = 'http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml' 
-    print '//Generated from windowsZones.xml'
     try:
         response = urllib2.urlopen(strUrl)
         xml = parseString(response.read())
         print '//Obtained by internet from http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml'
     except urllib2.URLError:
-        strXmlFile = '../resources/windowsZones.xml'
-        if len(sys.argv) > 1 :
-                strXmlFile = sys.argv[1]
-        xml = parse(strXmlFile)
-        print '//Obtained from local file'
+        xml = getXmlFromFile()
     return xml
+
+def getXml():
+    print '//Generated from windowsZones.xml'
+    if len(sys.argv) > 1 :
+        if sys.argv[1] == "--remote":
+            return getXmlFromWeb()
+    return getXmlFromFile()
 
 def parseMapZone(mapZone):
     strType = mapZone._attrs['type'].value 
@@ -48,13 +58,19 @@ def parseMapZones(xml):
         strMapZones.append(parseMapZone(mapZone))
     mapZones
     strMapZonesJoined = string.join(strMapZones, ',\n')
-    return strMapZonesJoined
+    return strMapZonesJoined, len(mapZones)
+
+def help():
+    print 'usage: ', sys.argv[0], ' [--remote| --local [local xml file]]'
 
 print 'struct tz_unicode_mapping {char *other; char* territory; char* type;};'
-print 'struct tz_unicode_mapping tz_unicode_map[] = {'
+print 'const struct tz_unicode_mapping tz_unicode_map[] = {'
+zonesCount = 0
 try:
-    print parseMapZones(getXml())
+    zonesStr, zonesCount = parseMapZones(getXml())
+    print zonesStr
 except :
     print '#error Cant generate timezones mapping watch the script ' +\
             os.path.abspath(sys.argv[0])
 print '};'
+print 'const size_t tz_unicode_map_size = ', zonesCount, ';\n'

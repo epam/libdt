@@ -1,7 +1,6 @@
 #include "basiccase.h"
-#include "libtz/timezone.h"
+#include "dt.h"
 
-/*
 static const char* unrealTimezone = "notreal/timezone/where/no/light";
 static const char* testMoscowTimeZone =
         #ifdef _WIN32
@@ -21,14 +20,14 @@ static const char* testGMTNeg5TimeZone =
         #ifdef _WIN32
         "West Asia Standard Time"
         #else
-        "GMT-5"
+        "Etc/GMT-5"
         #endif
         ;
 static const char* testGMT5TimeZone =
         #ifdef _WIN32
         "SA Pacific Standard Time"
         #else
-        "GMT+5"
+        "Etc/GMT+5"
         #endif
         ;
 static const char* testBerlinTimeZone =
@@ -227,4 +226,4 @@ void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
         dump_tm(tmUtc);
         printf("'\n");
 }
-*/
+

@@ -11,43 +11,32 @@
  */
 
 #include <time.h>
+#ifndef EXIT_SUCCESS
+    #define EXIT_SUCCESS 0
+#endif
+#ifndef EXIT_FAILURE
+    #define EXIT_FAILURE -1
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*!
- * \defgroup GeneralPurpose General purpose functions
- * @{
+/** Converts time_t to local time in specific Time Zone.
+ * @param time - time to format
+ * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
+ * @param result - variable for result. Value will be set to local time representation
+ * @return on success, EXIT_SUCCESS is returned or EXIT_FAILURE in error case.
  */
+int localtime_tz(const time_t *time, const char *tzName, struct tm *result);
 
-//! Represents a timestamp using a timezone none
-/*!
- * \param timestamp Timestamp to represent
- * \param tz_name Timezone name or NULL if local tiezone is considered
- * \param tm Timestamp representation [OUT]
- * \return Result status of the operation. 0 on success and <0 in other cases
+/** Converts local time in specific Time Zone to time_t.
+ * @param time - time to format
+ * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
+ * @param result - variable for result. Value will be set to local time representation
+ * @return on success, EXIT_SUCCESS is returned or EXIT_FAILURE in error case.
  */
-int dt_time_t_to_tm(const time_t timestamp, const char *tz_name, struct tm *tm);
-
-//! Returns a timestamps for a representation in timezone by it's name
-/*!
- * It is possible for the representation to have two timestamps, e.g. when a time is "going back" for
- * an hour.
- * \param representation Representation to fetch a timestamp of
- * \param tz_name Timezone name or NULL if local tiezone is considered
- * \param first_timestamp First representation's timestamp [OUT]
- * \param second_timestamp Optional second representation's timestamp (can be NULL, not supported at the moment) [OUT]
- * \return Result status of the operation. 0 on success and <0 in other cases
- */
-int dt_tm_to_time_t(const struct tm *representation, const char *tz_name,
-                time_t *first_timestamp, time_t *second_timestamp);
-
-/*!@}*/
-
-//------------------------------------------------------------------------------
-// String conversion functions
-//------------------------------------------------------------------------------
+int mktime_tz(const struct tm *tm, const char *tzName, time_t *result);
 
 /*!
  * \defgroup StringConversion String conversion functions
@@ -63,7 +52,7 @@ int dt_tm_to_time_t(const struct tm *representation, const char *tz_name,
  * \param str_buffer_size A size of the buffer to fill
  * \return Result status of the operation. 0 on success and <0 in other cases
  */
-int dt_tm_to_string(const struct tm *representation, const char *tz_name, const char *fmt,
+int dt_tm2string(const struct tm *representation, const char *tz_name, const char *fmt,
                 char *str_buffer, size_t str_buffer_size);
 
 //! Converts string to representation
@@ -75,7 +64,7 @@ int dt_tm_to_string(const struct tm *representation, const char *tz_name, const 
  * \param tz_name_buffer_size Timezone name buffer size, ignored if tz_name_buffer == NULL
  * \return Result status of the operation
  */
-int dt_tm_from_string(const char *str, const char *fmt, struct tm *representation,
+int dt_string2tm(const char *str, const char *fmt, struct tm *representation,
                 char *tz_name_buffer, size_t tz_name_buffer_size);
 
 /*!@}*/
