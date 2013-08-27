@@ -99,17 +99,24 @@ dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_
 dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
 {
     int cr = 0;
-    const dt_timestamp_t *lower_timestamp = cr < 0 ? lhs : rhs;
-    const dt_timestamp_t *higher_timestamp = cr < 0 ? rhs : lhs;
-    dt_bool_t is_forward = cr < 0 ? DT_TRUE : DT_FALSE;
-    unsigned long seconds = higher_timestamp->second - lower_timestamp->second;
-    long nano_seconds = (long) higher_timestamp->nano_second - (long) lower_timestamp->nano_second;
-    dt_status_t s = dt_compare_timestamps(lhs, rhs, &cr);
+    const dt_timestamp_t *lower_timestamp = NULL;
+    const dt_timestamp_t *higher_timestamp = NULL;
+    dt_bool_t is_forward = DT_FALSE;
+    unsigned long seconds = 0;
+    long nano_seconds = 0;
+    dt_status_t s = DT_UNKNOWN_ERROR;
+
 
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
+    s = dt_compare_timestamps(lhs, rhs, &cr);
+    lower_timestamp = cr < 0 ? lhs : rhs;
+    higher_timestamp = cr < 0 ? rhs : lhs;
+    seconds = higher_timestamp->second - lower_timestamp->second;
+    nano_seconds = (long) higher_timestamp->nano_second - (long) lower_timestamp->nano_second;
+    is_forward = cr < 0 ? DT_TRUE : DT_FALSE;
 
     if (s != DT_OK) {
         return s;
@@ -197,11 +204,15 @@ dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *
 
 dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result)
 {
-    unsigned long seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000L;
-    unsigned long nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000L;
+    unsigned long seconds = 0;
+    unsigned long nano_seconds = 0;
+
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
+
+    seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000L;
+    nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000L;
 
     result->seconds = seconds;
     result->nano_seconds = nano_seconds;
@@ -211,14 +222,19 @@ dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result)
 {
     int cr = 0;
-    unsigned long seconds = lhs->seconds - rhs->seconds - (lhs->nano_seconds < rhs->nano_seconds ? 1L : 0L);
-    unsigned long nano_seconds = lhs->nano_seconds < rhs->nano_seconds ?
-                1000000000L + lhs->nano_seconds - rhs->nano_seconds :
-                lhs->nano_seconds - rhs->nano_seconds;
-    dt_status_t s = dt_compare_intervals(lhs, rhs, &cr);
+    unsigned long seconds = 0;
+    unsigned long nano_seconds = 0;
+    dt_status_t s = DT_UNKNOWN_ERROR;
+
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
+
+    seconds = lhs->seconds - rhs->seconds - (lhs->nano_seconds < rhs->nano_seconds ? 1L : 0L);
+    nano_seconds = lhs->nano_seconds < rhs->nano_seconds ?
+                    1000000000L + lhs->nano_seconds - rhs->nano_seconds :
+                    lhs->nano_seconds - rhs->nano_seconds;
+    s = dt_compare_intervals(lhs, rhs, &cr);
 
     if (s != DT_OK) {
         return s;
@@ -236,11 +252,15 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 
 dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t *result)
 {
-    long double v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000L;
-    long double rv = v * rhs;
+    long double v = 0;
+    long double rv = 0;
+
     if (!lhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
+
+    v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000L;
+    rv = v * rhs;
 
     result->seconds = (unsigned long)floorl(rv);
     result->nano_seconds = (unsigned long)floorl(fmodl(rv, 1.0) * 1000000000L);
@@ -266,12 +286,16 @@ dt_status_t dt_init_representation(int year, int month, int day, int hour, int m
 
 dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *dow)
 {
-    int year = (representation->month == 1 || representation->month == 2) ? representation->year - 1 : representation->year;
-    int month = (representation->month == 1 || representation->month == 2) ? representation->month + 12 : representation->month;
+    int year = 0;
+    int month = 0;
+
     // TODO: Julian calendar support - now only Gregorian is supported
     if (!representation || !dow) {
         return DT_INVALID_ARGUMENT;
     }
+
+    year = (representation->month == 1 || representation->month == 2) ? representation->year - 1 : representation->year;
+    month = (representation->month == 1 || representation->month == 2) ? representation->month + 12 : representation->month;
     // See http://en.wikipedia.org/wiki/Zeller%27s_congruence
 
     *dow = (representation->day + (month + 1) * 26 / 10 + year + year / 4 + 6 * year / 100 + year / 400) % 7;
