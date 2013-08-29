@@ -46,6 +46,7 @@ static int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm);
 static int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst);
 static int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime);
 static int years_compare(void* contex, const void* year1, const void* year2);
+static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaximumYear, DWORD dstMinimumYear, DWORD* findedYear);
 //Tests is current windows version suitable to given version parts
 static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor);
 
@@ -335,6 +336,65 @@ static int InsertYearToArray(DWORD year, YEARS_ARRAY* array, DWORD index) {
     return EXIT_SUCCESS;
 }
 
+static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaximumYear, DWORD dstMinimumYear, DWORD* findedYear)
+{
+    DWORD dwEnumIndex = 0;
+    DWORD dw = 0;
+    DWORD dwErrorCode = ERROR_RESOURCE_NOT_FOUND;
+    char yearValueName[255] = {0,};
+    BOOL returnStatus = FALSE;
+    YEARS_ARRAY yearsArray = {0,};
+    if (targetYear >= dstMaximumYear) {
+        *findedYear = dstMaximumYear;
+        return TRUE;
+    }
+    else if (targetYear <= dstMinimumYear) {
+        *findedYear = dstMinimumYear;
+        return TRUE;
+    }
+
+
+
+    dwEnumIndex = 0;
+    dw = sizeof(yearValueName);
+    for (dwErrorCode = ERROR_SUCCESS; dwErrorCode != ERROR_NO_MORE_ITEMS ||
+         (dwErrorCode != ERROR_SUCCESS && dwErrorCode != ERROR_NO_MORE_ITEMS);) {
+        dwErrorCode = RegEnumValueA(hkey_tz, dwEnumIndex, yearValueName, &dw, NULL, NULL, NULL, NULL);
+        dwEnumIndex++;
+        if (strcmp(yearValueName, DYNAMIC_DST_FIRST_ENTRY) == 0
+                || strcmp(yearValueName, DYNAMIC_DST_LAST_ENTRY) == 0) {
+            continue;
+        }
+
+        if (EOF == sscanf_s(yearValueName, "%d", findedYear)) {
+            continue;
+        }
+
+        InsertYearToArray(*findedYear, &yearsArray, dwEnumIndex);
+    }
+    if (dwErrorCode != ERROR_SUCCESS && dwErrorCode != ERROR_NO_MORE_ITEMS) {
+        returnStatus = FALSE;
+        free(yearsArray.years);
+        *findedYear = YEAR_WRONG_VALUE;
+        return FALSE;
+    }
+
+
+    qsort_s(yearsArray.years, yearsArray.size, sizeof(DWORD), years_compare, NULL);
+
+    for (dwEnumIndex = 0; dwEnumIndex < yearsArray.size - 1 && yearsArray.years[dwEnumIndex] != YEAR_WRONG_VALUE; dwEnumIndex++) {
+        *findedYear = yearsArray.years[dwEnumIndex];
+        if (targetYear >= *findedYear) break;
+    }
+
+    free(yearsArray.years);
+    if (*findedYear == YEAR_WRONG_VALUE) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static
 BOOL
 WINAPI
@@ -346,14 +406,11 @@ GetTimeZoneInformationForYearLower(
 {
     HKEY hkey_tz = NULL;
     DWORD dw = 0;
-    DWORD dwEnumIndex = 0;
     DWORD dwErrorCode = ERROR_RESOURCE_NOT_FOUND;
     DWORD dstMinimumYear = 1601;
     DWORD dstMaximumYear = 30827;
-    DWORD targetYear = YEAR_WRONG_VALUE; //0xFFFFFFFF; any way wrong value
+    DWORD findedYear = YEAR_WRONG_VALUE; //0xFFFFFFFF; any way wrong value
     REG_TZI_FORMAT regtzi = {0,};
-    YEARS_ARRAY yearsArray = {0,};
-
     BOOL  returnStatus = FALSE;
     char yearValueName[255] = {0,};
     char timeZoneName[128] = {0,};
@@ -366,12 +423,12 @@ GetTimeZoneInformationForYearLower(
 
 
     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK, pdtzi->TimeZoneKeyName, sizeof(pdtzi->TimeZoneKeyName), timeZoneName, sizeof(timeZoneName), "\0", NULL);
-    memset(ptzi, 0, sizeof(TIME_ZONE_INFORMATION));
-    wcscpy_s(ptzi->StandardName, sizeof(ptzi->StandardName) / sizeof(WCHAR), pdtzi->StandardName);
-    wcscpy_s(ptzi->DaylightName, sizeof(ptzi->DaylightName) / sizeof(WCHAR), pdtzi->DaylightName);
     keyPath = malloc(keyPathSize);
     sprintf_s(keyPath, keyPathSize, "%s%s\\%s", REG_TIME_ZONES, timeZoneName, DYNAMIC_DST);
 
+    memset(ptzi, 0, sizeof(TIME_ZONE_INFORMATION));
+    wcscpy_s(ptzi->StandardName, sizeof(ptzi->StandardName) / sizeof(WCHAR), pdtzi->StandardName);
+    wcscpy_s(ptzi->DaylightName, sizeof(ptzi->DaylightName) / sizeof(WCHAR), pdtzi->DaylightName);
     dwErrorCode = RegOpenKeyA(HKEY_LOCAL_MACHINE, keyPath, &hkey_tz);
     if (ERROR_SUCCESS != dwErrorCode) {
         if (ERROR_FILE_NOT_FOUND != dwErrorCode) {
@@ -402,55 +459,11 @@ GetTimeZoneInformationForYearLower(
         goto GetTimeZoneInformationForYearLower_cleanup;
     }
 
-    if (wYear >= dstMaximumYear) {
-        targetYear = dstMaximumYear;
-    }
-    else if (wYear <= dstMinimumYear) {
-        targetYear = dstMinimumYear;
+    if (FALSE == FindCorrespondingYear(hkey_tz, wYear , dstMaximumYear, dstMinimumYear, &findedYear)) {
+        goto GetTimeZoneInformationForYearLower_cleanup;
     }
 
-    if (targetYear != YEAR_WRONG_VALUE) {
-        sprintf_s(yearValueName, sizeof(yearValueName), "%d", targetYear);
-    }
-    else {
-        dwEnumIndex = 0;
-        dw = sizeof(yearValueName);
-        for (dwErrorCode = ERROR_SUCCESS; dwErrorCode != ERROR_NO_MORE_ITEMS ||
-             (dwErrorCode != ERROR_SUCCESS && dwErrorCode != ERROR_NO_MORE_ITEMS);) {
-            dwErrorCode = RegEnumValueA(hkey_tz, dwEnumIndex, yearValueName, &dw, NULL, NULL, NULL, NULL);
-            dwEnumIndex++;
-            if (strcmp(yearValueName, DYNAMIC_DST_FIRST_ENTRY) == 0
-                    || strcmp(yearValueName, DYNAMIC_DST_LAST_ENTRY) == 0) {
-                continue;
-            }
-
-            if (EOF == sscanf_s(yearValueName, "%d", &targetYear)) {
-                continue;
-            }
-
-            InsertYearToArray(targetYear, &yearsArray, dwEnumIndex);
-        }
-        if (dwErrorCode != ERROR_SUCCESS && dwErrorCode != ERROR_NO_MORE_ITEMS) {
-            returnStatus = FALSE;
-            free(yearsArray.years);
-            goto GetTimeZoneInformationForYearLower_cleanup;
-        }
-
-
-        qsort_s(yearsArray.years, yearsArray.size, sizeof(DWORD), years_compare, NULL);
-
-        for (dwEnumIndex = 0; dwEnumIndex < yearsArray.size - 1 && yearsArray.years[dwEnumIndex] != YEAR_WRONG_VALUE; dwEnumIndex++) {
-            targetYear = yearsArray.years[dwEnumIndex];
-            if (wYear >= targetYear) break;
-        }
-
-        free(yearsArray.years);
-        if (targetYear == YEAR_WRONG_VALUE) {
-            goto GetTimeZoneInformationForYearLower_cleanup;
-        }
-    }
-
-    sprintf_s(yearValueName, sizeof(yearValueName), "%d", targetYear);
+    sprintf_s(yearValueName, sizeof(yearValueName), "%d", findedYear);
 
     if (GetTziFromKey(keyPath, yearValueName, &regtzi) == EXIT_FAILURE) {
         memset(ptzi, 0, sizeof(TIME_ZONE_INFORMATION));
