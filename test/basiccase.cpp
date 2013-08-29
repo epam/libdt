@@ -165,7 +165,7 @@ TEST_F(BasicCase, mktime_tz)
 TEST_F(BasicCase, wrongStringConvert)
 {
     const char *timeOnly = "08:31";
-    const char *timeOnlyWrong = "a08:31";
+    const char *timeOnlyWrong = "08:31a";
     const char *timeOnlyFormat = "%H:%M";
     const char *timeOnlyFormatWrong = "H:M";
 
