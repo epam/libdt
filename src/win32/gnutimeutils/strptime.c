@@ -43,7 +43,7 @@
 #define ALT_O          0x02
 //#define LEGAL_ALT(x)       { if (alt_format & ~(x)) return (0); }
 #define LEGAL_ALT(x)       { ; }
-#define TM_YEAR_BASE   (1970)
+#define TM_YEAR_BASE   (1900)
 
 static   int conv_num(const char **, int *, int, int);
 static int strncasecmp(char *s1, char *s2, size_t n);
