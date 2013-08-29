@@ -37,6 +37,13 @@ static const char* testBerlinTimeZone =
         "Europe/Berlin"
         #endif
         ;
+static const char* testTimeZoneWithoutHistoricalLawInfo =
+        #ifdef _WIN32
+        "W. Europe Standard Time"
+        #else
+        "Europe/Berlin"
+        #endif
+        ;
 
 // Fills tm structure
 static void fillTm(struct tm *output, int tm_gmtoff,
@@ -89,6 +96,19 @@ TEST_F(BasicCase, historic_tz_check)
         fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
         test_tm(&tm, testBerlinTimeZone, &tmUtc);
+
+        fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);
+        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
+        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
+        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
+        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
 }
 
 TEST_F(BasicCase, localtime_tz)
@@ -297,12 +317,12 @@ void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
 
         EXPECT_EQ(tmUtc->tm_hour, tmUtcToEquasion.tm_hour);
 
-        printf("Datetime representation '");
-        dump_tm(tm);
-        printf("' in '%s' timezone is an %ld timestamp, round-up converted representation is '", tz_name, tm_ts);
-        dump_tm(&tm_ts_tm);
-        printf("', UTC representation is '");
-        dump_tm(tmUtc);
-        printf("'\n");
+//        printf("Datetime representation '");
+//        dump_tm(tm);
+//        printf("' in '%s' timezone is an %ld timestamp, round-up converted representation is '", tz_name, tm_ts);
+//        dump_tm(&tm_ts_tm);
+//        printf("', UTC representation is '");
+//        dump_tm(tmUtc);
+//        printf("'\n");
 }
 
