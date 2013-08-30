@@ -207,16 +207,16 @@ TEST_F(BasicCase, wrongStringConvert)
     tr.tm_hour = 8;
     tr.tm_min = 612;
 
-    EXPECT_NE(dt_string2tm(NULL, timeOnlyFormat, &tr), EXIT_SUCCESS);
-    EXPECT_NE(dt_string2tm(timeOnlyWrong, NULL, NULL), EXIT_SUCCESS);
-    EXPECT_NE(dt_string2tm(timeOnlyWrong, timeOnlyFormat, &tr), EXIT_SUCCESS);
-    EXPECT_NE(dt_string2tm(timeOnly, timeOnlyFormatWrong, &tr), EXIT_SUCCESS);
+    EXPECT_NE(strptime_tz(NULL, timeOnlyFormat, &tr), EXIT_SUCCESS);
+    EXPECT_NE(strptime_tz(timeOnlyWrong, NULL, NULL), EXIT_SUCCESS);
+    EXPECT_NE(strptime_tz(timeOnlyWrong, timeOnlyFormat, &tr), EXIT_SUCCESS);
+    EXPECT_NE(strptime_tz(timeOnly, timeOnlyFormatWrong, &tr), EXIT_SUCCESS);
 
-    EXPECT_NE(dt_tm2string(NULL, testUTCTimeZone, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(dt_tm2string(&tr, NULL, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(dt_tm2string(&tr, testUTCTimeZone, NULL, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(dt_tm2string(&tr, testUTCTimeZone, timeOnlyFormatWrong, NULL, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(dt_tm2string(&tr, testUTCTimeZone, timeOnlyFormatWrong, buf, 0), EXIT_SUCCESS);
+    EXPECT_NE(strftime_tz(NULL, testUTCTimeZone, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(strftime_tz(&tr, NULL, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(strftime_tz(&tr, testUTCTimeZone, NULL, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(strftime_tz(&tr, testUTCTimeZone, timeOnlyFormatWrong, NULL, buf_size), EXIT_SUCCESS);
+    EXPECT_NE(strftime_tz(&tr, testUTCTimeZone, timeOnlyFormatWrong, buf, 0), EXIT_SUCCESS);
 }
 
 TEST_F(BasicCase, toStringConvert)
@@ -234,7 +234,7 @@ TEST_F(BasicCase, toStringConvert)
     tr1.tm_hour = 8;
     tr1.tm_min = 31;
 
-    EXPECT_EQ(dt_tm2string(&tr1, testUTCTimeZone, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_EQ(strftime_tz(&tr1, testUTCTimeZone, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
     EXPECT_STREQ(timeOnly1, buf);
 
     tr2.tm_mday = 11;
@@ -244,7 +244,7 @@ TEST_F(BasicCase, toStringConvert)
     tr2.tm_hour = 16;
     tr2.tm_sec = 12;
 
-    EXPECT_EQ(dt_tm2string(&tr2, testUTCTimeZone, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_EQ(strftime_tz(&tr2, testUTCTimeZone, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
     EXPECT_STREQ(timeOnly2, buf);
 }
 
@@ -259,12 +259,12 @@ TEST_F(BasicCase, fromStringConvert)
     struct tm tr2 = {0,};
 
 
-    EXPECT_EQ(dt_string2tm(timeOnly1, timeOnlyFormat1, &tr1), EXIT_SUCCESS);
+    EXPECT_EQ(strptime_tz(timeOnly1, timeOnlyFormat1, &tr1), EXIT_SUCCESS);
     EXPECT_EQ(tr1.tm_hour, 8);
     EXPECT_EQ(tr1.tm_min, 31);
 
 
-    EXPECT_EQ(dt_string2tm(timeOnly2, timeOnlyFormat2, &tr2), EXIT_SUCCESS);
+    EXPECT_EQ(strptime_tz(timeOnly2, timeOnlyFormat2, &tr2), EXIT_SUCCESS);
     EXPECT_EQ(tr2.tm_mday, 11);
     EXPECT_EQ(tr2.tm_mon, 8);
     EXPECT_EQ(tr2.tm_year, 2001 - 1900);
