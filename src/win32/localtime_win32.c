@@ -203,7 +203,7 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
     rc = 0;
     #define X(param, type, var) \
         do if ((dw = sizeof(var)), (ERROR_SUCCESS != (dw = RegGetValueW(hkey_tz, NULL, param, type, NULL, &var, &dw)))) { \
-            rc = -1; \
+            rc = EXIT_FAILURE; \
             goto ennd; \
         } while(0)
     GetTziFromKey(tszSubkey, "TZI", &regtzi);
@@ -325,11 +325,11 @@ static int InsertYearToArray(DWORD year, YEARS_ARRAY* array, DWORD index) {
         return EXIT_FAILURE;
     }
     while (index >= array->size) {
-        array->years = realloc(array->years, array->size + YEARS_ARRAY_SEED);
+        array->years = realloc(array->years, (array->size + YEARS_ARRAY_SEED) * sizeof(DWORD));
         if(array->years == 0) {
             return EXIT_FAILURE;
         }
-        memset(array->years + array->size, YEAR_WRONG_VALUE, YEARS_ARRAY_SEED);
+        memset(array->years + (array->size * sizeof(DWORD)), YEAR_WRONG_VALUE, YEARS_ARRAY_SEED * sizeof(DWORD));
         array->size += YEARS_ARRAY_SEED;
     }
     array->years[index] = year;
@@ -356,9 +356,10 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
 
 
     dwEnumIndex = 0;
-    dw = sizeof(yearValueName);
+
     for (dwErrorCode = ERROR_SUCCESS; dwErrorCode != ERROR_NO_MORE_ITEMS ||
          (dwErrorCode != ERROR_SUCCESS && dwErrorCode != ERROR_NO_MORE_ITEMS);) {
+        dw = sizeof(yearValueName);
         dwErrorCode = RegEnumValueA(hkey_tz, dwEnumIndex, yearValueName, &dw, NULL, NULL, NULL, NULL);
         dwEnumIndex++;
         if (strcmp(yearValueName, DYNAMIC_DST_FIRST_ENTRY) == 0
@@ -387,7 +388,10 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
         if (targetYear >= *findedYear) break;
     }
 
-    free(yearsArray.years);
+    if (yearsArray.size > 0) {
+        free(yearsArray.years);
+    }
+
     if (*findedYear == YEAR_WRONG_VALUE) {
         return FALSE;
     }
@@ -488,7 +492,7 @@ static int years_compare(void* contex, const void* year1, const void* year2)
     const DWORD* y1 = year1;
     const DWORD* y2 = year2;
     (void*)contex;
-    if (y1 < y2) return -1;
-    else if(y1 > y2) return 1;
+    if (*y1 < *y2) return -1;
+    else if(*y1 > *y2) return 1;
     else return 0;
 }

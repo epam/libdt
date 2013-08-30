@@ -70,11 +70,21 @@ TEST_F(BasicCase, historic_tz_check)
         struct tm tm;
         struct tm tmUtc;
 
+        //Most old law rule
         fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
         test_tm(&tm, testMoscowTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
+        test_tm(&tm, testMoscowTimeZone, &tmUtc);
+
+        //Law rule in the middle of list
+        fillTmRepresentationOnly(&tm, 2011, 7, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
+        test_tm(&tm, testMoscowTimeZone, &tmUtc);
+        fillTmRepresentationOnly(&tm, 2011, 1, 15, 8, 0, 0);
+        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
+
         test_tm(&tm, testMoscowTimeZone, &tmUtc);
         fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 4, 0, 0);
@@ -90,6 +100,7 @@ TEST_F(BasicCase, historic_tz_check)
         fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
         test_tm(&tm, testBerlinTimeZone, &tmUtc);
+
         fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
         fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
         test_tm(&tm, testBerlinTimeZone, &tmUtc);
