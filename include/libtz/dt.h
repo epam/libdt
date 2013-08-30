@@ -4,6 +4,7 @@
 /*
  * Cross-platform date/time handling library for C.
  * Main header file.
+ * Expand STD ANSI C Library
  *
  * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
  * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
@@ -47,7 +48,7 @@ int mktime_tz(const struct tm *tm, const char *tzName, time_t *result);
  * \param str_buffer_size A size of the buffer to fill
  * \return Result status of the operation. 0 on success and <0 in other cases
  */
-int dt_tm2string(const struct tm *representation, const char *tz_name, const char *fmt,
+int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
                 char *str_buffer, size_t str_buffer_size);
 
 //! Converts string to representation
@@ -57,7 +58,7 @@ int dt_tm2string(const struct tm *representation, const char *tz_name, const cha
  * \param representation Representation object to fill [OUT]
  * \return Result status of the operation
  */
-int dt_string2tm(const char *str, const char *fmt, struct tm *representation);
+int strptime_tz(const char *str, const char *fmt, struct tm *representation);
 
 /*!@}*/
 
