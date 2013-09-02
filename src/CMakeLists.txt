@@ -15,3 +15,5 @@ add_dependencies(${PROJECT_NAME} timezones-map)
 if (UNIX)
   target_link_libraries(${PROJECT_NAME} rt m)
 endif(UNIX)
+
+include(../cmake/TZPack.cmake)
