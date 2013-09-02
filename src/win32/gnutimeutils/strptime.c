@@ -70,10 +70,10 @@ static const char *am_pm[2] = {
 
 char * strptime(const char *buf, const char *fmt, struct tm *tm)
 {
-    char c;
-    const char *bp;
+    char c = '\0';
+    const char *bp = NULL;
     size_t len = 0;
-    int alt_format, i, split_year = 0;
+    int alt_format = 0, i = 0, split_year = 0;
 
     bp = buf;
 

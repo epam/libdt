@@ -159,7 +159,7 @@ int strptime_tz(const char *str, const char *fmt, struct tm *representation) {
     result = strptime(str, fmt, representation);//FIXME: Why warning?
     if (result == NULL)
         return EXIT_FAILURE;
-    if (*result != 0)// end of string
+    if (*result != '\0')// end of string
         return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

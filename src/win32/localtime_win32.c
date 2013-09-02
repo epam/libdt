@@ -132,7 +132,7 @@ int mktime_tz(const struct tm *tm, const char *tzname, time_t *result)
     return SystemTimeToUnixTime(&tUniversalTime, result);
 }
 
-int dt_tm2string(const struct tm *representation, const char *tz_name, const char *fmt,
+int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
                  char *str_buffer, size_t str_buffer_size) {
     size_t size = 0;
     if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
@@ -144,11 +144,14 @@ int dt_tm2string(const struct tm *representation, const char *tz_name, const cha
     return EXIT_FAILURE;
 }
 
-int dt_string2tm(const char *str, const char *fmt, struct tm *representation) {
+int strptime_tz(const char *str, const char *fmt, struct tm *representation) {
+    char *result = NULL;
     if (!representation || !str || !fmt)
         return EXIT_FAILURE;
-
-    if (!strptime(str, fmt, representation))
+    result = strptime(str, fmt, representation);
+    if (result == NULL)
+        return EXIT_FAILURE;
+    if (*result != '\0')// end of string
         return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }
