@@ -73,18 +73,18 @@ char * strptime(const char *buf, const char *fmt, struct tm *tm)
     char c = '\0';
     const char *bp = NULL;
     size_t len = 0;
-    int alt_format = 0, i = 0, split_year = 0;
+    int alt_format = 0;
+    int i = 0;
+    int split_year = 0;
 
     bp = buf;
 
-    while ((c = *fmt) != '\0')
-    {
+    while ((c = *fmt) != '\0') {
         /* Clear `alternate' modifier prior to new conversion. */
         alt_format = 0;
 
         /* Eat up white-space. */
-        if (isspace(c))
-        {
+        if (isspace(c)) {
             while (isspace(*bp))
                 bp++;
 
@@ -96,8 +96,7 @@ char * strptime(const char *buf, const char *fmt, struct tm *tm)
                   goto literal;
 
 
-again:        switch (c = *fmt++)
-        {
+again:        switch (c = *fmt++) {
             case '%': /* "%%" is converted to "%". */
                 literal:
                     if (c != *bp++)
@@ -169,8 +168,7 @@ again:        switch (c = *fmt++)
             case 'A': /* The day of week, using the locale's form. */
             case 'a':
                 LEGAL_ALT(0);
-                for (i = 0; i < 7; i++)
-                {
+                for (i = 0; i < 7; i++) {
                     /* Full name. */
                     len = strlen(day[i]);
                     if (strncasecmp((char *)(day[i]), (char *)bp, len) == 0)
@@ -194,8 +192,7 @@ again:        switch (c = *fmt++)
             case 'b':
             case 'h':
                 LEGAL_ALT(0);
-                for (i = 0; i < 12; i++)
-                {
+                for (i = 0; i < 12; i++) {
                      /* Full name. */
 
                     len = strlen(mon[i]);
@@ -221,8 +218,7 @@ again:        switch (c = *fmt++)
                 if (!(conv_num(&bp, &i, 0, 99)))
                     return (0);
 
-                if (split_year)
-                {
+                if (split_year) {
                     tm->tm_year = (tm->tm_year % 100) + (i * 100);
                 } else {
                     tm->tm_year = i * 100;
@@ -340,8 +336,7 @@ again:        switch (c = *fmt++)
                 if (!(conv_num(&bp, &i, 0, 99)))
                     return (0);
 
-                if (split_year)
-                {
+                if (split_year) {
                     tm->tm_year = ((tm->tm_year / 100) * 100) + i;
                     break;
                 }
@@ -403,8 +398,7 @@ int strncasecmp(char *s1, char *s2, size_t n)
     if (n == 0)
         return 0;
 
-    while (n-- != 0 && tolower(*s1) == tolower(*s2))
-    {
+    while (n-- != 0 && tolower(*s1) == tolower(*s2)) {
         if (n == 0 || *s1 == '\0' || *s2 == '\0')
             break;
         s1++;
@@ -415,4 +409,4 @@ int strncasecmp(char *s1, char *s2, size_t n)
 }
 
 
-//??
+//
