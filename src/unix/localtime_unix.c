@@ -141,25 +141,3 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
     return EXIT_SUCCESS;
 }
 
-int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
-                 char *str_buffer, size_t str_buffer_size) {
-    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
-        return EXIT_FAILURE;
-
-    size_t size = strftime(str_buffer, str_buffer_size, fmt, representation);
-    if (size > 0)
-        return EXIT_SUCCESS;
-    return EXIT_FAILURE;
-}
-
-int strptime_tz(const char *str, const char *fmt, struct tm *representation) {
-    char *result = NULL;
-    if (!representation || !str || !fmt)
-        return EXIT_FAILURE;
-    result = strptime(str, fmt, representation);//FIXME: Why warning?
-    if (result == NULL)
-        return EXIT_FAILURE;
-    if (*result != '\0')// end of string
-        return EXIT_FAILURE;
-    return EXIT_SUCCESS;
-}
