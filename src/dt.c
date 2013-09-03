@@ -52,23 +52,23 @@ const char * dt_strerror(dt_status_t status)
         }
 }
 
-dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second, long nano_second)
+dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second)
 {
-        // Simple checking for invalid values
-        if (year == 0 || month < 1 || month > 12 || day < 1 || hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 ||
-                        second > 59 || nano_second < 0L || nano_second > 999999999L) {
-                return DT_FALSE;
-        }
-	// Passage from Julian to Gregorian calendar
-	if (year == 1582 && month == 10 && day > 4 && day < 15) {
-		return DT_FALSE;
-	}
-        // Checking leap year
-        if (dt_is_leap_year(year) && month == 2 && day == 29) {
-                return DT_TRUE;
-        }
-        // Checking month days
-	return day <= month_days[month] ? DT_TRUE : DT_FALSE;
+    // Simple checking for invalid values
+    if (year == 0 || month < 1 || month > 12 || day < 1 || hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 ||
+            second > 59 || nano_second < 0UL || nano_second > 999999999UL) {
+        return DT_FALSE;
+    }
+    // Passage from Julian to Gregorian calendar
+    if (year == 1582 && month == 10 && day > 4 && day < 15) {
+        return DT_FALSE;
+    }
+    // Checking leap year
+    if (dt_is_leap_year(year) && month == 2 && day == 29) {
+        return DT_TRUE;
+    }
+    // Checking month days
+    return day <= month_days[month] ? DT_TRUE : DT_FALSE;
 }
 
 dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, int *result)
@@ -268,12 +268,12 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
     return DT_OK;
 }
 
-dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
+static dt_status_t dt_init_representation_without_check(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
                 dt_representation_t *result)
 {
-    if (!result || !dt_validate_representation(year, month, day, hour, minute, second, nano_second)) {
+    if (!result)
         return DT_INVALID_ARGUMENT;
-    }
+
     memset(result, 0, sizeof(dt_representation_t));
     result->year = year;
     result->month = month;
@@ -283,6 +283,15 @@ dt_status_t dt_init_representation(int year, int month, int day, int hour, int m
     result->second = second;
     result->nano_second = nano_second;
     return DT_OK;
+}
+
+dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
+                dt_representation_t *result)
+{
+    if (!dt_validate_representation(year, month, day, hour, minute, second, nano_second))
+        return DT_INVALID_ARGUMENT;
+    return dt_init_representation_without_check(year, month, day, hour, minute, second, nano_second,
+                                                result);
 }
 
 dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *dow)
@@ -352,27 +361,18 @@ dt_status_t dt_representation_to_tm(const dt_representation_t *representation, s
     return DT_OK;
 }
 
-dt_status_t dt_representation_to_tm_private(const dt_representation_t *representation, struct tm *tm)
-{
-        if (!representation || !tm) {
-                return DT_INVALID_ARGUMENT;
-        }
-        tm->tm_year = representation->year - 1900;
-        tm->tm_mon = representation->month - 1;
-        tm->tm_mday = representation->day;
-        tm->tm_hour = representation->hour;
-        tm->tm_min = representation->minute;
-        tm->tm_sec = representation->second;
-        tm->tm_wday = 0;
-        tm->tm_yday = 0;
-        tm->tm_isdst = -1;
-        return DT_OK;
-}
-
 dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation)
 {
         if (!tm || !representation) {
                 return DT_INVALID_ARGUMENT;
         }
         return dt_init_representation(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
+}
+
+dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation)
+{
+        if (!tm || !representation) {
+                return DT_INVALID_ARGUMENT;
+        }
+        return dt_init_representation_without_check(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
 }

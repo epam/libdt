@@ -233,6 +233,7 @@ TEST_F(BasicCase, toStringConvert)
 
     tr1.tm_hour = 8;
     tr1.tm_min = 31;
+    tr1.tm_mday = 1;
 
     EXPECT_EQ(strftime_tz(&tr1, testUTCTimeZone, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
     EXPECT_STREQ(timeOnly1, buf);
@@ -327,13 +328,5 @@ void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
         EXPECT_TRUE(localtime_tz(&tm_ts, testUTCTimeZone, &tmUtcToEquasion) == 0);
 
         EXPECT_EQ(tmUtc->tm_hour, tmUtcToEquasion.tm_hour);
-
-//        printf("Datetime representation '");
-//        dump_tm(tm);
-//        printf("' in '%s' timezone is an %ld timestamp, round-up converted representation is '", tz_name, tm_ts);
-//        dump_tm(&tm_ts_tm);
-//        printf("', UTC representation is '");
-//        dump_tm(tmUtc);
-//        printf("'\n");
 }
 

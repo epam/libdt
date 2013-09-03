@@ -50,7 +50,7 @@ const char * dt_strerror(dt_status_t status);
  * TODO: Leap seconds support!
  */
 dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second,
-                long nano_second);
+                unsigned long nano_second);
 
 /*!@}*/
 

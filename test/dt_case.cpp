@@ -512,3 +512,83 @@ TEST_F(DtCase, tm_to_representation)
         EXPECT_EQ(r.second, 45);
         EXPECT_EQ(r.nano_second, 123456789);
 }
+
+TEST_F(DtCase, wrongStringConvert)
+{
+    const char *timeOnly = "08:31";
+    const char *timeOnlyWrong = "08:31a";
+    const char *timeOnlyFormat = "%H:%M";
+    const char *timeOnlyFormatWrong = "H:M";
+
+    dt_representation_t tr = {0,};
+    size_t buf_size = 1024;
+    char buf[1024] = {0,};
+
+    tr.hour = 8;
+    tr.minute = 612;
+
+    EXPECT_NE(dt_from_string(NULL, timeOnlyFormat, &tr, NULL, 0), DT_OK);
+    EXPECT_NE(dt_from_string(timeOnlyWrong, NULL, NULL, NULL, 0), DT_OK);
+    EXPECT_NE(dt_from_string(timeOnlyWrong, timeOnlyFormat, &tr, NULL, 0), DT_OK);
+    EXPECT_NE(dt_from_string(timeOnly, timeOnlyFormatWrong, &tr, NULL, 0), DT_OK);
+
+    EXPECT_NE(dt_to_string(NULL, UTC_TZ_NAME, timeOnlyFormatWrong, buf, buf_size), DT_OK);
+    EXPECT_NE(dt_to_string(&tr, NULL, timeOnlyFormatWrong, buf, buf_size), DT_OK);
+    EXPECT_NE(dt_to_string(&tr, UTC_TZ_NAME, NULL, buf, buf_size), DT_OK);
+    EXPECT_NE(dt_to_string(&tr, UTC_TZ_NAME, timeOnlyFormatWrong, NULL, buf_size), DT_OK);
+    EXPECT_NE(dt_to_string(&tr, UTC_TZ_NAME, timeOnlyFormatWrong, buf, 0), DT_OK);
+}
+
+TEST_F(DtCase, toStringConvert)
+{
+    const char *timeOnly1 = "08:31";
+    const char *timeOnlyFormat1 = "%H:%M";
+    const char *timeOnly2 = "11/09/2001 16:54:12";
+    const char *timeOnlyFormat2 = "%d/%m/%Y %H:%M:%S";
+
+    dt_representation_t tr1 = {0,};
+    dt_representation_t tr2 = {0,};
+    size_t buf_size = 1024;
+    char buf[1024] = {0,};
+
+    tr1.hour = 8;
+    tr1.minute = 31;
+
+    EXPECT_EQ(dt_to_string(&tr1, UTC_TZ_NAME, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_STREQ(timeOnly1, buf);
+
+    tr2.day = 11;
+    tr2.month = 9;
+    tr2.year = 2001;
+    tr2.minute = 54;
+    tr2.hour = 16;
+    tr2.second = 12;
+
+    EXPECT_EQ(dt_to_string(&tr2, UTC_TZ_NAME, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_STREQ(timeOnly2, buf);
+}
+
+TEST_F(DtCase, fromStringConvert)
+{
+    const char *timeOnly1 = "08:31";
+    const char *timeOnlyFormat1 = "%H:%M";
+    const char *timeOnly2 = "11/09/2001 16:54:12";
+    const char *timeOnlyFormat2 = "%d/%m/%Y %H:%M:%S";
+
+    dt_representation_t tr1 = {0,};
+    dt_representation_t tr2 = {0,};
+
+
+    EXPECT_EQ(dt_from_string(timeOnly1, timeOnlyFormat1, &tr1, NULL, 0), DT_OK);
+    EXPECT_EQ(tr1.hour, 8);
+    EXPECT_EQ(tr1.minute, 31);
+
+
+    EXPECT_EQ(dt_from_string(timeOnly2, timeOnlyFormat2, &tr2, NULL, 0), EXIT_SUCCESS);
+    EXPECT_EQ(tr2.day, 11);
+    EXPECT_EQ(tr2.month, 9);
+    EXPECT_EQ(tr2.year, 2001);
+    EXPECT_EQ(tr2.minute, 54);
+    EXPECT_EQ(tr2.hour, 16);
+    EXPECT_EQ(tr2.second, 12);
+}

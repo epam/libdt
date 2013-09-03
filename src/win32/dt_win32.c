@@ -117,7 +117,6 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
         *nano_second = timestamp->nano_second;
         return DT_OK;
 }
-#define DEBUG printf("%s %i\n", "__func__", __LINE__);
 
 dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const char *tz_name, dt_representation_t *representation)
 {
@@ -130,41 +129,35 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
     unsigned long nano = 0;
     struct tm result = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
-DEBUG
+
     if (!timestamp || !representation || !tz_name) {
         return DT_INVALID_ARGUMENT;
     }
-DEBUG
+
     dwError = GetTimeZoneInformationByName(&dtzi, tz_name);
     if (dwError != 0)
         return EXIT_FAILURE;
-    DEBUG
+
     status = dt_timestamp_to_posix_time(timestamp, &time, &nano);
     if (status != DT_OK)
         return status;
-    DEBUG
 
     if (UnixTimeToSystemTime(&time, &tUniversalTime))
         return EXIT_FAILURE;
-    DEBUG
 
     if (GetTimeZoneInformationForYearLower(tUniversalTime.wYear, &dtzi, &tzi) == FALSE)
         return EXIT_FAILURE;
 
-    DEBUG
     if (SystemTimeToTzSpecificLocalTime(&tzi, &tUniversalTime, &tLocalTime) == FALSE)
         return EXIT_FAILURE;
 
-    DEBUG
     if (TmFromSystemTime(&tLocalTime, &result) != EXIT_SUCCESS)
         return EXIT_FAILURE;
 
-    DEBUG
     status = dt_tm_to_representation(&result, nano, representation);
     if (status != DT_OK)
         return status;
 
-    DEBUG
     return DT_OK;
 }
 
@@ -563,4 +556,57 @@ static int years_compare(void* contex, const void* year1, const void* year2)
     if (*y1 < *y2) return -1;
     else if(*y1 > *y2) return 1;
     else return 0;
+}
+
+dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
+                char *str_buffer, size_t str_buffer_size)
+{
+    size_t size = 0;
+    struct tm tm = {0};
+    dt_status_t status = DT_UNKNOWN_ERROR;
+
+    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
+        return DT_INVALID_ARGUMENT;
+
+    status = dt_representation_to_tm(representation, &tm);
+
+    size = strftime(str_buffer, str_buffer_size, fmt, &tm);
+    if (size > 0)
+        return DT_OK;
+
+    return status;
+
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+char * strptime(const char *buf, const char *fmt, struct tm *tm);
+dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation);
+#ifdef __cplusplus
+}
+#endif
+
+dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation,
+                char *tz_name_buffer, size_t tz_name_buffer_size)
+{
+    char *result = NULL;
+    struct tm tm = {0};
+    dt_status_t status = DT_UNKNOWN_ERROR;
+
+    if (!representation || !str || !fmt)
+        return DT_INVALID_ARGUMENT;
+
+    result = strptime(str, fmt, &tm);
+    if (result == NULL)
+        return status;
+    if (*result != '\0')// end of string
+        return status;
+
+    status = dt_tm_to_representation_withoutcheck(&tm, 0, representation);
+    if (status != DT_OK)
+        return status;
+
+    return DT_OK;
+
 }
