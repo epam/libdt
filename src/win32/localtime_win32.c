@@ -51,34 +51,3 @@ int mktime_tz(const struct tm *tm, const char *tzName, time_t *result)
     return DT_OK;
 }
 
-int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
-                 char *str_buffer, size_t str_buffer_size) {
-    dt_representation_t rep = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    printf("%d\n", __LINE__);
-    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
-        return DT_INVALID_ARGUMENT;
-    printf("%d\n", __LINE__);
-
-    status = dt_tm_to_representation(representation, 0, &rep);
-    if (status != DT_OK)
-        return status;
-    printf("%d\n", __LINE__);
-
-    return dt_to_string(&rep, tz_name, fmt, str_buffer, str_buffer_size);
-}
-
-int strptime_tz(const char *str, const char *fmt, struct tm *representation) {
-    dt_representation_t rep = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    if (!representation || !fmt || !str)
-        return DT_INVALID_ARGUMENT;
-
-    status = dt_from_string(str, fmt, &rep, NULL, NULL);
-    if (status != DT_OK)
-        return status;
-
-    return dt_representation_to_tm(&rep, representation);
-}
