@@ -143,7 +143,7 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
  * \param result interval to initialize [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result);
+dt_status_t dt_init_interval(long seconds, unsigned long nano_seconds, dt_interval_t *result);
 
 //! Compares two intervals
 /*!
@@ -228,7 +228,7 @@ dt_status_t dt_timespec_to_interval(const struct timespec *ts, dt_interval_t *re
  * \param result Representation to init [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, int nano_second,
+dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
                 dt_representation_t *result);
 
 //! Represents a timestamp using a timezone none

@@ -43,7 +43,7 @@ typedef struct dt_timestamp {
 
 //! Interval object
 typedef struct dt_interval {
-        unsigned long seconds;                  //!< Seconds part (>=0L)
+        long seconds;                           //!< Seconds part (>=0L)
         unsigned long nano_seconds;             //!< Nano-seconds part (0L-999999999L)
 } dt_interval_t;
 
@@ -61,7 +61,7 @@ typedef struct dt_representation {
         int hour;                               //!< Hour (0-23)
         int minute;                             //!< Minute (0-59)
         int second;                             //!< Second (0-59 or 0-60 if leap second)
-        long nano_second;                       //!< Nano-second (0L-999999999L)
+        unsigned long nano_second;              //!< Nano-second (0L-999999999L)
 } dt_representation_t;
 
 #endif // _DT_TYPES_H

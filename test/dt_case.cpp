@@ -3,11 +3,14 @@
 
 #ifdef _WIN32
 
-#define UTC_TZ_NAME "Etc/UTC"
+#define UTC_TZ_NAME "UTC"
 #define MOSCOW_TZ_NAME "Russian Standard Time"
 #define BERLIN_TZ_NAME "W. Europe Standard Time"
 #define GMT_MINUS_5_TZ_NAME "GMT-5"
 #define GMT_PLUS_5_TZ_NAME "GMT+5"
+
+#include <Windows.h>
+#define sleep(x) Sleep(x*1000)
 
 #else
 
@@ -71,6 +74,7 @@ TEST_F(DtCase, now_compare_timestamps)
         dt_timestamp_t ts_01;
         EXPECT_EQ(dt_now(NULL), DT_INVALID_ARGUMENT);
         EXPECT_EQ(dt_now(&ts_01), DT_OK);
+        sleep(1);
         dt_timestamp_t ts_02;
         EXPECT_EQ(dt_now(&ts_02), DT_OK);
         int cr;
@@ -138,12 +142,13 @@ TEST_F(DtCase, apply_offset)
         EXPECT_EQ(dt_apply_offset(&ts_01, &o, NULL), DT_INVALID_ARGUMENT);
 
         dt_representation_t r;
-        EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
+        EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789UL, &r) == DT_OK);
         EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
         dt_representation_t rr;
 
-        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 100L, &o.duration) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 100UL, &o.duration) == DT_OK);
         o.is_forward = DT_TRUE;
+
         EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
         EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
         EXPECT_EQ(rr.year, 2012);
@@ -154,7 +159,7 @@ TEST_F(DtCase, apply_offset)
         EXPECT_EQ(rr.second, 45);
         EXPECT_EQ(rr.nano_second, 123456889L);
 
-        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 900000000L, &o.duration) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 900000000UL, &o.duration) == DT_OK);
         o.is_forward = DT_TRUE;
         EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
         EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
@@ -166,7 +171,7 @@ TEST_F(DtCase, apply_offset)
         EXPECT_EQ(rr.second, 46);
         EXPECT_EQ(rr.nano_second, 23456789L);
 
-        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 100L, &o.duration) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 100UL, &o.duration) == DT_OK);
         o.is_forward = DT_FALSE;
         EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
         EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
@@ -178,7 +183,7 @@ TEST_F(DtCase, apply_offset)
         EXPECT_EQ(rr.second, 45);
         EXPECT_EQ(rr.nano_second, 123456689L);
 
-        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 900000000L, &o.duration) == DT_OK);
+        EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 900000000UL, &o.duration) == DT_OK);
         o.is_forward = DT_FALSE;
         EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
         EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
@@ -188,7 +193,7 @@ TEST_F(DtCase, apply_offset)
         EXPECT_EQ(rr.hour, 8);
         EXPECT_EQ(rr.minute, 30);
         EXPECT_EQ(rr.second, 44);
-        EXPECT_EQ(rr.nano_second, 223456789L);
+        EXPECT_EQ(rr.nano_second, 223456789UL);
 }
 
 TEST_F(DtCase, posix_time_to_and_from_timestamp)
@@ -354,8 +359,7 @@ TEST_F(DtCase, representation_timestamp_conversion)
         EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
         EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
         EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
-        EXPECT_EQ(urr.hour, 4);         // TODO: Remove it after history support enabled
-        //EXPECT_EQ(urr.hour, 3);         // TODO: Uncomment it - here is a history check
+        EXPECT_EQ(urr.hour, 5);
 
         EXPECT_TRUE(dt_init_representation(2013, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
@@ -474,7 +478,7 @@ TEST_F(DtCase, representation_to_tm)
 
         EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789, &r) == DT_OK);
         EXPECT_EQ(dt_representation_to_tm(&r, &tm), DT_OK);
-        EXPECT_EQ(tm.tm_year, 2012);
+        EXPECT_EQ(tm.tm_year, 112);
         EXPECT_EQ(tm.tm_mon, 11);
         EXPECT_EQ(tm.tm_mday, 21);
         EXPECT_EQ(tm.tm_hour, 8);
@@ -487,7 +491,7 @@ TEST_F(DtCase, representation_to_tm)
 TEST_F(DtCase, tm_to_representation)
 {
         struct tm tm;
-        tm.tm_year = 2012;
+        tm.tm_year = 112;
         tm.tm_mon = 11;
         tm.tm_mday = 21;
         tm.tm_hour = 8;

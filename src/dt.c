@@ -131,7 +131,7 @@ dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, d
 
     if (nano_seconds < 0L) {
         seconds -= 1L;
-        nano_seconds += 1000000000L;
+        nano_seconds += 1000000000UL;
     }
     result->duration.seconds = seconds;
     result->duration.nano_seconds = nano_seconds;
@@ -142,24 +142,25 @@ dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, d
 dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
 {
     long second = 0;
-    long nano_second = 0;
+    unsigned long nano_second = 0;
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
     if (rhs->is_forward) {
-        second = lhs->second + rhs->duration.seconds;
-        nano_second = (long) lhs->nano_second + (long) rhs->duration.nano_seconds;
-        if (nano_second > 999999999L) {
-            second += 1L;
-            nano_second -= 1000000000L;
-        }
+        nano_second = lhs->nano_second + rhs->duration.nano_seconds;
+        second = lhs->second + rhs->duration.seconds + nano_second / 1000000000UL;
+        nano_second %= 1000000000UL;
     } else {
-        second = lhs->second - rhs->duration.seconds;
-        nano_second = (long) lhs->nano_second - (long) rhs->duration.nano_seconds;
-        if (nano_second < 0L) {
-            second -= 1L;
-            nano_second += 1000000000L;
+        if (lhs->nano_second > rhs->duration.nano_seconds) {
+            nano_second = lhs->nano_second - rhs->duration.nano_seconds;
+            second = lhs->second - rhs->duration.seconds + nano_second / 1000000000UL;
+            nano_second %= 1000000000UL;
+        } else {
+            nano_second = rhs->duration.nano_seconds - lhs->nano_second;
+            second = lhs->second - rhs->duration.seconds - nano_second / 1000000000UL - 1;
+            nano_second %= 1000000000UL;
+            nano_second = 1000000000UL - nano_second;
         }
     }
     result->second = second;
@@ -167,13 +168,13 @@ dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, d
     return DT_OK;
 }
 
-dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result)
+dt_status_t dt_init_interval(long seconds, unsigned long nano_seconds, dt_interval_t *result)
 {
         if (!result) {
                 return DT_INVALID_ARGUMENT;
         }
-        result->seconds = seconds + nano_seconds / 1000000000L;
-        result->nano_seconds = nano_seconds % 1000000000L;
+        result->seconds = seconds + nano_seconds / 1000000000UL;
+        result->nano_seconds = nano_seconds % 1000000000UL;
         return DT_OK;
 }
 
@@ -211,8 +212,8 @@ dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
         return DT_INVALID_ARGUMENT;
     }
 
-    seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000L;
-    nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000L;
+    seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000UL;
+    nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000UL;
 
     result->seconds = seconds;
     result->nano_seconds = nano_seconds;
@@ -232,7 +233,7 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 
     seconds = lhs->seconds - rhs->seconds - (lhs->nano_seconds < rhs->nano_seconds ? 1L : 0L);
     nano_seconds = lhs->nano_seconds < rhs->nano_seconds ?
-                    1000000000L + lhs->nano_seconds - rhs->nano_seconds :
+                    1000000000UL + lhs->nano_seconds - rhs->nano_seconds :
                     lhs->nano_seconds - rhs->nano_seconds;
     s = dt_compare_intervals(lhs, rhs, &cr);
 
@@ -259,15 +260,15 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
         return DT_INVALID_ARGUMENT;
     }
 
-    v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000L;
+    v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000UL;
     rv = v * rhs;
 
     result->seconds = (unsigned long)floorl(rv);
-    result->nano_seconds = (unsigned long)floorl(fmodl(rv, 1.0) * 1000000000L);
+    result->nano_seconds = (unsigned long)floorl(fmodl(rv, 1.0) * 1000000000UL);
     return DT_OK;
 }
 
-dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, int nano_second,
+dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
                 dt_representation_t *result)
 {
     if (!result || !dt_validate_representation(year, month, day, hour, minute, second, nano_second)) {
@@ -339,7 +340,7 @@ dt_status_t dt_representation_to_tm(const dt_representation_t *representation, s
     if (s != DT_OK) {
         return s;
     }
-    tm->tm_year = representation->year;
+    tm->tm_year = representation->year - 1900;
     tm->tm_mon = representation->month - 1;
     tm->tm_mday = representation->day;
     tm->tm_hour = representation->hour;
@@ -356,7 +357,7 @@ dt_status_t dt_representation_to_tm_private(const dt_representation_t *represent
         if (!representation || !tm) {
                 return DT_INVALID_ARGUMENT;
         }
-        tm->tm_year = representation->year;
+        tm->tm_year = representation->year - 1900;
         tm->tm_mon = representation->month - 1;
         tm->tm_mday = representation->day;
         tm->tm_hour = representation->hour;
@@ -373,5 +374,5 @@ dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_re
         if (!tm || !representation) {
                 return DT_INVALID_ARGUMENT;
         }
-        return dt_init_representation(tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
+        return dt_init_representation(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
 }
