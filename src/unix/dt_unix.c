@@ -1,43 +1,13 @@
-#include <libtz/dt.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-//#include "tzcode/tzfile.h"
-#include "../dt_private.h"
-
 #include <stdio.h>
 #include <assert.h>
 
-/*
- * Cross-platform date/time handling library for C.
- * Unix platform source file.
- *
- * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
- * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
- * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
- */
+#include "../dt_private.h"
+#include "libtz/dt.h"
 
-//! Returns an offset from UTC of to represent timestamp in timezone
-/*!
- * \param timestamp Timestamp to represent
- * \param timezone Timezone
- * \param offset Offset from UTC [OUT]
- * \return Result status of the operation
- */
-//static dt_status_t dt_timestamp_utc_offset(const dt_timestamp_t *timestamp, const dt_timezone_t *timezone, dt_offset_t *offset);
-
-//! Returns two offsets from UTC of the local timestamp representation
-/*!
- * It is possible for the representation to have two UTC-offsets, e.g. when a time is going back for
- * an hour.
- * \param representation Representation to get offset of
- * \param timezone Timezone
- * \param first_offset First offset from UTC [OUT]
- * \param secons_offset First offset from UTC [OUT]
- * \return Result status of the operation
- */
-//static dt_status_t dt_representation_utc_offset(const dt_representation_t *representation, const dt_timezone_t *timezone,
-//                dt_offset_t *first_offset, dt_offset_t *second_offset);
+#include <timezones_map.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -275,4 +245,24 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
         return status;
 
     return DT_OK;
+}
+
+char * findTimeZoneByName(const char *tz_name)
+{
+    int i = 0;
+    char *nameOfTimeZone = NULL;
+
+    if (tz_name == NULL)
+        return NULL;
+
+    for (i = 0; i < tz_unicode_map_size; i++) {
+        struct tz_unicode_mapping tz = tz_unicode_map[i];
+        if ((!strcmp(tz.type, tz_name)) ||
+            (!strcmp(tz.territory, tz_name)) ||
+            (!strcmp(tz.other, tz_name))) {
+            nameOfTimeZone = tz.type;
+            break;
+        }
+    }
+    return nameOfTimeZone;
 }
