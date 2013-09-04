@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "libtz/dt.h"
 #include "dt_private.h"
 
 #include <stdio.h>
@@ -52,23 +53,23 @@ const char * dt_strerror(dt_status_t status)
         }
 }
 
-dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second, long nano_second)
+dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second)
 {
-        // Simple checking for invalid values
-        if (year == 0 || month < 1 || month > 12 || day < 1 || hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 ||
-                        second > 59 || nano_second < 0L || nano_second > 999999999L) {
-                return DT_FALSE;
-        }
-	// Passage from Julian to Gregorian calendar
-	if (year == 1582 && month == 10 && day > 4 && day < 15) {
-		return DT_FALSE;
-	}
-        // Checking leap year
-        if (dt_is_leap_year(year) && month == 2 && day == 29) {
-                return DT_TRUE;
-        }
-        // Checking month days
-	return day <= month_days[month] ? DT_TRUE : DT_FALSE;
+    // Simple checking for invalid values
+    if (year == 0 || month < 1 || month > 12 || day < 1 || hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 ||
+            second > 59 || nano_second < 0UL || nano_second > 999999999UL) {
+        return DT_FALSE;
+    }
+    // Passage from Julian to Gregorian calendar
+    if (year == 1582 && month == 10 && day > 4 && day < 15) {
+        return DT_FALSE;
+    }
+    // Checking leap year
+    if (dt_is_leap_year(year) && month == 2 && day == 29) {
+        return DT_TRUE;
+    }
+    // Checking month days
+    return day <= month_days[month] ? DT_TRUE : DT_FALSE;
 }
 
 dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, int *result)
@@ -131,7 +132,7 @@ dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, d
 
     if (nano_seconds < 0L) {
         seconds -= 1L;
-        nano_seconds += 1000000000L;
+        nano_seconds += 1000000000UL;
     }
     result->duration.seconds = seconds;
     result->duration.nano_seconds = nano_seconds;
@@ -142,24 +143,25 @@ dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, d
 dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
 {
     long second = 0;
-    long nano_second = 0;
+    unsigned long nano_second = 0;
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
     if (rhs->is_forward) {
-        second = lhs->second + rhs->duration.seconds;
-        nano_second = (long) lhs->nano_second + (long) rhs->duration.nano_seconds;
-        if (nano_second > 999999999L) {
-            second += 1L;
-            nano_second -= 1000000000L;
-        }
+        nano_second = lhs->nano_second + rhs->duration.nano_seconds;
+        second = lhs->second + rhs->duration.seconds + nano_second / 1000000000UL;
+        nano_second %= 1000000000UL;
     } else {
-        second = lhs->second - rhs->duration.seconds;
-        nano_second = (long) lhs->nano_second - (long) rhs->duration.nano_seconds;
-        if (nano_second < 0L) {
-            second -= 1L;
-            nano_second += 1000000000L;
+        if (lhs->nano_second > rhs->duration.nano_seconds) {
+            nano_second = lhs->nano_second - rhs->duration.nano_seconds;
+            second = lhs->second - rhs->duration.seconds + nano_second / 1000000000UL;
+            nano_second %= 1000000000UL;
+        } else {
+            nano_second = rhs->duration.nano_seconds - lhs->nano_second;
+            second = lhs->second - rhs->duration.seconds - nano_second / 1000000000UL - 1;
+            nano_second %= 1000000000UL;
+            nano_second = 1000000000UL - nano_second;
         }
     }
     result->second = second;
@@ -167,13 +169,13 @@ dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, d
     return DT_OK;
 }
 
-dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result)
+dt_status_t dt_init_interval(long seconds, unsigned long nano_seconds, dt_interval_t *result)
 {
         if (!result) {
                 return DT_INVALID_ARGUMENT;
         }
-        result->seconds = seconds + nano_seconds / 1000000000L;
-        result->nano_seconds = nano_seconds % 1000000000L;
+        result->seconds = seconds + nano_seconds / 1000000000UL;
+        result->nano_seconds = nano_seconds % 1000000000UL;
         return DT_OK;
 }
 
@@ -211,8 +213,8 @@ dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
         return DT_INVALID_ARGUMENT;
     }
 
-    seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000L;
-    nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000L;
+    seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000UL;
+    nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000UL;
 
     result->seconds = seconds;
     result->nano_seconds = nano_seconds;
@@ -232,7 +234,7 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 
     seconds = lhs->seconds - rhs->seconds - (lhs->nano_seconds < rhs->nano_seconds ? 1L : 0L);
     nano_seconds = lhs->nano_seconds < rhs->nano_seconds ?
-                    1000000000L + lhs->nano_seconds - rhs->nano_seconds :
+                    1000000000UL + lhs->nano_seconds - rhs->nano_seconds :
                     lhs->nano_seconds - rhs->nano_seconds;
     s = dt_compare_intervals(lhs, rhs, &cr);
 
@@ -259,20 +261,20 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
         return DT_INVALID_ARGUMENT;
     }
 
-    v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000L;
+    v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000UL;
     rv = v * rhs;
 
     result->seconds = (unsigned long)floorl(rv);
-    result->nano_seconds = (unsigned long)floorl(fmodl(rv, 1.0) * 1000000000L);
+    result->nano_seconds = (unsigned long)floorl(fmodl(rv, 1.0) * 1000000000UL);
     return DT_OK;
 }
 
-dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, int nano_second,
+static dt_status_t dt_init_representation_without_check(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
                 dt_representation_t *result)
 {
-    if (!result || !dt_validate_representation(year, month, day, hour, minute, second, nano_second)) {
+    if (!result)
         return DT_INVALID_ARGUMENT;
-    }
+
     memset(result, 0, sizeof(dt_representation_t));
     result->year = year;
     result->month = month;
@@ -282,6 +284,15 @@ dt_status_t dt_init_representation(int year, int month, int day, int hour, int m
     result->second = second;
     result->nano_second = nano_second;
     return DT_OK;
+}
+
+dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
+                dt_representation_t *result)
+{
+    if (!dt_validate_representation(year, month, day, hour, minute, second, nano_second))
+        return DT_INVALID_ARGUMENT;
+    return dt_init_representation_without_check(year, month, day, hour, minute, second, nano_second,
+                                                result);
 }
 
 dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *dow)
@@ -339,7 +350,7 @@ dt_status_t dt_representation_to_tm(const dt_representation_t *representation, s
     if (s != DT_OK) {
         return s;
     }
-    tm->tm_year = representation->year;
+    tm->tm_year = representation->year - 1900;
     tm->tm_mon = representation->month - 1;
     tm->tm_mday = representation->day;
     tm->tm_hour = representation->hour;
@@ -351,27 +362,47 @@ dt_status_t dt_representation_to_tm(const dt_representation_t *representation, s
     return DT_OK;
 }
 
-dt_status_t dt_representation_to_tm_private(const dt_representation_t *representation, struct tm *tm)
-{
-        if (!representation || !tm) {
-                return DT_INVALID_ARGUMENT;
-        }
-        tm->tm_year = representation->year;
-        tm->tm_mon = representation->month - 1;
-        tm->tm_mday = representation->day;
-        tm->tm_hour = representation->hour;
-        tm->tm_min = representation->minute;
-        tm->tm_sec = representation->second;
-        tm->tm_wday = 0;
-        tm->tm_yday = 0;
-        tm->tm_isdst = -1;
-        return DT_OK;
-}
-
 dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation)
 {
         if (!tm || !representation) {
                 return DT_INVALID_ARGUMENT;
         }
-        return dt_init_representation(tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
+        return dt_init_representation(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
+}
+
+dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation)
+{
+        if (!tm || !representation) {
+                return DT_INVALID_ARGUMENT;
+        }
+        return dt_init_representation_without_check(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
+}
+
+int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
+                 char *str_buffer, size_t str_buffer_size) {
+    dt_representation_t rep = {0};
+    dt_status_t status = DT_UNKNOWN_ERROR;
+
+    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
+        return DT_INVALID_ARGUMENT;
+
+    status = dt_tm_to_representation(representation, 0, &rep);
+    if (status != DT_OK)
+        return status;
+
+    return dt_to_string(&rep, tz_name, fmt, str_buffer, str_buffer_size);
+}
+
+int strptime_tz(const char *str, const char *fmt, struct tm *representation) {
+    dt_representation_t rep = {0};
+    dt_status_t status = DT_UNKNOWN_ERROR;
+
+    if (!representation || !fmt || !str)
+        return DT_INVALID_ARGUMENT;
+
+    status = dt_from_string(str, fmt, &rep, NULL, 0);
+    if (status != DT_OK)
+        return status;
+
+    return dt_representation_to_tm(&rep, representation);
 }

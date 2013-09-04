@@ -17,6 +17,7 @@ typedef enum {
         DT_TIMEZONE_NOT_FOUND,                  //!< Timezone not found
         DT_SYSTEM_CALL_ERROR,                   //!< System call error
         DT_TOO_SMALL_BUFFER,                    //!< Too small buffer has been provided to function
+        DT_CONVERT_ERROR,                       //!< Convertations errors
         DT_UNKNOWN_ERROR                        //!< Unknown error
 } dt_status_t;
 
@@ -43,7 +44,7 @@ typedef struct dt_timestamp {
 
 //! Interval object
 typedef struct dt_interval {
-        unsigned long seconds;                  //!< Seconds part (>=0L)
+        long seconds;                           //!< Seconds part (>=0L)
         unsigned long nano_seconds;             //!< Nano-seconds part (0L-999999999L)
 } dt_interval_t;
 
@@ -61,7 +62,7 @@ typedef struct dt_representation {
         int hour;                               //!< Hour (0-23)
         int minute;                             //!< Minute (0-59)
         int second;                             //!< Second (0-59 or 0-60 if leap second)
-        long nano_second;                       //!< Nano-second (0L-999999999L)
+        unsigned long nano_second;              //!< Nano-second (0L-999999999L)
 } dt_representation_t;
 
 #endif // _DT_TYPES_H

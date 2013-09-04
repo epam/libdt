@@ -1,3 +1,4 @@
+#define _VARIADIC_MAX 10
 #include <gtest/gtest.h>
 
 int main(int argc, char **argv) {

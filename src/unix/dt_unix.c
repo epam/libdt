@@ -205,7 +205,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         }
 
         struct tm tm;
-        dt_representation_to_tm_private(representation, &tm);
+        dt_representation_to_tm(representation, &tm);
 
         time_t posix_time = mktime(&tm);
         if (posix_time < 0) {
@@ -233,4 +233,46 @@ cleanup_fakeenv:
                 first_timestamp->nano_second = representation->nano_second;
         }
         return result;
+}
+dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
+                char *str_buffer, size_t str_buffer_size)
+{
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    struct tm tm = {0};
+
+    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
+        return DT_INVALID_ARGUMENT;
+
+    status = dt_representation_to_tm(representation, &tm);
+    if (status != DT_OK)
+        return status;
+
+    size_t size = strftime(str_buffer, str_buffer_size, fmt, &tm);
+    if (size > 0)
+        return DT_OK;
+    return status;
+
+}
+
+dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation,
+                char *tz_name_buffer, size_t tz_name_buffer_size)
+{
+    char *result = NULL;
+    struct tm tm = {0};
+    dt_status_t status = DT_UNKNOWN_ERROR;
+
+    if (!representation || !str || !fmt)
+        return DT_INVALID_ARGUMENT;
+
+    result = strptime(str, fmt, &tm);//FIXME: Why warning?
+    if (result == NULL)
+        return status;
+    if (*result != '\0')// end of string
+        return status;
+
+    status = dt_tm_to_representation_withoutcheck(&tm, 0, representation);
+    if (status != DT_OK)
+        return status;
+
+    return DT_OK;
 }
