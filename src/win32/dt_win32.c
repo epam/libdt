@@ -136,23 +136,23 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
 
     dwError = GetTimeZoneInformationByName(&dtzi, tz_name);
     if (dwError != 0)
-        return EXIT_FAILURE;
+        return DT_TIMEZONE_NOT_FOUND;
 
     status = dt_timestamp_to_posix_time(timestamp, &time, &nano);
     if (status != DT_OK)
         return status;
 
     if (UnixTimeToSystemTime(&time, &tUniversalTime))
-        return EXIT_FAILURE;
+        return DT_CONVERT_ERROR;
 
     if (GetTimeZoneInformationForYearLower(tUniversalTime.wYear, &dtzi, &tzi) == FALSE)
-        return EXIT_FAILURE;
+        return DT_CONVERT_ERROR;
 
     if (SystemTimeToTzSpecificLocalTime(&tzi, &tUniversalTime, &tLocalTime) == FALSE)
-        return EXIT_FAILURE;
+        return DT_CONVERT_ERROR;
 
     if (TmFromSystemTime(&tLocalTime, &result) != EXIT_SUCCESS)
-        return EXIT_FAILURE;
+        return DT_CONVERT_ERROR;
 
     status = dt_tm_to_representation(&result, nano, representation);
     if (status != DT_OK)
@@ -184,7 +184,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         return status;
 
     if (SystemTimeFromTm(&tLocalTime, &tm) != EXIT_SUCCESS) {
-        return EXIT_FAILURE;
+        return DT_CONVERT_ERROR;
     }
 
     if (strcmp(tz_name, "UTC") == 0) {
@@ -192,20 +192,20 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
     } else {
         dwError = GetTimeZoneInformationByName(&dtzi, tz_name);
         if (dwError != 0) {
-            return EXIT_FAILURE;
+            return DT_TIMEZONE_NOT_FOUND;
         }
         if (GetTimeZoneInformationForYearLower(tLocalTime.wYear, &dtzi, &tzi) == FALSE) {
-            return EXIT_FAILURE;
+            return DT_TIMEZONE_NOT_FOUND;
         }
 
         if (TzSpecificLocalTimeToSystemTime(&tzi, &tLocalTime, &tUniversalTime) == FALSE) {
-            return EXIT_FAILURE;
+            return DT_CONVERT_ERROR;
         }
 
     }
 
     if (SystemTimeToUnixTime(&tUniversalTime, &time) != EXIT_SUCCESS)
-        return EXIT_FAILURE;
+        return DT_CONVERT_ERROR;
 
     status = dt_posix_time_to_timestamp(time, nano, first_timestamp);
     if (status != DT_OK)
@@ -246,11 +246,16 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
     HKEY hkey_tz = NULL;
     DWORD dw = 0;
     REG_TZI_FORMAT regtzi = {0,};
-    size_t subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
-    char* tszSubkey = (char *)malloc(subKeySize);
+    size_t subKeySize = 0;
+    char* tszSubkey = NULL;
+
     if (ptzi == NULL || szStandardName == NULL) {
         return EXIT_FAILURE;
     }
+
+    subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
+    tszSubkey = (char *)malloc(subKeySize);
+
     memset(tszSubkey, (int)NULL, subKeySize );
     memset(ptzi, 0, sizeof(DYNAMIC_TIME_ZONE_INFORMATION));
 
@@ -302,7 +307,8 @@ static int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm)
 }
 
 //was gotten from microsoft support
-static void UnixTimeToFileTime(const time_t *t, LPFILETIME pft) {
+static void UnixTimeToFileTime(const time_t *t, LPFILETIME pft)
+{
     // Note that LONGLONG is a 64-bit value
     UINT64 ll;
     UINT64 time = *t;
@@ -312,7 +318,8 @@ static void UnixTimeToFileTime(const time_t *t, LPFILETIME pft) {
 }
 
 //was gotten from microsoft support
-static int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst) {
+static int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst)
+{
     FILETIME ft;
 
     UnixTimeToFileTime(t, &ft);
@@ -324,7 +331,6 @@ static int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst) {
 
 //was gotten from microsoft support
 static int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime)
-
 {
     LARGE_INTEGER jan1970FT = {0};
     LARGE_INTEGER utcFT = {0};
@@ -582,7 +588,6 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
 extern "C" {
 #endif
 char * strptime(const char *buf, const char *fmt, struct tm *tm);
-dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation);
 #ifdef __cplusplus
 }
 #endif
