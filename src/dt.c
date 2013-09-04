@@ -406,3 +406,54 @@ int strptime_tz(const char *str, const char *fmt, struct tm *representation) {
 
     return dt_representation_to_tm(&rep, representation);
 }
+
+int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
+{
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    dt_timestamp_t t = {0};
+    dt_representation_t rep = {0};
+    char *tz = findTimeZoneByName(tz_name);
+
+    if (!time || !result || !tz)
+        return EXIT_FAILURE;
+
+    status = dt_posix_time_to_timestamp(*time, 0, &t);
+    if (status != DT_OK)
+        return EXIT_FAILURE;
+
+    status = dt_timestamp_to_representation(&t, tz, &rep);
+    if (status != DT_OK)
+        return EXIT_FAILURE;
+
+    status = dt_representation_to_tm(&rep, result);
+    if (status != DT_OK)
+        return EXIT_FAILURE;
+
+    return EXIT_SUCCESS;
+}
+
+int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
+{
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    dt_timestamp_t t = {0};
+    dt_representation_t rep = {0};
+    unsigned long nano = 0;
+    char *tz = findTimeZoneByName(tz_name);
+
+    if (!tm || !result)
+        return EXIT_FAILURE;
+
+    status = dt_tm_to_representation(tm, 0, &rep);
+    if (status != DT_OK)
+        return EXIT_FAILURE;
+
+    status = dt_representation_to_timestamp(&rep, tz, &t, NULL);
+    if (status != DT_OK)
+        return EXIT_FAILURE;
+
+    status = dt_timestamp_to_posix_time(&t, result, &nano);
+    if (status != DT_OK)
+        return EXIT_FAILURE;
+
+    return EXIT_SUCCESS;
+}

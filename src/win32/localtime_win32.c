@@ -27,7 +27,7 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result)
     return EXIT_SUCCESS;
 }
 
-int mktime_tz(const struct tm *tm, const char *tzName, time_t *result)
+int mktime_tz(const struct tm *tm, const char *tz, time_t *result)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
@@ -41,7 +41,7 @@ int mktime_tz(const struct tm *tm, const char *tzName, time_t *result)
     if (status != DT_OK)
         return EXIT_FAILURE;
 
-    status = dt_representation_to_timestamp(&rep, tzName, &t, NULL);
+    status = dt_representation_to_timestamp(&rep, tz, &t, NULL);
     if (status != DT_OK)
         return EXIT_FAILURE;
 

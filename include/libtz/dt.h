@@ -24,7 +24,7 @@ extern "C" {
  * @param result - variable for result. Value will be set to local time representation
  * @return on success, EXIT_SUCCESS is returned or EXIT_FAILURE in error case.
  */
-int localtime_tz(const time_t *time, const char *tzName, struct tm *result);
+int localtime_tz(const time_t *time, const char *tz_name, struct tm *result);
 
 /** Converts local time in specific Time Zone to time_t.
  * @param time - time to format
@@ -32,7 +32,7 @@ int localtime_tz(const time_t *time, const char *tzName, struct tm *result);
  * @param result - variable for result. Value will be set to local time representation
  * @return on success, EXIT_SUCCESS is returned or EXIT_FAILURE in error case.
  */
-int mktime_tz(const struct tm *tm, const char *tzName, time_t *result);
+int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
 
 /*!
  * \defgroup StringConversion String conversion functions
