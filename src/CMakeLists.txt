@@ -1,4 +1,4 @@
-file(GLOB SRC_LIST "dt.c")
+aux_source_directory(. SRC_LIST)
 if (UNIX)
   file(GLOB SRC_LIST ${SRC_LIST} "unix/*.c")
   include_directories(. unix)

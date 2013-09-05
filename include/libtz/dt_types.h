@@ -18,6 +18,7 @@ typedef enum {
         DT_SYSTEM_CALL_ERROR,                   //!< System call error
         DT_TOO_SMALL_BUFFER,                    //!< Too small buffer has been provided to function
         DT_CONVERT_ERROR,                       //!< Convertations errors
+        DT_NO_MORE_ITEMS,		        //!< No more items for enumeration available
         DT_UNKNOWN_ERROR                        //!< Unknown error
 } dt_status_t;
 
