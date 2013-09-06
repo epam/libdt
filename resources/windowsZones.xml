@@ -226,7 +226,7 @@ For terms of use, see http://www.unicode.org/copyright.html
 
 			<!-- (UTC) Coordinated Universal Time -->
 			<mapZone other="UTC" territory="001" type="Etc/GMT"/>
-			<mapZone other="UTC" territory="001" type="Etc/UTC"/>
+                        <mapZone other="UTC" territory="001" type="Etc/UTC"/>
 			<mapZone other="UTC" territory="GL" type="America/Danmarkshavn"/>
 			<mapZone other="UTC" territory="ZZ" type="Etc/GMT"/>
 
