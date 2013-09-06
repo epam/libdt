@@ -31,7 +31,6 @@ static inline tz_alias_iterator_t** insert_alias(tz_aliases_t* aliases, tz_alias
     inserted = *insertPosition;
     inserted->next = NULL;
 
-    inserted->node.name = malloc(strlen(alias->name) + 1);
     inserted->node.name = alias->name;
     inserted->node.kind = alias->kind;
     return &inserted->next;
