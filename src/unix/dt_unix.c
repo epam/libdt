@@ -8,8 +8,7 @@
 #include "../dt_private.h"
 #include "libtz/dt.h"
 
-#include <timezones_map.h>
-
+#include <libtz/tzmapping.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -249,22 +248,22 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
     return DT_OK;
 }
 
-char * findTimeZoneByName(const char *tz_name)
+const char * findTimeZoneByName(const char *tz_name)
 {
-    int i = 0;
-    char *nameOfTimeZone = NULL;
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    tz_aliases_t* aliases = NULL;
+    tz_alias_iterator_t* it = TZMAP_START;
+    tz_alias_t * alias = NULL;
 
-    if (tz_name == NULL)
-        return NULL;
+    if (tzmap_map(tz_name, &aliases) != DT_OK) {
+        return 0;
+    }
 
-    for (i = 0; i < tz_unicode_map_size; i++) {
-        struct tz_unicode_mapping tz = tz_unicode_map[i];
-        if ((!strcmp(tz.type, tz_name)) ||
-                (!strcmp(tz.territory, tz_name)) ||
-                (!strcmp(tz.other, tz_name))) {
-            nameOfTimeZone = tz.type;
-            break;
+    while((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
+        if (alias->kind == TZA_OLSEN_NAME) {
+            return alias->name;
         }
     }
-    return nameOfTimeZone;
+
+    return 0;
 }

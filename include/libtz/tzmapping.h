@@ -13,16 +13,17 @@ typedef struct tz_alias_iterator tz_alias_iterator_t;
 typedef struct tz_aliases tz_aliases_t;
 typedef struct tz_alias {
     tz_alias_kind_t kind;
-    char* name;
+    const char* name;
 } tz_alias_t;
 
-
+#define TZMAP_START (tz_alias_iterator_t*)0x1
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 dt_status_t tzmap_map(const char* tz_name, tz_aliases_t **aliases);
-dt_status_t tzmap_iterate(const tz_aliases_t* aliases, tz_alias_iterator_t** iterator, tz_alias_t** alias);
+dt_status_t tzmap_iterate(const tz_aliases_t* aliases, tz_alias_iterator_t** iterator, tz_alias_t **alias);
+dt_status_t tzmap_free(tz_aliases_t* aliases);
 #ifdef __cplusplus
 }
 #endif

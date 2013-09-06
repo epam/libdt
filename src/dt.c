@@ -412,7 +412,7 @@ int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
-    char *tz = findTimeZoneByName(tz_name);
+    const char *tz = findTimeZoneByName(tz_name);
 
     if (!time || !result || !tz)
         return EXIT_FAILURE;
@@ -438,7 +438,7 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
     unsigned long nano = 0;
-    char *tz = findTimeZoneByName(tz_name);
+    const char *tz = findTimeZoneByName(tz_name);
 
     if (!tm || !result)
         return EXIT_FAILURE;

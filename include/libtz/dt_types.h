@@ -12,16 +12,6 @@
 
 //! Result status values
 typedef enum {
-<<<<<<< HEAD
-        DT_OK,                                  //!< No error
-        DT_INVALID_ARGUMENT,                    //!< Invalid argument
-        DT_TIMEZONE_NOT_FOUND,                  //!< Timezone not found
-        DT_SYSTEM_CALL_ERROR,                   //!< System call error
-        DT_TOO_SMALL_BUFFER,                    //!< Too small buffer has been provided to function
-        DT_CONVERT_ERROR,                       //!< Convertations errors
-        DT_NO_MORE_ITEMS,		        //!< No more items for enumeration available
-        DT_UNKNOWN_ERROR                        //!< Unknown error
-=======
     DT_OK,                                  //!< No error
     DT_INVALID_ARGUMENT,                    //!< Invalid argument
     DT_TIMEZONE_NOT_FOUND,                  //!< Timezone not found
@@ -29,8 +19,8 @@ typedef enum {
     DT_MALLOC_ERROR,                        //!< Memory allocate error
     DT_TOO_SMALL_BUFFER,                    //!< Too small buffer has been provided to function
     DT_CONVERT_ERROR,                       //!< Convertations errors
+    DT_NO_MORE_ITEMS,                       //!< No more items for enumeration available
     DT_UNKNOWN_ERROR                        //!< Unknown error
->>>>>>> 6e074b3146026bbc3f35af043787af01e4b530d8
 } dt_status_t;
 
 //! Boolean type

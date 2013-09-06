@@ -32,7 +32,7 @@ dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_
  * \param tz_name some representation of time zone
  * \return link to static variable or NULL, if time zone didn't found
  */
-char * findTimeZoneByName(const char *tz_name);
+const char *findTimeZoneByName(const char *tz_name);
 
 #ifdef __cplusplus
 }

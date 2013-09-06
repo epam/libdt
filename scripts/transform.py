@@ -63,7 +63,7 @@ def parseMapZones(xml):
 def help():
     print 'usage: ', sys.argv[0], ' [--remote| --local [local xml file]]'
 
-print 'struct tz_unicode_mapping {char *other; char* territory; char* type;};'
+print 'struct tz_unicode_mapping {const char *other; const char* territory; const char* type;};'
 print 'const struct tz_unicode_mapping tz_unicode_map[] = {'
 zonesCount = 0
 try:

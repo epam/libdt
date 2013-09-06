@@ -12,33 +12,39 @@ static const char* olsenHawaianName = "Pacific/Honolulu";
 static const char* abbrHawaianName = "CK";
 static const char* aliasesOlsenForHawaian[] = {"Pacific/Rarotonga", "Pacific/Tahiti", "Pacific/Johnston",
  "Pacific/Honolulu", "Etc/GMT+10"};
-static const char* aliasesAbbrForHawaian[] = {"CK", "PF", "UM", "US", "ZZ"};
+static const char* aliasesAbbrForHawaian[] = {"001", "CK", "PF", "UM", "US", "ZZ"};
 
 TimeZoneNameMappingCase::TimeZoneNameMappingCase()
 {
 }
 
-TEST_F(TimeZoneNameMappingCase, variousMapping)
+TEST_F(TimeZoneNameMappingCase, errorHandling)
 {
     tz_aliases_t *aliases = NULL;
-    dt_status_t  status = DT_UNKNOWN_ERROR;
-    tz_alias_t *alias = NULL;
-    tz_alias_iterator_t *iterator = NULL;
+    tz_alias_t *alias = (tz_alias_t*)&aliases;
+    tz_alias_iterator_t *iterator = (tz_alias_iterator_t*)&alias;
     EXPECT_EQ(tzmap_map(NULL, &aliases), DT_INVALID_ARGUMENT);
     EXPECT_EQ(tzmap_map(invalidTimeZone, NULL), DT_INVALID_ARGUMENT);
 
     EXPECT_EQ(tzmap_map(invalidTimeZone, &aliases), DT_TIMEZONE_NOT_FOUND);
     EXPECT_TRUE(aliases == NULL);
 
+    EXPECT_EQ(tzmap_free(NULL), DT_INVALID_ARGUMENT);
 
+    EXPECT_EQ(tzmap_iterate(NULL, &iterator, &alias), DT_INVALID_ARGUMENT);
+    aliases = (tz_aliases_t*)&iterator;
+    EXPECT_EQ(tzmap_iterate(aliases, NULL, &alias), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(tzmap_iterate(aliases, &iterator, NULL), DT_INVALID_ARGUMENT);
 }
+
+
 
 TEST_F(TimeZoneNameMappingCase, fromWindowsStandardTimeMapping)
 {
     tz_aliases_t *aliases = NULL;
     dt_status_t  status = DT_UNKNOWN_ERROR;
     tz_alias_t *alias = NULL;
-    tz_alias_iterator_t *iterator = NULL;
+    tz_alias_iterator_t *iterator = TZMAP_START;
     size_t aliasesArrayLength = sizeof(aliasesOlsenForHawaian) / sizeof(char *);
     std::set<std::string> setOlsenForHawaian(aliasesOlsenForHawaian, aliasesOlsenForHawaian + aliasesArrayLength);
     aliasesArrayLength = sizeof(aliasesAbbrForHawaian) / sizeof(char *);
@@ -46,7 +52,7 @@ TEST_F(TimeZoneNameMappingCase, fromWindowsStandardTimeMapping)
 
     EXPECT_EQ(tzmap_map(windowsStandardTimeHawaianName, &aliases), DT_OK);
     EXPECT_TRUE(aliases != NULL);
-    while((status = tzmap_iterate(aliases, &iterator, &alias)) == DT_OK && iterator != NULL) {
+    while((status = tzmap_iterate(aliases, &iterator, &alias)) == DT_OK) {
         std::set<std::string>::iterator it;
         EXPECT_TRUE(alias != NULL);
         bool finded = false;
@@ -76,5 +82,9 @@ TEST_F(TimeZoneNameMappingCase, fromWindowsStandardTimeMapping)
         }
         EXPECT_TRUE(finded);
     }
+    EXPECT_TRUE(setAbbrForHawaian.empty());
+    EXPECT_TRUE(setOlsenForHawaian.empty());
     EXPECT_EQ(status, DT_NO_MORE_ITEMS);
+    EXPECT_EQ(tzmap_free(aliases), DT_OK);
 }
+
