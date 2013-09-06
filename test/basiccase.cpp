@@ -55,7 +55,7 @@ static void fillTm(struct tm *output, int tm_gmtoff,
 
 // Fills only representation fields in tm structure
 static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon, int tm_mday,
-                int tm_hour, int tm_min, int tm_sec);
+                                     int tm_hour, int tm_min, int tm_sec);
 
 static void dump_tm(const struct tm *tm);
 
@@ -67,59 +67,59 @@ BasicCase::BasicCase()
 
 TEST_F(BasicCase, historic_tz_check)
 {
-        struct tm tm;
-        struct tm tmUtc;
+    struct tm tm;
+    struct tm tmUtc;
 
-        //Most old law rule
-        fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
-        test_tm(&tm, testMoscowTimeZone, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
-        test_tm(&tm, testMoscowTimeZone, &tmUtc);
+    //Most old law rule
+    fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
+    test_tm(&tm, testMoscowTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
+    test_tm(&tm, testMoscowTimeZone, &tmUtc);
 
-        //Law rule in the middle of list
-        fillTmRepresentationOnly(&tm, 2011, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
-        test_tm(&tm, testMoscowTimeZone, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2011, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
+    //Law rule in the middle of list
+    fillTmRepresentationOnly(&tm, 2011, 7, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 4, 0, 0);
+    test_tm(&tm, testMoscowTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2011, 1, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 5, 0, 0);
 
-        test_tm(&tm, testMoscowTimeZone, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 4, 0, 0);
-        test_tm(&tm, testMoscowTimeZone, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 4, 0, 0);
-        test_tm(&tm, testMoscowTimeZone, &tmUtc);
+    test_tm(&tm, testMoscowTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 4, 0, 0);
+    test_tm(&tm, testMoscowTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 4, 0, 0);
+    test_tm(&tm, testMoscowTimeZone, &tmUtc);
 
 
-        fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);
-        test_tm(&tm, testBerlinTimeZone, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
-        test_tm(&tm, testBerlinTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);
+    test_tm(&tm, testBerlinTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
+    test_tm(&tm, testBerlinTimeZone, &tmUtc);
 
-        fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
-        test_tm(&tm, testBerlinTimeZone, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
-        test_tm(&tm, testBerlinTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
+    test_tm(&tm, testBerlinTimeZone, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
+    test_tm(&tm, testBerlinTimeZone, &tmUtc);
 
-        fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);
-        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
-        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
-        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
-        fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
-        fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
-        test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 7, 15, 6, 0, 0);
+    test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2009, 1, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2009, 1, 15, 7, 0, 0);
+    test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2013, 7, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2013, 7, 15, 6, 0, 0);
+    test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
+    fillTmRepresentationOnly(&tm, 2013, 1, 15, 8, 0, 0);
+    fillTmRepresentationOnly(&tmUtc, 2013, 1, 15, 7, 0, 0);
+    test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
 }
 
 TEST_F(BasicCase, localtime_tz)
@@ -302,35 +302,35 @@ static void fillTm(struct tm *output, int tm_gmtoff,
 }
 
 static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon, int tm_mday,
-                int tm_hour, int tm_min, int tm_sec)
+                                     int tm_hour, int tm_min, int tm_sec)
 {
-        if (output == NULL) {
-                return;
-        }
-        memset(output, 0, sizeof(struct tm));
-        output->tm_hour = tm_hour;
-        output->tm_mday = tm_mday;
-        output->tm_min = tm_min;
-        output->tm_mon = tm_mon;
-        output->tm_sec = tm_sec;
-        output->tm_year = tm_year - 1900;
+    if (output == NULL) {
+        return;
+    }
+    memset(output, 0, sizeof(struct tm));
+    output->tm_hour = tm_hour;
+    output->tm_mday = tm_mday;
+    output->tm_min = tm_min;
+    output->tm_mon = tm_mon;
+    output->tm_sec = tm_sec;
+    output->tm_year = tm_year - 1900;
 
 }
 
 static void dump_tm(const struct tm *tm)
 {
-        printf("%04d-%02d-%02d %02d:%02d:%02d", tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+    printf("%04d-%02d-%02d %02d:%02d:%02d", tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 }
 
 void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
 {
-        time_t tm_ts;
-        struct tm tm_ts_tm;
-        struct tm tmUtcToEquasion = {0};
-        EXPECT_TRUE(mktime_tz(tm, tz_name, &tm_ts) == 0);
-        EXPECT_TRUE(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
-        EXPECT_TRUE(localtime_tz(&tm_ts, testUTCTimeZone, &tmUtcToEquasion) == 0);
+    time_t tm_ts;
+    struct tm tm_ts_tm;
+    struct tm tmUtcToEquasion = {0};
+    EXPECT_TRUE(mktime_tz(tm, tz_name, &tm_ts) == 0);
+    EXPECT_TRUE(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
+    EXPECT_TRUE(localtime_tz(&tm_ts, testUTCTimeZone, &tmUtcToEquasion) == 0);
 
-        EXPECT_EQ(tmUtc->tm_hour, tmUtcToEquasion.tm_hour);
+    EXPECT_EQ(tmUtc->tm_hour, tmUtcToEquasion.tm_hour);
 }
 
