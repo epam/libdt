@@ -21,6 +21,8 @@ static const char *invalid_argument_error_message = "Invalid argument";
 static const char *timezone_not_found_error_message = "Timezone not found";
 static const char *system_call_error_message = "System call error";
 static const char *unknown_error_message = "Unknown error";
+static const char *malloc_error_message = "malloc returned NULL";
+static const char *no_more_items_error_message = "No more items in collection";
 static const char *invalid_status_error_message = "<Invalid result status>";
 
 const int month_days[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
@@ -48,6 +50,10 @@ const char * dt_strerror(dt_status_t status)
         return system_call_error_message;
     case DT_UNKNOWN_ERROR:
         return unknown_error_message;
+    case DT_MALLOC_ERROR:
+        return malloc_error_message;
+    case DT_NO_MORE_ITEMS:
+        return no_more_items_error_message;
     default:
         return invalid_status_error_message;
     }
