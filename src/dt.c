@@ -97,7 +97,7 @@ dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_
     return DT_OK;
 }
 
-dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
+dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
 {
     int cr = 0;
     const dt_timestamp_t *lower_timestamp = NULL;
@@ -295,13 +295,13 @@ dt_status_t dt_init_representation(int year, int month, int day, int hour, int m
                                                 result);
 }
 
-dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *dow)
+dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *day_of_week)
 {
     int year = 0;
     int month = 0;
 
     // TODO: Julian calendar support - now only Gregorian is supported
-    if (!representation || !dow) {
+    if (!representation || !day_of_week) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -309,24 +309,24 @@ dt_status_t dt_representation_day_of_week(const dt_representation_t *representat
     month = (representation->month == 1 || representation->month == 2) ? representation->month + 12 : representation->month;
     // See http://en.wikipedia.org/wiki/Zeller%27s_congruence
 
-    *dow = (representation->day + (month + 1) * 26 / 10 + year + year / 4 + 6 * year / 100 + year / 400) % 7;
-    *dow = *dow == 0 ? 7 : *dow;
+    *day_of_week = (representation->day + (month + 1) * 26 / 10 + year + year / 4 + 6 * year / 100 + year / 400) % 7;
+    *day_of_week = *day_of_week == 0 ? 7 : *day_of_week;
     return DT_OK;
 }
 
-dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *doy)
+dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *day_of_year)
 {
     int i = 0;
     // TODO: Julian calendar support - now only Gregorian is supported
-    if (!representation || !doy) {
+    if (!representation || !day_of_year) {
         return DT_INVALID_ARGUMENT;
     }
-    *doy = 0;
+    *day_of_year = 0;
 
     for (i = 1; i < representation->month; ++i) {
-        *doy += (i == 2 && dt_is_leap_year(representation->year)) ? 29 : month_days[i];
+        *day_of_year += (i == 2 && dt_is_leap_year(representation->year)) ? 29 : month_days[i];
     }
-    *doy += representation->day;
+    *day_of_year += representation->day;
     return DT_OK;
 }
 

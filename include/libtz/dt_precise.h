@@ -17,10 +17,6 @@
 extern "C" {
 #endif
 
-//------------------------------------------------------------------------------
-// General purpose functions
-//------------------------------------------------------------------------------
-
 /*!
  * \defgroup GeneralPurpose General purpose functions
  * @{
@@ -52,11 +48,7 @@ const char * dt_strerror(dt_status_t status);
 dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second,
                 unsigned long nano_second);
 
-/*!@}*/
-
-//------------------------------------------------------------------------------
-// Timestamp functions
-//------------------------------------------------------------------------------
+/*! @}*/
 
 /*!
  * \defgroup Timestamp Timestamp functions
@@ -69,12 +61,6 @@ dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int
  * \return Result status of the operation
  */
 dt_status_t dt_now(dt_timestamp_t *result);
-
-//! Returns a current timestamp
-/*!
- * \return Current timestamp [OUT]
- */
-//dt_timestamp_t dt_now();
 
 //! Compares two timestamps
 /*!
@@ -92,7 +78,7 @@ dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_
  * \param result Offset b/w timestamps [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result);
+dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result);
 
 //! Applies offset on the timestamp
 /*!
@@ -103,32 +89,7 @@ dt_status_t dt_offset_to(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, d
  */
 dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result);
 
-//! Loads timestamp from POSIX time
-/*!
- * \note POSIX time (time_t) supports greater than zero values only
- * \param time POSIX time value
- * \param result Timestamp for the POSIX time value [OUT]
- * \param nano_second Nano-seconds part of the timestamp
- * \return Result status of the operation
- */
-dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result);
-
-//! Converts timestamp to POSIX time value
-/*!
- * Function returns DT_INVALID_ARGUMENT if a timestamp could not be represented by POSIX time.
- * \note POSIX time (time_t) supports greater than zero values only
- * \param timestamp Timestamp to convert
- * \param time POSIX time for the timestamp [OUT]
- * \param nano_second Optional nano-seconds part of the timestamp (0L-999999999L), could be NULL if not used [OUT]
- * \return Result status of the operation
- */
-dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second);
-
-/*!@}*/
-
-//------------------------------------------------------------------------------
-// Interval functions
-//------------------------------------------------------------------------------
+/*! @}*/
 
 /*!
  * \defgroup Interval Interval functions
@@ -182,34 +143,7 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
  */
 dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t *result);
 
-#if defined(_WIN32)
-struct timespec {
-        time_t tv_sec;                          //!< Seconds
-        long tv_nsec;                           //!< Nano-seconds
-};
-#endif
-
-//! Converts interval to timespec structure
-/*!
- * \param interval Interval to convert to timespec structure
- * \param result Timespec structure [OUT]
- * \return Result status of the operation
- */
-dt_status_t dt_interval_to_timespec(const dt_interval_t *interval, struct timespec *result);
-
-//! Converts timespec structure to interval
-/*!
- * \param ts Timespec structure
- * \param result Interval [OUT]
- * \return Result status of the operation
- */
-dt_status_t dt_timespec_to_interval(const struct timespec *ts, dt_interval_t *result);
-
-/*!@}*/
-
-//------------------------------------------------------------------------------
-// Representation functions
-//------------------------------------------------------------------------------
+/*! @}*/
 
 /*!
  * \defgroup Representation Representation functions
@@ -256,41 +190,20 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
 //! Returns representation's week day number
 /*!
  * \param representation Representation object
- * \param dow Representation's day of week (1-7, 1 is Sunday) [OUT]
+ * \param day_of_week Representation's day of week (1-7, 1 is Sunday) [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *dow);
+dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *day_of_week);
 
 //! Returns representation's day of year
 /*!
  * \param representation Representation object
- * \param doy Representation's day of year (1-365/366) [OUT]
+ * \param day_of_year Representation's day of year (1-365/366) [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *doy);
+dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *day_of_year);
 
-//! Converts a localized representation to POSIX breakdown time structure
-/*!
- * \param representation Representation object
- * \param tm POSIX breakdown time structure for the representation [OUT]
- * \return Result status of the operation
- */
-dt_status_t dt_representation_to_tm(const dt_representation_t *representation, struct tm *tm);
-
-//! Converts a POSIX breakdown time structure to representation
-/*!
- * \param tm POSIX breakdown time structure
- * \param nano_second Nano-second part of the representation
- * \param representation Representation of POSIX breakdown time structure [OUT]
- * \return Result status of the operation
- */
-dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation);
-
-/*!@}*/
-
-//------------------------------------------------------------------------------
-// String conversion functions
-//------------------------------------------------------------------------------
+/*! @}*/
 
 /*!
  * \defgroup StringConversion String conversion functions
@@ -321,7 +234,75 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
 dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation,
                 char *tz_name_buffer, size_t tz_name_buffer_size);
 
-/*!@}*/
+/*! @}*/
+
+/*!
+ * \defgroup TypeConversion Type conversion functions
+ * @{
+ */
+
+//! Loads timestamp from POSIX time
+/*!
+ * \note POSIX time (time_t) supports greater than zero values only
+ * \param time POSIX time value
+ * \param nano_second Nano-seconds part of the timestamp
+ * \param result Timestamp for the POSIX time value [OUT]
+ * \return Result status of the operation
+ */
+dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result);
+
+//! Converts timestamp to POSIX time value
+/*!
+ * Function returns DT_INVALID_ARGUMENT if a timestamp could not be represented by POSIX time.
+ * \note POSIX time (time_t) supports greater than zero values only
+ * \param timestamp Timestamp to convert
+ * \param time POSIX time for the timestamp [OUT]
+ * \param nano_second Optional nano-seconds part of the timestamp (0L-999999999L), could be NULL if not used [OUT]
+ * \return Result status of the operation
+ */
+dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second);
+
+#if defined(_WIN32)
+struct timespec {
+        time_t tv_sec;                          //!< Seconds
+        long tv_nsec;                           //!< Nano-seconds
+};
+#endif
+
+//! Converts interval to timespec structure
+/*!
+ * \param interval Interval to convert to timespec structure
+ * \param result Timespec structure [OUT]
+ * \return Result status of the operation
+ */
+dt_status_t dt_interval_to_timespec(const dt_interval_t *interval, struct timespec *result);
+
+//! Converts timespec structure to interval
+/*!
+ * \param ts Timespec structure
+ * \param result Interval [OUT]
+ * \return Result status of the operation
+ */
+dt_status_t dt_timespec_to_interval(const struct timespec *ts, dt_interval_t *result);
+
+//! Converts a localized representation to POSIX breakdown time structure. Nano seconds will be losted!
+/*!
+ * \param representation Representation object
+ * \param tm POSIX breakdown time structure for the representation [OUT]
+ * \return Result status of the operation
+ */
+dt_status_t dt_representation_to_tm(const dt_representation_t *representation, struct tm *tm);
+
+//! Converts a POSIX breakdown time structure to representation
+/*!
+ * \param tm POSIX breakdown time structure
+ * \param nano_second Nano-second part of the representation
+ * \param representation Representation of POSIX breakdown time structure [OUT]
+ * \return Result status of the operation
+ */
+dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation);
+
+/*! @}*/
 
 #ifdef __cplusplus
 }

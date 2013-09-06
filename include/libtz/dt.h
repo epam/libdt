@@ -4,7 +4,7 @@
 /*
  * Cross-platform date/time handling library for C.
  * Main header file.
- * Expand STD ANSI C Library
+ * Extend STD ANSI C Library
  *
  * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
  * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
@@ -18,7 +18,13 @@
 extern "C" {
 #endif
 
-/** Converts time_t to local time in specific Time Zone.
+/*!
+ * \defgroup STDExtendFunctons functions, which is extending STD ANSI C Library
+ * @{
+ */
+
+//! Converts time_t to local time in specific Time Zone. See man localtime.
+/*!
  * @param time - time to format
  * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
  * @param result - variable for result. Value will be set to local time representation
@@ -26,7 +32,8 @@ extern "C" {
  */
 int localtime_tz(const time_t *time, const char *tz_name, struct tm *result);
 
-/** Converts local time in specific Time Zone to time_t.
+//! Converts local time in specific Time Zone to time_t. See man mktime.
+/*!
  * @param time - time to format
  * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
  * @param result - variable for result. Value will be set to local time representation
@@ -34,12 +41,7 @@ int localtime_tz(const time_t *time, const char *tz_name, struct tm *result);
  */
 int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
 
-/*!
- * \defgroup StringConversion String conversion functions
- * @{
- */
-
-//! Converts representation to string
+//! Converts representation to string. See man strftime.
 /*!
  * \param representation Representation to convert
  * \param tz_name Optional timezone name, could be NULL if local timezone is considered
@@ -51,7 +53,7 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
 int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
                 char *str_buffer, size_t str_buffer_size);
 
-//! Converts string to representation
+//! Converts string to representation. See man strptime.
 /*!
  * \param str A NULL-terminated string to parse
  * \param fmt Format string, see strptime()/strftime() plus "%f" for nano-seconds
@@ -60,7 +62,7 @@ int strftime_tz(const struct tm *representation, const char *tz_name, const char
  */
 int strptime_tz(const char *str, const char *fmt, struct tm *representation);
 
-/*!@}*/
+/*! @}*/
 
 #ifdef __cplusplus
 }
