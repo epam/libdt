@@ -41,22 +41,22 @@ static inline tz_alias_iterator_t** insert_alias(tz_aliases_t* aliases, tz_alias
 tz_alias_iterator_t** insert_mapping(tz_aliases_t* aliases, tz_alias_iterator_t** insertPosition, struct tz_unicode_mapping* tz)
 {
     tz_alias_t alias = {0,};
-    alias.kind = TZA_UNKNOWN;
+    alias.kind = TZMAP_UNKNOWN;
 
 
 
     alias.name = tz->other;
-    alias.kind = TZA_WIN_STANDARD_TIME;
+    alias.kind = TZMAP_WIN_STANDARD_TIME;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
     alias.name = tz->type;
-    alias.kind = TZA_OLSEN_NAME;
+    alias.kind = TZMAP_OLSEN_NAME;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
     alias.name = tz->territory;
-    alias.kind = TZA_ABBREVIATION;
+    alias.kind = TZMAP_ABBREVIATION;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
@@ -84,7 +84,6 @@ dt_status_t tzmap_map(const char* tz_name, tz_aliases_t **aliases)
     for (i = 0; i < tz_unicode_map_size; i++) {
             struct tz_unicode_mapping tz = tz_unicode_map[i];
             if (((!strcmp(tz.type, tz_name)) ||
-                (!strcmp(tz.territory, tz_name)) ||
                  (!strcmp(tz.other, tz_name)))) {
                 insertPosition = insert_mapping(list, insertPosition, &tz);
             }

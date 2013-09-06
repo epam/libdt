@@ -260,10 +260,12 @@ const char * findTimeZoneByName(const char *tz_name)
     }
 
     while((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
-        if (alias->kind == TZA_OLSEN_NAME) {
+        if (alias->kind == TZMAP_OLSEN_NAME) {
+            tzmap_free(aliases);
             return alias->name;
         }
     }
+
 
     return 0;
 }

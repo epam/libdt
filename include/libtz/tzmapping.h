@@ -3,10 +3,10 @@
 #include <libtz/dt_types.h>
 
 typedef enum {
-    TZA_ABBREVIATION,
-    TZA_WIN_STANDARD_TIME,
-    TZA_OLSEN_NAME,
-    TZA_UNKNOWN
+    TZMAP_ABBREVIATION,
+    TZMAP_WIN_STANDARD_TIME,
+    TZMAP_OLSEN_NAME,
+    TZMAP_UNKNOWN
 } tz_alias_kind_t;
 
 typedef struct tz_alias_iterator tz_alias_iterator_t;
