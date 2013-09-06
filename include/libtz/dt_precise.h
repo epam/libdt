@@ -46,7 +46,7 @@ const char * dt_strerror(dt_status_t status);
  * TODO: Leap seconds support!
  */
 dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second,
-                unsigned long nano_second);
+                                     unsigned long nano_second);
 
 /*! @}*/
 
@@ -163,7 +163,7 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
  * \return Result status of the operation
  */
 dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
-                dt_representation_t *result);
+                                   dt_representation_t *result);
 
 //! Represents a timestamp using a timezone none
 /*!
@@ -185,7 +185,7 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
  * \return Result status of the operation
  */
 dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const char *tz_name,
-                dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
+                                           dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
 
 //! Returns representation's week day number
 /*!
@@ -220,7 +220,7 @@ dt_status_t dt_representation_day_of_year(const dt_representation_t *representat
  * \return Result status of the operation
  */
 dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
-                char *str_buffer, size_t str_buffer_size);
+                         char *str_buffer, size_t str_buffer_size);
 
 //! Converts string to representation
 /*!
@@ -232,7 +232,7 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
  * \return Result status of the operation
  */
 dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation,
-                char *tz_name_buffer, size_t tz_name_buffer_size);
+                           char *tz_name_buffer, size_t tz_name_buffer_size);
 
 /*! @}*/
 
@@ -264,8 +264,8 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
 
 #if defined(_WIN32)
 struct timespec {
-        time_t tv_sec;                          //!< Seconds
-        long tv_nsec;                           //!< Nano-seconds
+    time_t tv_sec;                          //!< Seconds
+    long tv_nsec;                           //!< Nano-seconds
 };
 #endif
 
