@@ -13,13 +13,13 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 dt_status_t dt_now(dt_timestamp_t *result)
 {
-    if (!result) {
+    if (!result)
         return DT_INVALID_ARGUMENT;
-    }
+
     struct timespec ts;
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0)
         return DT_SYSTEM_CALL_ERROR;
-    }
+
     result->second = ts.tv_sec;
     result->nano_second = ts.tv_nsec;
     return DT_OK;
@@ -27,9 +27,9 @@ dt_status_t dt_now(dt_timestamp_t *result)
 
 dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result)
 {
-    if (time < 0 || !result) {
+    if (time < 0 || !result)
         return DT_INVALID_ARGUMENT;
-    }
+
     result->second = time;
     result->nano_second = nano_second;
     return DT_OK;
@@ -37,9 +37,9 @@ dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, d
 
 dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
 {
-    if (!timestamp || !time || timestamp->second < 0) {
+    if (!timestamp || !time || timestamp->second < 0)
         return DT_INVALID_ARGUMENT;
-    }
+
     *time = timestamp->second;
     *nano_second = timestamp->nano_second;
     return DT_OK;
@@ -47,11 +47,10 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
 
 dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const char *tz_name, dt_representation_t *representation)
 {
-    // TODO: System timezone database usage!
+    // FIXME: System timezone database usage!
 
-    if (!timestamp || !representation) {
+    if (!timestamp || !representation)
         return DT_INVALID_ARGUMENT;
-    }
 
     dt_status_t result = DT_UNKNOWN_ERROR;
 
@@ -66,18 +65,18 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
         for (i = 0; environ[i] != NULL; ++i) {
             continue;
         }
+
         fakeenv = malloc((i + 2) * sizeof *fakeenv);
         size_t longest = 1024;
-        if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL) {
-            return -1;
-        }
+        if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL)
+            return DT_MALLOC_ERROR;
+
         int to = 0;
         strcpy(fakeenv[to++], "TZ=");
         int from = 0;
         for (from = 0; environ[from] != NULL; ++from) {
-            if (strncmp(environ[from], "TZ=", 3) != 0) {
+            if (strncmp(environ[from], "TZ=", 3) != 0)
                 fakeenv[to++] = environ[from];
-            }
         }
         fakeenv[to] = NULL;
     }
@@ -109,27 +108,26 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
         tzset();
     }
 unlock_mutex:
-    if (pthread_mutex_unlock(&mutex)) {
+    if (pthread_mutex_unlock(&mutex))
         result = DT_SYSTEM_CALL_ERROR;
-    }
+
 cleanup_fakeenv:
-    if (tz_name) {
+    if (tz_name)
         free(fakeenv);
-    }
-    if (result == DT_OK) {
+
+    if (result == DT_OK)
         result = dt_tm_to_representation(&tm, timestamp->nano_second, representation);
-    }
+
     return result;
 }
 
 dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const char *tz_name,
                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp)
 {
-    // TODO: System timezone database usage!
+    // FIXME: System timezone database usage!
 
-    if (!representation || !first_timestamp) {
+    if (!representation || !first_timestamp)
         return DT_INVALID_ARGUMENT;
-    }
 
     dt_status_t result = DT_UNKNOWN_ERROR;
 
@@ -144,11 +142,12 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         for (i = 0; environ[i] != NULL; ++i) {
             continue;
         }
+
         fakeenv = malloc((i + 2) * sizeof *fakeenv);
         size_t longest = 1024;
-        if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL) {
-            return -1;
-        }
+        if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL)
+            return DT_MALLOC_ERROR;
+
         int to = 0;
         strcpy(fakeenv[to++], "TZ=");
         int from = 0;
@@ -191,19 +190,20 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         tzset();
     }
 unlock_mutex:
-    if (pthread_mutex_unlock(&mutex)) {
+    if (pthread_mutex_unlock(&mutex))
         result = DT_SYSTEM_CALL_ERROR;
-    }
+
 cleanup_fakeenv:
-    if (tz_name) {
+    if (tz_name)
         free(fakeenv);
-    }
+
     if (result == DT_OK) {
         first_timestamp->second = posix_time;
         first_timestamp->nano_second = representation->nano_second;
     }
     return result;
 }
+
 dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
                          char *str_buffer, size_t str_buffer_size)
 {
@@ -229,7 +229,7 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
 {
     char *result = NULL;
     struct tm tm = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
+    dt_status_t status = DT_SYSTEM_CALL_ERROR;
 
     if (!representation || !str || !fmt)
         return DT_INVALID_ARGUMENT;
