@@ -252,7 +252,7 @@ const char * findTimeZoneByName(const char *tz_name)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
     tz_aliases_t* aliases = NULL;
-    tz_alias_iterator_t* it = TZMAP_START;
+    tz_alias_iterator_t* it = TZMAP_BEGIN;
     tz_alias_t * alias = NULL;
 
     if (tzmap_map(tz_name, &aliases) != DT_OK) {

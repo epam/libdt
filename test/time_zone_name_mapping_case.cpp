@@ -48,7 +48,7 @@ void testMappingWithHawaianData(const char* tzName)
     bool visitedWindowsStandardTimeAlias = false;
     dt_status_t  status = DT_UNKNOWN_ERROR;
     tz_alias_t *alias = NULL;
-    tz_alias_iterator_t *iterator = TZMAP_START;
+    tz_alias_iterator_t *iterator = TZMAP_BEGIN;
     size_t aliasesArrayLength = sizeof(aliasesOlsenForHawaian) / sizeof(char *);
     std::set<std::string> setOlsenForHawaian(aliasesOlsenForHawaian, aliasesOlsenForHawaian + aliasesArrayLength);
     aliasesArrayLength = sizeof(aliasesAbbrForHawaian) / sizeof(char *);

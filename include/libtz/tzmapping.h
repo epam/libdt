@@ -16,7 +16,7 @@ typedef struct tz_alias {
     const char* name;
 } tz_alias_t;
 
-#define TZMAP_START (tz_alias_iterator_t*)0x1
+#define TZMAP_BEGIN (tz_alias_iterator_t*)0x1
 #ifdef __cplusplus
 extern "C" {
 #endif
