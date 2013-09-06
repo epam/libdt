@@ -65,7 +65,7 @@ TEST_F(DtCase, validate_representation)
         EXPECT_EQ(dt_validate_representation(2012, 12, 0, 8, 30, 45, 123456789), DT_FALSE);
         EXPECT_EQ(dt_validate_representation(2012, 0, 21, 8, 30, 45, 123456789), DT_FALSE);
         EXPECT_EQ(dt_validate_representation(0, 12, 21, 8, 30, 45, 123456789), DT_FALSE);
-	// Passage from Julian to Gregorian calendar
+        // Passage from Julian to Gregorian calendar
         EXPECT_EQ(dt_validate_representation(1582, 10, 10, 8, 30, 45, 123456789), DT_FALSE);
 }
 
