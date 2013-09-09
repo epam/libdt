@@ -46,7 +46,7 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
     return DT_OK;
 }
 
-dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const char *tz_name, dt_representation_t *representation)
+dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t* tz, dt_representation_t *representation)
 {
     // FIXME: System timezone database usage!
 
@@ -60,7 +60,7 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
     char **fakeenv = NULL;
     char **oldenv = NULL;
 
-    if (tz_name) {
+    if (tz != NULL) {
         // Preparing fake environment if TZ has been defined
         int i = 0;
         for (i = 0; environ[i] != NULL; ++i) {
@@ -87,12 +87,12 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
         goto cleanup_fakeenv;
     }
 
-    if (tz_name) {
+    if (tz != NULL && tz->time_zone_name != NULL) {
         // Substituting environment if TZ has been defined
         oldenv = environ;
         environ = fakeenv;
         // Setting timezone
-        strcpy(&fakeenv[0][3], tz_name);
+        strcpy(&fakeenv[0][3], tz->time_zone_name);
         tzset();
     }
 
@@ -102,7 +102,7 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
     } else {
         result = DT_OK;
     }
-    if (tz_name) {
+    if (tz != NULL && tz->time_zone_name != NULL) {
         // Restoring environment
         environ = oldenv;
         // Restoring timezone
@@ -113,7 +113,7 @@ unlock_mutex:
         result = DT_SYSTEM_CALL_ERROR;
 
 cleanup_fakeenv:
-    if (tz_name)
+    if (tz != NULL && tz->time_zone_name != NULL)
         free(fakeenv);
 
     if (result == DT_OK)
@@ -122,7 +122,7 @@ cleanup_fakeenv:
     return result;
 }
 
-dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const char *tz_name,
+dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t *timezone,
                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp)
 {
     // FIXME: System timezone database usage!
@@ -137,7 +137,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
     char **fakeenv = NULL;
     char **oldenv = NULL;
 
-    if (tz_name) {
+    if (timezone && timezone->time_zone_name) {
         // Preparing fake environment if TZ has been defined
         int i = 0;
         for (i = 0; environ[i] != NULL; ++i) {
@@ -165,12 +165,12 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         goto cleanup_fakeenv;
     }
 
-    if (tz_name) {
+    if (timezone && timezone->time_zone_name) {
         // Substituting environment if TZ has been defined
         oldenv = environ;
         environ = fakeenv;
         // Setting timezone
-        strcpy(&fakeenv[0][3], tz_name);
+        strcpy(&fakeenv[0][3], timezone->time_zone_name);
         tzset();
     }
 
@@ -184,7 +184,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         result = DT_OK;
     }
 
-    if (tz_name) {
+    if (timezone && timezone->time_zone_name) {
         // Restoring environment
         environ = oldenv;
         // Restoring timezone
@@ -195,7 +195,7 @@ unlock_mutex:
         result = DT_SYSTEM_CALL_ERROR;
 
 cleanup_fakeenv:
-    if (tz_name)
+    if (timezone && timezone->time_zone_name)
         free(fakeenv);
 
     if (result == DT_OK) {
@@ -248,24 +248,4 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
     return DT_OK;
 }
 
-const char * findTimeZoneByName(const char *tz_name)
-{
-    dt_status_t status = DT_UNKNOWN_ERROR;
-    tz_aliases_t* aliases = NULL;
-    tz_alias_iterator_t* it = TZMAP_BEGIN;
-    tz_alias_t * alias = NULL;
 
-    if (tzmap_map(tz_name, &aliases) != DT_OK) {
-        return 0;
-    }
-
-    while((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
-        if (alias->kind == TZMAP_OLSEN_NAME) {
-            tzmap_free(aliases);
-            return alias->name;
-        }
-    }
-
-
-    return 0;
-}

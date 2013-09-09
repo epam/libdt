@@ -418,16 +418,22 @@ int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
-    const char *tz = findTimeZoneByName(tz_name);
+    dt_timezone_t tz = {0,};
 
-    if (!time || !result || !tz)
+
+    if (!time || !result || !tz_name)
         return EXIT_FAILURE;
+
+    if (dt_timezone_lookup(&tz, tz_name) != DT_OK) {
+        return EXIT_FAILURE;
+    }
 
     status = dt_posix_time_to_timestamp(*time, 0, &t);
     if (status != DT_OK)
         return EXIT_FAILURE;
 
-    status = dt_timestamp_to_representation(&t, tz, &rep);
+    status = dt_timestamp_to_representation(&t, &tz, &rep);
+    dt_timezone_cleanup(&tz);
     if (status != DT_OK)
         return EXIT_FAILURE;
 
@@ -443,17 +449,21 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
+    dt_timezone_t tz = {0,};
     unsigned long nano = 0;
-    const char *tz = findTimeZoneByName(tz_name);
 
-    if (!tm || !result)
+    if (!tm || !result || !tz_name)
         return EXIT_FAILURE;
+    if (dt_timezone_lookup(&tz, tz_name) != DT_OK) {
+        return EXIT_FAILURE;
+    }
 
     status = dt_tm_to_representation(tm, 0, &rep);
     if (status != DT_OK)
         return EXIT_FAILURE;
 
-    status = dt_representation_to_timestamp(&rep, tz, &t, NULL);
+    status = dt_representation_to_timestamp(&rep, &tz, &t, NULL);
+    dt_timezone_cleanup(&tz);
     if (status != DT_OK)
         return EXIT_FAILURE;
 
@@ -462,4 +472,38 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
+}
+
+
+dt_status_t dt_timezone_lookup(dt_timezone_t *timezone, const char* timezone_name)
+{
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    tz_aliases_t* aliases = NULL;
+    tz_alias_iterator_t* it = TZMAP_BEGIN;
+    tz_alias_t * alias = NULL;
+
+    if (timezone == NULL || timezone_name == NULL) {
+        return DT_INVALID_ARGUMENT;
+    }
+
+    if ((status = tzmap_map(timezone_name, &aliases)) != DT_OK) {
+        return status;
+    }
+
+    while((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
+        if (alias->kind == PREFERED_TZMAP_TYPE) {
+            timezone->time_zone_name = alias->name;
+            tzmap_free(aliases);
+            return DT_OK;
+        }
+    }
+
+    return status;
+}
+
+dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone)
+{
+    if (timezone == NULL)
+        return DT_INVALID_ARGUMENT;
+    return DT_OK;
 }

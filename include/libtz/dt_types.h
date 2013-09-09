@@ -67,4 +67,10 @@ typedef struct dt_representation {
     unsigned long nano_second;              //!< Nano-second (0L-999999999L)
 } dt_representation_t;
 
+//! Timezone representation
+//! @note it's internal implementation can be changed from version to version
+typedef struct dt_timezone {
+    const char* time_zone_name;
+} dt_timezone_t;
+
 #endif // _DT_TYPES_H

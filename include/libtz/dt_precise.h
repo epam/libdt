@@ -172,7 +172,7 @@ dt_status_t dt_init_representation(int year, int month, int day, int hour, int m
  * \param representation Timestamp representation [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const char *tz_name, dt_representation_t *representation);
+dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *tz, dt_representation_t *representation);
 
 //! Returns a timestamps for a representation in timezone by it's name
 /*!
@@ -184,7 +184,7 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
  * \param second_timestamp Optional second representation's timestamp (can be NULL, not supported at the moment) [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const char *tz_name,
+dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t* timezone,
                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
 
 //! Returns representation's week day number
@@ -301,6 +301,22 @@ dt_status_t dt_representation_to_tm(const dt_representation_t *representation, s
  * \return Result status of the operation
  */
 dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation);
+
+//! Lookups timezone object for future usage in corresponding api.
+/*!
+ * \param timezone pointer to timezone object
+ * \param timezone_name name of timezone for lookup, it can be in olsen database format, or in windows standard time format
+ * \return Result status of the operation
+ */
+dt_status_t dt_timezone_lookup(dt_timezone_t *timezone, const char* timezone_name);
+
+//! Free resources connected with timezone object
+//! @note memory allocated for dt_timezone_t objec won't be free
+/*!
+ * \param timezone pointer to timezone object
+ * \return Result status of the operation
+ */
+dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone);
 
 /*! @}*/
 

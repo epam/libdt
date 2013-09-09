@@ -616,7 +616,4 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
 
 }
 
-char * findTimeZoneByName(const char *tz_name)
-{
-    return tz_name;
-}
+
