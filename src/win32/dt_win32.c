@@ -118,7 +118,7 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
         return DT_OK;
 }
 
-dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const char *tz_name, dt_representation_t *representation)
+dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *tz, dt_representation_t *representation)
 {
     DWORD dwError = -1;
     SYSTEMTIME tLocalTime = {0};
@@ -130,13 +130,21 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
     struct tm result = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!timestamp || !representation || !tz_name) {
+    if (timestamp == NULL || representation == NULL) {
         return DT_INVALID_ARGUMENT;
     }
 
-    dwError = GetTimeZoneInformationByName(&dtzi, tz_name);
-    if (dwError != 0)
-        return DT_TIMEZONE_NOT_FOUND;
+    if(tz == NULL || tz->time_zone_name == NULL) {
+        dwError = GetTimeZoneInformation((LPTIME_ZONE_INFORMATION)&dtzi);
+        if (dwError != 0)
+            return DT_TIMEZONE_NOT_FOUND;
+    }
+    else {
+        dwError = GetTimeZoneInformationByName(&dtzi, tz->time_zone_name);
+        if (dwError != 0)
+            return DT_TIMEZONE_NOT_FOUND;
+    }
+
 
     status = dt_timestamp_to_posix_time(timestamp, &time, &nano);
     if (status != DT_OK)
@@ -161,8 +169,8 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
     return DT_OK;
 }
 
-dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const char *tz_name,
-                dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp)
+dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t* timezone,
+                                           dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp)
 {
     DWORD dwError;
     TIME_ZONE_INFORMATION tzi;
@@ -174,7 +182,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
     struct tm tm = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!representation || !first_timestamp || tz_name == NULL) {
+    if (!representation || !first_timestamp) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -187,21 +195,28 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         return DT_CONVERT_ERROR;
     }
 
-    if (strcmp(tz_name, "UTC") == 0) {
+    if (timezone != NULL && timezone->time_zone_name != NULL && strcmp(timezone->time_zone_name, "UTC") == 0) {
         return SystemTimeToUnixTime(&tLocalTime, &time);
-    } else {
-        dwError = GetTimeZoneInformationByName(&dtzi, tz_name);
+    } else if(timezone != NULL && timezone->time_zone_name != NULL){
+        dwError = GetTimeZoneInformationByName(&dtzi, timezone->time_zone_name);
         if (dwError != 0) {
             return DT_TIMEZONE_NOT_FOUND;
         }
-        if (GetTimeZoneInformationForYearLower(tLocalTime.wYear, &dtzi, &tzi) == FALSE) {
+
+   }
+    else {
+        dwError = GetTimeZoneInformation((LPTIME_ZONE_INFORMATION)&dtzi);
+        if (dwError != 0) {
             return DT_TIMEZONE_NOT_FOUND;
         }
 
-        if (TzSpecificLocalTimeToSystemTime(&tzi, &tLocalTime, &tUniversalTime) == FALSE) {
-            return DT_CONVERT_ERROR;
-        }
+    }
+    if (GetTimeZoneInformationForYearLower(tLocalTime.wYear, &dtzi, &tzi) == FALSE) {
+        return DT_TIMEZONE_NOT_FOUND;
+    }
 
+    if (TzSpecificLocalTimeToSystemTime(&tzi, &tLocalTime, &tUniversalTime) == FALSE) {
+        return DT_CONVERT_ERROR;
     }
 
     if (SystemTimeToUnixTime(&tUniversalTime, &time) != EXIT_SUCCESS)

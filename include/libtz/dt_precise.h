@@ -168,7 +168,7 @@ dt_status_t dt_init_representation(int year, int month, int day, int hour, int m
 //! Represents a timestamp using a timezone name
 /*!
  * \param timestamp Timestamp to represent
- * \param tz_name Timezone name or NULL if local tiezone is considered
+ * \param timezone Timezone or NULL if local timezone is considered
  * \param representation Timestamp representation [OUT]
  * \return Result status of the operation
  */
@@ -179,7 +179,7 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
  * It is possible for the representation to have two timestamps, e.g. when a time is "going back" for
  * an hour.
  * \param representation Representation to fetch a timestamp of
- * \param tz_name Timezone name or NULL if local tiezone is considered
+ * \param timezone Timezone or NULL if local timezone is considered
  * \param first_timestamp First representation's timestamp [OUT]
  * \param second_timestamp Optional second representation's timestamp (can be NULL, not supported at the moment) [OUT]
  * \return Result status of the operation

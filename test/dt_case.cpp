@@ -375,6 +375,11 @@ TEST_F(DtCase, representation_timestamp_conversion)
     EXPECT_EQ(dt_timezone_lookup(&tz_berlin, BERLIN_TZ_NAME), DT_OK);
     EXPECT_EQ(dt_timezone_lookup(&tz_utc, UTC_TZ_NAME), DT_OK);
 
+    //Local timezone
+    EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, NULL, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, NULL, &rr), DT_OK);
+
     // Europe/Moscow
     EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
     EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
