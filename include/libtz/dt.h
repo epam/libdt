@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 /*!
- * \defgroup STDExtendFunctons functions, which is extending STD ANSI C Library
+ * \defgroup STDExtendFunctons Functions, which is extending STD ANSI C Library
  * @{
  */
 
