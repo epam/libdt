@@ -165,7 +165,7 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
 dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
                                    dt_representation_t *result);
 
-//! Represents a timestamp using a timezone none
+//! Represents a timestamp using a timezone name
 /*!
  * \param timestamp Timestamp to represent
  * \param tz_name Timezone name or NULL if local tiezone is considered

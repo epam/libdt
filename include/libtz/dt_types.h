@@ -59,11 +59,11 @@ typedef struct dt_offset {
 //! Date/time representation object
 typedef struct dt_representation {
     int year;                               //!< Year (any, except 0)
-    int month;                              //!< Month (1-12)
-    int day;                                //!< Day (1-28/29/30/31)
-    int hour;                               //!< Hour (0-23)
-    int minute;                             //!< Minute (0-59)
-    int second;                             //!< Second (0-59 or 0-60 if leap second)
+    unsigned short month;                   //!< Month (1-12)
+    unsigned short day;                     //!< Day (1-28/29/30/31)
+    unsigned short hour;                    //!< Hour (0-23)
+    unsigned short minute;                  //!< Minute (0-59)
+    unsigned short second;                  //!< Second (0-59 or 0-60 if leap second)
     unsigned long nano_second;              //!< Nano-second (0L-999999999L)
 } dt_representation_t;
 
