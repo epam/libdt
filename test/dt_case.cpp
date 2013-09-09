@@ -102,7 +102,7 @@ TEST_F(DtCase, offset_to)
     dt_offset_t o;
     dt_timezone_t tz_moscow = {0,};
 
-    EXPECT_EQ(dt_timezone_lookup(&tz_moscow, MOSCOW_TZ_NAME), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
     EXPECT_EQ(dt_offset_between(NULL, &ts_02, &o), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_offset_between(&ts_01, NULL, &o), DT_INVALID_ARGUMENT);
@@ -148,7 +148,7 @@ TEST_F(DtCase, apply_offset)
     dt_offset_t o;
     dt_timezone_t tz_moscow = {0,};
 
-    EXPECT_EQ(dt_timezone_lookup(&tz_moscow, MOSCOW_TZ_NAME), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
     EXPECT_EQ(dt_apply_offset(NULL, &o, &ts_02), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_apply_offset(&ts_01, NULL, &ts_02), DT_INVALID_ARGUMENT);
@@ -371,9 +371,9 @@ TEST_F(DtCase, representation_timestamp_conversion)
     dt_timezone_t tz_berlin = {0,};
     dt_timezone_t tz_utc= {0,};
     //Lookup timezones
-    EXPECT_EQ(dt_timezone_lookup(&tz_moscow, MOSCOW_TZ_NAME), DT_OK);
-    EXPECT_EQ(dt_timezone_lookup(&tz_berlin, BERLIN_TZ_NAME), DT_OK);
-    EXPECT_EQ(dt_timezone_lookup(&tz_utc, UTC_TZ_NAME), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(BERLIN_TZ_NAME, &tz_berlin), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(UTC_TZ_NAME, &tz_utc), DT_OK);
 
     //Local timezone
     EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
@@ -630,12 +630,12 @@ TEST_F(DtCase, lookup_free_timezone)
     dt_timezone_t tz_moscow_olsen = {0,};
     dt_timezone_t tz_unreal_timezone = {0,};
 
-    EXPECT_EQ(dt_timezone_lookup(NULL, MOSCOW_WINDOWS_STANDARD_TZ_NAME), DT_INVALID_ARGUMENT);
-    EXPECT_EQ(dt_timezone_lookup(&tz_unreal_timezone, NULL), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_WINDOWS_STANDARD_TZ_NAME, NULL), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_timezone_lookup(NULL, &tz_unreal_timezone), DT_INVALID_ARGUMENT);
 
-    EXPECT_EQ(dt_timezone_lookup(&tz_unreal_timezone, UNREAL_TIMEZONE_NAME), DT_TIMEZONE_NOT_FOUND);
-    EXPECT_EQ(dt_timezone_lookup(&tz_moscow_standard, MOSCOW_WINDOWS_STANDARD_TZ_NAME), DT_OK);
-    EXPECT_EQ(dt_timezone_lookup(&tz_moscow_olsen, MOSCOW_OLSEN_TZ_NAME), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(UNREAL_TIMEZONE_NAME, &tz_unreal_timezone), DT_TIMEZONE_NOT_FOUND);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_WINDOWS_STANDARD_TZ_NAME, &tz_moscow_standard), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_OLSEN_TZ_NAME, &tz_moscow_olsen), DT_OK);
 
     EXPECT_EQ(dt_timezone_cleanup(NULL), DT_INVALID_ARGUMENT);
 

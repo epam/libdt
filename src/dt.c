@@ -59,7 +59,7 @@ const char * dt_strerror(dt_status_t status)
     }
 }
 
-dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second)
+dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second)
 {
     // Simple checking for invalid values
     if (year == 0 || month < 1 || month > 12 || day < 1 || hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 ||
@@ -292,7 +292,7 @@ static dt_status_t dt_init_representation_without_check(int year, int month, int
     return DT_OK;
 }
 
-dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
+dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second,
                                    dt_representation_t *result)
 {
     if (!dt_validate_representation(year, month, day, hour, minute, second, nano_second))
@@ -424,7 +424,7 @@ int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
     if (!time || !result || !tz_name)
         return EXIT_FAILURE;
 
-    if (dt_timezone_lookup(&tz, tz_name) != DT_OK) {
+    if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
         return EXIT_FAILURE;
     }
 
@@ -454,7 +454,7 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
 
     if (!tm || !result || !tz_name)
         return EXIT_FAILURE;
-    if (dt_timezone_lookup(&tz, tz_name) != DT_OK) {
+    if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
         return EXIT_FAILURE;
     }
 
@@ -475,7 +475,7 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
 }
 
 
-dt_status_t dt_timezone_lookup(dt_timezone_t *timezone, const char* timezone_name)
+dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
     tz_aliases_t* aliases = NULL;

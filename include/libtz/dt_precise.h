@@ -45,7 +45,7 @@ const char * dt_strerror(dt_status_t status);
  *
  * TODO: Leap seconds support!
  */
-dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second,
+dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
                                      unsigned long nano_second);
 
 /*! @}*/
@@ -162,7 +162,8 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
  * \param result Representation to init [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
+dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
+                                   unsigned long nano_second,
                                    dt_representation_t *result);
 
 //! Represents a timestamp using a timezone name
@@ -304,11 +305,11 @@ dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_re
 
 //! Lookups timezone object for future usage in corresponding api.
 /*!
- * \param timezone pointer to timezone object
  * \param timezone_name name of timezone for lookup, it can be in olsen database format, or in windows standard time format
+ ** \param timezone [IN/OUT]pointer to timezone object
  * \return Result status of the operation
  */
-dt_status_t dt_timezone_lookup(dt_timezone_t *timezone, const char* timezone_name);
+dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone);
 
 //! Free resources connected with timezone object
 //! @note memory allocated for dt_timezone_t objec won't be free
