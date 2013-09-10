@@ -1,10 +1,14 @@
 #include "dt_case.h"
 #include "libtz/dt_precise.h"
 
+#define MOSCOW_WINDOWS_STANDARD_TZ_NAME "Russian Standard Time"
+#define MOSCOW_OLSEN_TZ_NAME  "Europe/Moscow"
+#define UNREAL_TIMEZONE_NAME "this time zone is unreal, you can not find it anywhere, so good luck"
+
 #ifdef _WIN32
 
 #define UTC_TZ_NAME "UTC"
-#define MOSCOW_TZ_NAME "Russian Standard Time"
+#define MOSCOW_TZ_NAME MOSCOW_WINDOWS_STANDARD_TZ_NAME
 #define BERLIN_TZ_NAME "W. Europe Standard Time"
 #define GMT_MINUS_5_TZ_NAME "GMT-5"
 #define GMT_PLUS_5_TZ_NAME "GMT+5"
@@ -15,12 +19,13 @@
 #else
 
 #define UTC_TZ_NAME "UTC"
-#define MOSCOW_TZ_NAME "Europe/Moscow"
+#define MOSCOW_TZ_NAME MOSCOW_OLSEN_TZ_NAME
 #define BERLIN_TZ_NAME "Europe/Berlin"
 #define GMT_MINUS_5_TZ_NAME "West Asia Standard Time"
 #define GMT_PLUS_5_TZ_NAME "SA Pacific Standard Time"
 
 #endif
+
 
 DtCase::DtCase() :
     ::testing::Test()
@@ -95,6 +100,9 @@ TEST_F(DtCase, offset_to)
     dt_timestamp_t ts_01;
     dt_timestamp_t ts_02;
     dt_offset_t o;
+    dt_timezone_t tz_moscow = {0,};
+
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
     EXPECT_EQ(dt_offset_between(NULL, &ts_02, &o), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_offset_between(&ts_01, NULL, &o), DT_INVALID_ARGUMENT);
@@ -102,14 +110,14 @@ TEST_F(DtCase, offset_to)
 
     dt_representation_t r;
     EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
-    EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
+    EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_01, NULL) == DT_OK);
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_01, &o), DT_OK);
     EXPECT_EQ(o.is_forward, DT_TRUE);
     EXPECT_EQ(o.duration.seconds, 0L);
     EXPECT_EQ(o.duration.nano_seconds, 0L);
 
     EXPECT_TRUE(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r) == DT_OK);
-    EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
+    EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_02, NULL) == DT_OK);
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_02, &o), DT_OK);
     EXPECT_EQ(o.is_forward, DT_TRUE);
     EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
@@ -120,7 +128,7 @@ TEST_F(DtCase, offset_to)
     EXPECT_EQ(o.duration.nano_seconds, 100L);
 
     EXPECT_TRUE(dt_init_representation(2012, 12, 22, 8, 30, 45, 100L, &r) == DT_OK);
-    EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_02, NULL) == DT_OK);
+    EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_02, NULL) == DT_OK);
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_02, &o), DT_OK);
     EXPECT_EQ(o.is_forward, DT_TRUE);
     EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
@@ -129,6 +137,8 @@ TEST_F(DtCase, offset_to)
     EXPECT_EQ(o.is_forward, DT_FALSE);
     EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
     EXPECT_EQ(o.duration.nano_seconds, 876543311L);
+
+    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
 }
 
 TEST_F(DtCase, apply_offset)
@@ -136,6 +146,9 @@ TEST_F(DtCase, apply_offset)
     dt_timestamp_t ts_01;
     dt_timestamp_t ts_02;
     dt_offset_t o;
+    dt_timezone_t tz_moscow = {0,};
+
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
     EXPECT_EQ(dt_apply_offset(NULL, &o, &ts_02), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_apply_offset(&ts_01, NULL, &ts_02), DT_INVALID_ARGUMENT);
@@ -143,14 +156,14 @@ TEST_F(DtCase, apply_offset)
 
     dt_representation_t r;
     EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789UL, &r) == DT_OK);
-    EXPECT_TRUE(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &ts_01, NULL) == DT_OK);
+    EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_01, NULL) == DT_OK);
     dt_representation_t rr;
 
     EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 100UL, &o.duration) == DT_OK);
     o.is_forward = DT_TRUE;
 
     EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
-    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, &tz_moscow, &rr) == DT_OK);
     EXPECT_EQ(rr.year, 2012);
     EXPECT_EQ(rr.month, 12);
     EXPECT_EQ(rr.day, 22);
@@ -162,7 +175,7 @@ TEST_F(DtCase, apply_offset)
     EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 900000000UL, &o.duration) == DT_OK);
     o.is_forward = DT_TRUE;
     EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
-    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, &tz_moscow, &rr) == DT_OK);
     EXPECT_EQ(rr.year, 2012);
     EXPECT_EQ(rr.month, 12);
     EXPECT_EQ(rr.day, 22);
@@ -174,7 +187,7 @@ TEST_F(DtCase, apply_offset)
     EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 100UL, &o.duration) == DT_OK);
     o.is_forward = DT_FALSE;
     EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
-    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, &tz_moscow, &rr) == DT_OK);
     EXPECT_EQ(rr.year, 2012);
     EXPECT_EQ(rr.month, 12);
     EXPECT_EQ(rr.day, 20);
@@ -186,7 +199,7 @@ TEST_F(DtCase, apply_offset)
     EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 900000000UL, &o.duration) == DT_OK);
     o.is_forward = DT_FALSE;
     EXPECT_EQ(dt_apply_offset(&ts_01, &o, &ts_02), DT_OK);
-    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, MOSCOW_TZ_NAME, &rr) == DT_OK);
+    EXPECT_TRUE(dt_timestamp_to_representation(&ts_02, &tz_moscow, &rr) == DT_OK);
     EXPECT_EQ(rr.year, 2012);
     EXPECT_EQ(rr.month, 12);
     EXPECT_EQ(rr.day, 20);
@@ -194,6 +207,8 @@ TEST_F(DtCase, apply_offset)
     EXPECT_EQ(rr.minute, 30);
     EXPECT_EQ(rr.second, 44);
     EXPECT_EQ(rr.nano_second, 223456789UL);
+
+    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
 }
 
 TEST_F(DtCase, posix_time_to_and_from_timestamp)
@@ -352,64 +367,80 @@ TEST_F(DtCase, representation_timestamp_conversion)
     dt_timestamp_t t;
     dt_representation_t rr;
     dt_representation_t urr;
+    dt_timezone_t tz_moscow = {0,};
+    dt_timezone_t tz_berlin = {0,};
+    dt_timezone_t tz_utc= {0,};
+    //Lookup timezones
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(BERLIN_TZ_NAME, &tz_berlin), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(UTC_TZ_NAME, &tz_utc), DT_OK);
+
+    //Local timezone
+    EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, NULL, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, NULL, &rr), DT_OK);
 
     // Europe/Moscow
     EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_moscow, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 5);
 
     EXPECT_TRUE(dt_init_representation(2013, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_moscow, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 4);
 
     EXPECT_TRUE(dt_init_representation(2009, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_moscow, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 4);
 
     EXPECT_TRUE(dt_init_representation(2013, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, MOSCOW_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, MOSCOW_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_moscow, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 4);
 
     // Europe/Berlin
     EXPECT_TRUE(dt_init_representation(2009, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_berlin, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_berlin, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 7);
 
     EXPECT_TRUE(dt_init_representation(2013, 1, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_berlin, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_berlin, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 7);
 
     EXPECT_TRUE(dt_init_representation(2009, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_berlin, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_berlin, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 6);
 
     EXPECT_TRUE(dt_init_representation(2013, 7, 15, 8, 0, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, BERLIN_TZ_NAME, &t, NULL), DT_OK);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, BERLIN_TZ_NAME, &rr), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_berlin, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_berlin, &rr), DT_OK);
     EXPECT_EQ(memcmp(&r, &rr, sizeof(dt_representation_t)), 0);
-    EXPECT_EQ(dt_timestamp_to_representation(&t, UTC_TZ_NAME, &urr), DT_OK);
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &urr), DT_OK);
     EXPECT_EQ(urr.hour, 6);
+
+    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
+    EXPECT_EQ(dt_timezone_cleanup(&tz_berlin), DT_OK);
+    EXPECT_EQ(dt_timezone_cleanup(&tz_utc), DT_OK);
 
     // TODO: Case for current time zone!
 }
@@ -591,4 +622,25 @@ TEST_F(DtCase, fromStringConvert)
     EXPECT_EQ(tr2.minute, 54);
     EXPECT_EQ(tr2.hour, 16);
     EXPECT_EQ(tr2.second, 12);
+}
+
+TEST_F(DtCase, lookup_free_timezone)
+{
+    dt_timezone_t tz_moscow_standard = {0,};
+    dt_timezone_t tz_moscow_olsen = {0,};
+    dt_timezone_t tz_unreal_timezone = {0,};
+
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_WINDOWS_STANDARD_TZ_NAME, NULL), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_timezone_lookup(NULL, &tz_unreal_timezone), DT_INVALID_ARGUMENT);
+
+    EXPECT_EQ(dt_timezone_lookup(UNREAL_TIMEZONE_NAME, &tz_unreal_timezone), DT_TIMEZONE_NOT_FOUND);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_WINDOWS_STANDARD_TZ_NAME, &tz_moscow_standard), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_OLSEN_TZ_NAME, &tz_moscow_olsen), DT_OK);
+
+    EXPECT_EQ(dt_timezone_cleanup(NULL), DT_INVALID_ARGUMENT);
+
+    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow_olsen), DT_OK);
+    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow_standard), DT_OK);
+
+
 }

@@ -12,7 +12,7 @@ struct tz_aliases {
     tz_alias_iterator_t begin;
 };
 
-static inline tz_alias_iterator_t** insert_alias(tz_aliases_t* aliases, tz_alias_t* alias, tz_alias_iterator_t** insertPosition)
+static tz_alias_iterator_t** insert_alias(tz_aliases_t* aliases, tz_alias_t* alias, tz_alias_iterator_t** insertPosition)
 {
     tz_alias_iterator_t* inserted = NULL;
     tz_alias_iterator_t* searchIt = TZMAP_BEGIN;
@@ -37,7 +37,7 @@ static inline tz_alias_iterator_t** insert_alias(tz_aliases_t* aliases, tz_alias
 }
 
 
-static inline tz_alias_iterator_t** insert_mapping(tz_aliases_t* aliases, tz_alias_iterator_t** insertPosition, struct tz_unicode_mapping* tz)
+static tz_alias_iterator_t** insert_mapping(tz_aliases_t* aliases, tz_alias_iterator_t** insertPosition, struct tz_unicode_mapping* tz)
 {
     tz_alias_t alias = {0,};
     alias.kind = TZMAP_UNKNOWN;
@@ -62,9 +62,9 @@ static inline tz_alias_iterator_t** insert_mapping(tz_aliases_t* aliases, tz_ali
     return insertPosition;
 }
 
-static inline tz_alias_iterator_t** add_mapping_to_aliases(const char* tz_name, tz_aliases_t* list, tz_alias_iterator_t** insertPosition)
+static tz_alias_iterator_t** add_mapping_to_aliases(const char* tz_name, tz_aliases_t* list, tz_alias_iterator_t** insertPosition)
 {
-    int i = 0;
+    size_t i = 0;
     if(insertPosition == NULL) {
         insertPosition = &list->begin.next;
         list->begin.next = NULL;
