@@ -195,9 +195,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         return DT_CONVERT_ERROR;
     }
 
-    if (timezone != NULL && timezone->time_zone_name != NULL && strcmp(timezone->time_zone_name, "UTC") == 0) {
-        return SystemTimeToUnixTime(&tLocalTime, &time);
-    } else if(timezone != NULL && timezone->time_zone_name != NULL){
+    if(timezone != NULL && timezone->time_zone_name != NULL){
         dwError = GetTimeZoneInformationByName(&dtzi, timezone->time_zone_name);
         if (dwError != 0) {
             return DT_TIMEZONE_NOT_FOUND;
