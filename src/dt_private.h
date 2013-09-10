@@ -11,10 +11,19 @@
  */
 
 #include <libtz/dt_precise.h>
+#include <libtz/tzmapping.h>
+
+#ifdef _WIN32
+    #define PREFERED_TZMAP_TYPE TZMAP_WIN_STANDARD_TIME
+#else
+    #define PREFERED_TZMAP_TYPE TZMAP_OLSEN_NAME
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
 
 //! Converts a POSIX breakdown time structure to localized representation
 /*!
@@ -26,13 +35,6 @@ extern "C" {
  */
 dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation);
 
-//! Converts a time zone name in form, valid for current system ("Etc/GMT" will be convert in "Etc/UTC" for UNIX and in "UTC" for Windows 7, for example)
-/*!
- * This function does not set tm.tm_wday and tm.tm_yday fields. It not check validate of result
- * \param tz_name some representation of time zone
- * \return link to static variable or NULL, if time zone didn't found
- */
-const char *findTimeZoneByName(const char *tz_name);
 
 #ifdef __cplusplus
 }

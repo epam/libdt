@@ -45,7 +45,7 @@ const char * dt_strerror(dt_status_t status);
  *
  * TODO: Leap seconds support!
  */
-dt_bool_t dt_validate_representation(int year, int month, int day, int hour, int minute, int second,
+dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
                                      unsigned long nano_second);
 
 /*! @}*/
@@ -162,29 +162,30 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
  * \param result Representation to init [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_init_representation(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
+dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
+                                   unsigned long nano_second,
                                    dt_representation_t *result);
 
-//! Represents a timestamp using a timezone none
+//! Represents a timestamp using a timezone name
 /*!
  * \param timestamp Timestamp to represent
- * \param tz_name Timezone name or NULL if local tiezone is considered
+ * \param timezone Timezone or NULL if local timezone is considered
  * \param representation Timestamp representation [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const char *tz_name, dt_representation_t *representation);
+dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *tz, dt_representation_t *representation);
 
 //! Returns a timestamps for a representation in timezone by it's name
 /*!
  * It is possible for the representation to have two timestamps, e.g. when a time is "going back" for
  * an hour.
  * \param representation Representation to fetch a timestamp of
- * \param tz_name Timezone name or NULL if local tiezone is considered
+ * \param timezone Timezone or NULL if local timezone is considered
  * \param first_timestamp First representation's timestamp [OUT]
  * \param second_timestamp Optional second representation's timestamp (can be NULL, not supported at the moment) [OUT]
  * \return Result status of the operation
  */
-dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const char *tz_name,
+dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t* timezone,
                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
 
 //! Returns representation's week day number
@@ -301,6 +302,22 @@ dt_status_t dt_representation_to_tm(const dt_representation_t *representation, s
  * \return Result status of the operation
  */
 dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation);
+
+//! Lookups timezone object for future usage in corresponding api.
+/*!
+ * \param timezone_name name of timezone for lookup, it can be in olsen database format, or in windows standard time format
+ ** \param timezone [IN/OUT]pointer to timezone object
+ * \return Result status of the operation
+ */
+dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone);
+
+//! Free resources connected with timezone object
+//! @note memory allocated for dt_timezone_t objec won't be free
+/*!
+ * \param timezone pointer to timezone object
+ * \return Result status of the operation
+ */
+dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone);
 
 /*! @}*/
 
