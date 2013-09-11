@@ -334,3 +334,17 @@ void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
     EXPECT_EQ(tmUtc->tm_hour, tmUtcToEquasion.tm_hour);
 }
 
+TEST_F(BasicCase, utc_convert_mktime_tz)
+{
+    struct tm currentRepresentation = {0,};
+    const char *timeZone = "UTC";
+    time_t resultTime = 0;
+
+    time_t currentTime = 0;
+    time(&currentTime);
+    localtime_tz(&currentTime, timeZone, &currentRepresentation);
+    
+    mktime_tz(&currentRepresentation, timeZone, &resultTime);
+
+    EXPECT_NE(resultTime, 0);
+}
