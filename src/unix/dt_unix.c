@@ -7,7 +7,7 @@
 #include "../dt_private.h"
 #include <libdt/dt.h>
 
-#include <libdt/tzmapping.h>
+#include <dt-private/tzmapping.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 

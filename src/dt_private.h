@@ -11,7 +11,7 @@
  */
 
 #include <libdt/dt_precise.h>
-#include <libdt/tzmapping.h>
+#include <dt-private/tzmapping.h>
 
 #ifdef _WIN32
     #define PREFERED_TZMAP_TYPE TZMAP_WIN_STANDARD_TIME

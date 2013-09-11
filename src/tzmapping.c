@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <libdt/tzmapping.h>
+#include <dt-private/tzmapping.h>
 #include <timezones_map.h>
 #include <string.h>
 

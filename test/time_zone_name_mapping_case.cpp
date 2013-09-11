@@ -1,5 +1,5 @@
 #include "time_zone_name_mapping_case.h"
-#include <libdt/tzmapping.h>
+#include <dt-private/tzmapping.h>
 #include <libdt/dt_types.h>
 #include <set>
 #include <vector>
