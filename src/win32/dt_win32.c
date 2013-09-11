@@ -79,9 +79,13 @@ static const char DYNAMIC_DST_LAST_ENTRY[] = "LastEntry";
     {
         const DWORD* y1 = year1;
         const DWORD* y2 = year2;
-        if (*y1 < *y2) return -1;
-        else if(*y1 > *y2) return 1;
-        else return 0;
+        if (*y1 < *y2) {
+            return -1;
+        } else if (*y1 > *y2) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
 #else
@@ -90,9 +94,14 @@ static const char DYNAMIC_DST_LAST_ENTRY[] = "LastEntry";
         const DWORD* y1 = year1;
         const DWORD* y2 = year2;
         (void*)contex;
-        if (*y1 < *y2) return -1;
-        else if(*y1 > *y2) return 1;
-        else return 0;
+
+        if (*y1 < *y2) {
+            return -1;
+        } else if (*y1 > *y2) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 #endif
 
@@ -132,9 +141,9 @@ static dt_status_t dt_filetime_to_timestamp(const PFILETIME ft, dt_timestamp_t *
 {
         LARGE_INTEGER li;
 
-        if (!ft || !ts) {
-                return DT_INVALID_ARGUMENT;
-        }
+        if (!ft || !ts)
+            return DT_INVALID_ARGUMENT;
+
         li.QuadPart = ft->dwHighDateTime;
         li.QuadPart <<= 32;
         li.QuadPart |= ft->dwLowDateTime;
@@ -147,9 +156,9 @@ static dt_status_t dt_timestamp_to_filetime(const dt_timestamp_t *ts, PFILETIME 
 {
         LARGE_INTEGER li;
 
-        if (!ts || !ft) {
+        if (!ts || !ft)
                 return DT_INVALID_ARGUMENT;
-        }
+
         li.QuadPart = ts->second * 10000000;
         li.QuadPart += ts->nano_second / 100;
         ft->dwLowDateTime = (long)li.QuadPart;
@@ -163,9 +172,9 @@ dt_status_t dt_now(dt_timestamp_t *result)
         FILETIME ft = {0};
         dt_status_t s;
 
-        if (!result) {
-                return DT_INVALID_ARGUMENT;
-        }
+        if (!result)
+            return DT_INVALID_ARGUMENT;
+
         GetSystemTimeAsFileTime(&ft);
         s = dt_filetime_to_timestamp(&ft, result);
         return s;
@@ -173,9 +182,9 @@ dt_status_t dt_now(dt_timestamp_t *result)
 
 dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result)
 {
-        if (time < 0 || !result) {
-                return DT_INVALID_ARGUMENT;
-        }
+        if (time < 0 || !result)
+            return DT_INVALID_ARGUMENT;
+
         result->second = (long)time;
         result->nano_second = nano_second;
         return DT_OK;
@@ -183,9 +192,9 @@ dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, d
 
 dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
 {
-        if (!timestamp || !time || timestamp->second < 0) {
-                return DT_INVALID_ARGUMENT;
-        }
+        if (!timestamp || !time || timestamp->second < 0)
+            return DT_INVALID_ARGUMENT;
+
         *time = timestamp->second;
         *nano_second = timestamp->nano_second;
         return DT_OK;
@@ -203,16 +212,15 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
     struct tm result = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (timestamp == NULL || representation == NULL) {
+    if (timestamp == NULL || representation == NULL)
         return DT_INVALID_ARGUMENT;
-    }
+
 
     if(tz == NULL || tz->time_zone_name == NULL) {
         dwError = GetTimeZoneInformation((LPTIME_ZONE_INFORMATION)&dtzi);
         if (dwError != 0)
             return DT_TIMEZONE_NOT_FOUND;
-    }
-    else {
+    } else {
         dwError = GetTimeZoneInformationByName(&dtzi, tz->time_zone_name);
         if (dwError != 0)
             return DT_TIMEZONE_NOT_FOUND;
@@ -255,41 +263,34 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
     struct tm tm = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!representation || !first_timestamp) {
+    if (!representation || !first_timestamp)
         return DT_INVALID_ARGUMENT;
-    }
 
     nano = representation->nano_second;
     status = dt_representation_to_tm(representation, &tm);
     if (status != DT_OK)
         return status;
 
-    if (SystemTimeFromTm(&tLocalTime, &tm) != EXIT_SUCCESS) {
+    if (SystemTimeFromTm(&tLocalTime, &tm) != EXIT_SUCCESS)
         return DT_CONVERT_ERROR;
-    }
 
-    if(timezone != NULL && timezone->time_zone_name != NULL){
+    if (timezone != NULL && timezone->time_zone_name != NULL){
         dwError = GetTimeZoneInformationByName(&dtzi, timezone->time_zone_name);
-        if (dwError != 0) {
+        if (dwError != 0)
             return DT_TIMEZONE_NOT_FOUND;
-        }
 
-   }
-    else {
+    } else {
         dwError = GetTimeZoneInformation((LPTIME_ZONE_INFORMATION)&dtzi);
-        if (dwError != 0) {
+        if (dwError != 0)
             return DT_TIMEZONE_NOT_FOUND;
-        }
-
     }
-    if (GetTimeZoneInformationForYearLower(tLocalTime.wYear, &dtzi, &tzi) == FALSE) {
+
+    if (GetTimeZoneInformationForYearLower(tLocalTime.wYear, &dtzi, &tzi) == FALSE)
         return DT_TIMEZONE_NOT_FOUND;
-    }
 
 
-    if (TzSpecificLocalTimeToSystemTime((LPTIME_ZONE_INFORMATION)&tzi, (LPSYSTEMTIME)&tLocalTime, (LPSYSTEMTIME)&tUniversalTime) == FALSE) {
+    if (TzSpecificLocalTimeToSystemTime((LPTIME_ZONE_INFORMATION)&tzi, (LPSYSTEMTIME)&tLocalTime, (LPSYSTEMTIME)&tUniversalTime) == FALSE)
         return DT_CONVERT_ERROR;
-    }
 
     if (SystemTimeToUnixTime(&tUniversalTime, &time) != EXIT_SUCCESS)
         return DT_CONVERT_ERROR;
@@ -306,20 +307,18 @@ static int GetTziFromKey(const char szKey[], const char szValue[], REG_TZI_FORMA
     int rc = EXIT_FAILURE;
     HKEY hkey_tz = NULL;
     DWORD dw = sizeof(REG_TZI_FORMAT);
-    if (ptzi == NULL || szKey == NULL || szValue == NULL) {
+    if (ptzi == NULL || szKey == NULL || szValue == NULL)
         return EXIT_FAILURE;
-    }
+
     memset(ptzi, 0, sizeof(REG_TZI_FORMAT));
 
-    if (ERROR_SUCCESS !=  RegOpenKeyA(HKEY_LOCAL_MACHINE, szKey, &hkey_tz)) {
+    if (ERROR_SUCCESS !=  RegOpenKeyA(HKEY_LOCAL_MACHINE, szKey, &hkey_tz))
         return EXIT_FAILURE;
-    }
 
     if (ERROR_SUCCESS != RegQueryValueExA(hkey_tz, szValue,
                                       NULL, NULL, (LPBYTE)ptzi, &dw)) {
         rc = EXIT_FAILURE;
-    }
-    else {
+    } else {
         rc = EXIT_SUCCESS;
     }
 
@@ -336,9 +335,8 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
     size_t subKeySize = 0;
     char* tszSubkey = NULL;
 
-    if (ptzi == NULL || szStandardName == NULL) {
+    if (ptzi == NULL || szStandardName == NULL)
         return EXIT_FAILURE;
-    }
 
     subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
     tszSubkey = (char *)malloc(subKeySize);
@@ -463,9 +461,8 @@ static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor)
     dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
     dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
 
-    if (dwMajorVersion >= dwMajor && dwMinorVersion >= dwMinor) {
+    if (dwMajorVersion >= dwMajor && dwMinorVersion >= dwMinor)
         return TRUE;
-    }
 
     return FALSE;
 }
@@ -475,14 +472,15 @@ static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor)
 //for cover more suitable case of usual years layout
 //all not initialized years will be set to YEAR_WRONG_VALUE
 static int InsertYearToArray(DWORD year, YEARS_ARRAY* array, DWORD index) {
-    if (array == 0) {
+    if (array == 0)
         return EXIT_FAILURE;
-    }
+
     while (index >= array->size) {
         array->years = realloc(array->years, (array->size + YEARS_ARRAY_SEED) * sizeof(DWORD));
-        if(array->years == 0) {
+
+        if (array->years == 0)
             return EXIT_FAILURE;
-        }
+
         memset(array->years + (array->size * sizeof(DWORD)), YEAR_WRONG_VALUE, YEARS_ARRAY_SEED * sizeof(DWORD));
         array->size += YEARS_ARRAY_SEED;
     }
@@ -501,8 +499,7 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
     if (targetYear >= dstMaximumYear) {
         *findedYear = dstMaximumYear;
         return TRUE;
-    }
-    else if (targetYear <= dstMinimumYear) {
+    } else if (targetYear <= dstMinimumYear) {
         *findedYear = dstMinimumYear;
         return TRUE;
     }
@@ -517,14 +514,12 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
         dwErrorCode = RegEnumValueA(hkey_tz, dwEnumIndex, yearValueName, &dw, NULL, NULL, NULL, NULL);
         dwEnumIndex++;
         if (strcmp(yearValueName, DYNAMIC_DST_FIRST_ENTRY) == 0
-                || strcmp(yearValueName, DYNAMIC_DST_LAST_ENTRY) == 0) {
+                || strcmp(yearValueName, DYNAMIC_DST_LAST_ENTRY) == 0)
             continue;
-        }
 
 
-        if (EOF == sscanf_s(yearValueName, "%d", findedYear)) {
+        if (EOF == sscanf_s(yearValueName, "%d", findedYear))
             continue;
-        }
 
         InsertYearToArray(*findedYear, &yearsArray, dwEnumIndex);
     }
@@ -544,13 +539,11 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
         if (targetYear >= *findedYear) break;
     }
 
-    if (yearsArray.size > 0) {
+    if (yearsArray.size > 0)
         free(yearsArray.years);
-    }
 
-    if (*findedYear == YEAR_WRONG_VALUE) {
+    if (*findedYear == YEAR_WRONG_VALUE)
         return FALSE;
-    }
 
     return TRUE;
 }
@@ -577,9 +570,8 @@ GetTimeZoneInformationForYearLower(
     char* keyPath = NULL;
     size_t keyPathSize = sizeof(REG_TIME_ZONES) + sizeof(timeZoneName) + sizeof(DYNAMIC_DST) + sizeof('\\') + sizeof('\0');
 
-    if (wYear < 1601 || pdtzi == NULL || ptzi == NULL) {
+    if (wYear < 1601 || pdtzi == NULL || ptzi == NULL)
         return FALSE;
-    }
 
 
     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK, pdtzi->TimeZoneKeyName, sizeof(pdtzi->TimeZoneKeyName), timeZoneName, sizeof(timeZoneName), "\0", NULL);
@@ -594,8 +586,7 @@ GetTimeZoneInformationForYearLower(
     if (ERROR_SUCCESS != dwErrorCode) {
         if (ERROR_FILE_NOT_FOUND != dwErrorCode) {
             return FALSE;
-        }
-        else {
+        } else {
             ptzi->Bias = pdtzi->Bias;
             ptzi->DaylightBias = pdtzi->DaylightBias;
             ptzi->DaylightDate = pdtzi->DaylightDate;
@@ -620,9 +611,8 @@ GetTimeZoneInformationForYearLower(
         goto GetTimeZoneInformationForYearLower_cleanup;
     }
 
-    if (FALSE == FindCorrespondingYear(hkey_tz, wYear , dstMaximumYear, dstMinimumYear, &findedYear)) {
+    if (FALSE == FindCorrespondingYear(hkey_tz, wYear , dstMaximumYear, dstMinimumYear, &findedYear))
         goto GetTimeZoneInformationForYearLower_cleanup;
-    }
 
     snprintf(yearValueName, sizeof(yearValueName), "%d", findedYear);
 
