@@ -26,8 +26,7 @@ static const char DYNAMIC_DST_LAST_ENTRY[] = "LastEntry";
 #define snprintf sprintf_s
 #endif
 
-#ifdef __MINGW32__
-    #include <_mingw.h>
+#if __GNUC__
     WINBASEAPI BOOL WINAPI TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION,LPSYSTEMTIME,LPSYSTEMTIME);
     //
     // RRF - Registry Routine Flags (for RegGetValue)

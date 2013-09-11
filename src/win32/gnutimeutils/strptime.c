@@ -46,7 +46,7 @@
 #define TM_YEAR_BASE   (1900)
 
 static   int conv_num(const char **, int *, int, int);
-#ifndef __MINGW32__
+#ifndef __GNUC__
 static int strncasecmp(char *s1, char *s2, size_t n);
 #endif
 
@@ -395,7 +395,7 @@ static int conv_num(const char **buf, int *dest, int llim, int ulim)
     return (1);
 }
 
-#ifndef __MINGW32__
+#ifndef __GNUC__
 int strncasecmp(char *s1, char *s2, size_t n)
 {
     if (n == 0)
