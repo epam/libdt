@@ -15,31 +15,50 @@
 #
 
 # Check prereqs
+find_package(Perl)
+
 set(CODE_COVERAGE_FOUND "True")
+
 FIND_PROGRAM( GCOV_PATH gcov )
-FIND_PROGRAM( LCOV_PATH lcov )
-FIND_PROGRAM( GENHTML_PATH genhtml )
+if(WIN32)
+    if(NOT PERL_FOUND)
+        message(STATUS "Perl not found! Coverage report will be unavailable")
+        unset(CODE_COVERAGE_FOUND)
+    endif(NOT PERL_FOUND)
+
+    if(LCOV_ROOT)
+        find_file(LCOV_PATH lcov PATHS "${LCOV_ROOT}\\bin\\")
+        string(REGEX REPLACE "[/]" "\\\\" LCOV_PATH_NATIVE ${LCOV_PATH})
+        find_file(GENHTML_PATH genhtml PATHS "${LCOV_ROOT}\\bin\\")
+        string(REGEX REPLACE "[/]" "\\\\" GENHTML_PATH_NATIVE ${GENHTML_PATH})
+    else(LCOV_ROOT)
+        message(STATUS "LCOV_ROOT is not set! Coverage report will be unavailable")
+    endif(LCOV_ROOT)
+else(WIN32)
+    FIND_PROGRAM( LCOV_PATH lcov )
+    FIND_PROGRAM( GENHTML_PATH genhtml )
+endif(WIN32)
+
 FIND_PROGRAM( GCOVR_PATH gcovr PATHS ${CMAKE_SOURCE_DIR}/tests)
 
-
 IF(NOT GCOV_PATH)
-MESSAGE(STATUS "gcov not found! Coverage report will be unavailable")
-unset(CODE_COVERAGE_FOUND)
+    MESSAGE(STATUS "gcov not found! Coverage report will be unavailable")
+    unset(CODE_COVERAGE_FOUND)
 ENDIF() # NOT GCOV_PATH
 
 IF(NOT CMAKE_COMPILER_IS_GNUCXX)
-MESSAGE(STATUS "Compiler is not GNU gcc! Coverage report will be unavailable")
-unset(CODE_COVERAGE_FOUND)
+    MESSAGE(STATUS "Compiler is not GNU gcc! Coverage report will be unavailable")
+    unset(CODE_COVERAGE_FOUND)
 ENDIF() # NOT CMAKE_COMPILER_IS_GNUCXX
 
 IF( NOT CMAKE_BUILD_TYPE STREQUAL "Debug" )
-MESSAGE(STATUS "Code coverage results with an optimised (non-Debug) build may be misleading" )
+    MESSAGE(STATUS "Code coverage results with an optimised (non-Debug) build may be misleading" )
 ENDIF() # NOT CMAKE_BUILD_TYPE STREQUAL "Debug"
 
 IF(CODE_COVERAGE_FOUND)
-# Setup compiler options
-ADD_DEFINITIONS(-fprofile-arcs -ftest-coverage)
-LINK_LIBRARIES(gcov)
+    # Setup compiler options
+    ADD_DEFINITIONS(-fprofile-arcs -ftest-coverage)
+    LINK_LIBRARIES(gcov)
 ENDIF()
 
 
@@ -52,26 +71,36 @@ ENDIF()
 FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
 
 IF(NOT LCOV_PATH)
-MESSAGE(STATUS "lcov not found! Coverage report will be unavailable")
+    MESSAGE(WARNING "lcov not found! Coverage report will be unavailable")
 ENDIF() # NOT LCOV_PATH
 
 IF(NOT GENHTML_PATH)
-MESSAGE(STATUS "genhtml not found! Coverage report will be unavailable")
+    MESSAGE(WARNING "genhtml not found! Coverage report will be unavailable")
 ENDIF() # NOT GENHTML_PATH
 
+IF(WIN32)
+    set(LCOV_COMMAND ${PERL_EXECUTABLE})
+    set(GENHTML_COMMAND ${PERL_EXECUTABLE})
+    set(LCOV_COMMAND_ARGS ${LCOV_PATH_NATIVE})
+    set(GENHTML_COMMAND_ARGS ${GENHTML_PATH_NATIVE})
+ELSE(WIN32)
+    set(LCOV_COMMAND ${LCOV_PATH})
+    set(GENHTML_COMMAND ${GENHTML_PATH})
+ENDIF(WIN32)
+message(STATUS "LCOV_COMMAND is ${LCOV_COMMAND}")
 # Setup target
 ADD_CUSTOM_TARGET(${_targetname}
 
 # Cleanup lcov
-${LCOV_PATH} --directory . --zerocounters
+${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --directory . --zerocounters
 
 # Run tests
 COMMAND ${_testrunner} ${ARGV3}
 
 # Capturing lcov counters and generating report
-COMMAND ${LCOV_PATH} --directory . --capture --output-file ${_outputname}.info
-COMMAND ${LCOV_PATH} --remove ${_outputname}.info 'tests/*' '/usr/*' --output-file ${_outputname}.info.cleaned
-COMMAND ${GENHTML_PATH} -o ${_outputname} ${_outputname}.info.cleaned
+COMMAND ${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --directory . --capture --output-file ${_outputname}.info
+COMMAND ${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --remove ${_outputname}.info 'tests\\*'  --output-file ${_outputname}.info.cleaned
+COMMAND ${GENHTML_COMMAND} ${GENHTML_COMMAND_ARGS} -o ${_outputname} ${_outputname}.info.cleaned
 COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info ${_outputname}.info.cleaned
 
 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

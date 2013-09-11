@@ -22,14 +22,88 @@ static const size_t YEARS_ARRAY_SEED = 10; // seed which setups how often will b
 static const char DYNAMIC_DST_FIRST_ENTRY[] = "FirstEntry";
 static const char DYNAMIC_DST_LAST_ENTRY[] = "LastEntry";
 
+#if ( (defined(_WIN32) || defined(WIN32) ) && ( defined(_MSC_VER) ) )
+#define snprintf sprintf_s
+#endif
+
+#ifdef __MINGW32__
+    #include <_mingw.h>
+    WINBASEAPI BOOL WINAPI TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION,LPSYSTEMTIME,LPSYSTEMTIME);
+    //
+    // RRF - Registry Routine Flags (for RegGetValue)
+    //
+
+    #define RRF_RT_REG_NONE        0x00000001  // restrict type to REG_NONE      (other data types will not return ERROR_SUCCESS)
+    #define RRF_RT_REG_SZ          0x00000002  // restrict type to REG_SZ        (other data types will not return ERROR_SUCCESS) (automatically converts REG_EXPAND_SZ to REG_SZ unless RRF_NOEXPAND is specified)
+    #define RRF_RT_REG_EXPAND_SZ   0x00000004  // restrict type to REG_EXPAND_SZ (other data types will not return ERROR_SUCCESS) (must specify RRF_NOEXPAND or RegGetValue will fail with ERROR_INVALID_PARAMETER)
+    #define RRF_RT_REG_BINARY      0x00000008  // restrict type to REG_BINARY    (other data types will not return ERROR_SUCCESS)
+    #define RRF_RT_REG_DWORD       0x00000010  // restrict type to REG_DWORD     (other data types will not return ERROR_SUCCESS)
+    #define RRF_RT_REG_MULTI_SZ    0x00000020  // restrict type to REG_MULTI_SZ  (other data types will not return ERROR_SUCCESS)
+    #define RRF_RT_REG_QWORD       0x00000040  // restrict type to REG_QWORD     (other data types will not return ERROR_SUCCESS)
+
+    #define RRF_RT_DWORD           (RRF_RT_REG_BINARY | RRF_RT_REG_DWORD) // restrict type to *32-bit* RRF_RT_REG_BINARY or RRF_RT_REG_DWORD (other data types will not return ERROR_SUCCESS)
+    #define RRF_RT_QWORD           (RRF_RT_REG_BINARY | RRF_RT_REG_QWORD) // restrict type to *64-bit* RRF_RT_REG_BINARY or RRF_RT_REG_DWORD (other data types will not return ERROR_SUCCESS)
+    #define RRF_RT_ANY             0x0000ffff                             // no type restriction
+
+    #define RRF_NOEXPAND           0x10000000  // do not automatically expand environment strings if value is of type REG_EXPAND_SZ
+    #define RRF_ZEROONFAILURE      0x20000000  // if pvData is not NULL, set content to all zeros on failure
+
+    typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
+        LONG Bias;
+        WCHAR StandardName[ 32 ];
+        SYSTEMTIME StandardDate;
+        LONG StandardBias;
+        WCHAR DaylightName[ 32 ];
+        SYSTEMTIME DaylightDate;
+        LONG DaylightBias;
+        WCHAR TimeZoneKeyName[ 128 ];
+        BOOLEAN DynamicDaylightTimeDisabled;
+    } DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
+    #define sscanf_s sscanf
+
+    wchar_t* wcscpy_s (wchar_t* dest, size_t size, const wchar_t* source)
+    {
+        (void*)&size;
+        return wcscpy(dest, source);
+    }
+
+    void qsort_s(void* base, size_t length, size_t size,
+          int (*compare)(const void*, const void*), void* context)
+    {
+        (void*)context;
+        qsort(base, length, size, compare);
+    }
+
+
+    static int years_compare(const void* year1, const void* year2)
+    {
+        const DWORD* y1 = year1;
+        const DWORD* y2 = year2;
+        if (*y1 < *y2) return -1;
+        else if(*y1 > *y2) return 1;
+        else return 0;
+    }
+
+#else
+    static int years_compare(void* contex, const void* year1, const void* year2)
+    {
+        const DWORD* y1 = year1;
+        const DWORD* y2 = year2;
+        (void*)contex;
+        if (*y1 < *y2) return -1;
+        else if(*y1 > *y2) return 1;
+        else return 0;
+    }
+#endif
+
 //GetTimeZoneInformationForYear implementation for windows server 2003 and lower
 static
 BOOL
 WINAPI
 GetTimeZoneInformationForYearLower(
-    __in USHORT wYear,
-    __in_opt PDYNAMIC_TIME_ZONE_INFORMATION pdtzi,
-    __out LPTIME_ZONE_INFORMATION ptzi
+    /*__in*/ USHORT wYear,
+    /*__in_opt*/ PDYNAMIC_TIME_ZONE_INFORMATION pdtzi,
+    /*__out*/ LPTIME_ZONE_INFORMATION ptzi
     );
 //Helper functions prototypes
 static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[]);
@@ -37,7 +111,6 @@ static int TmFromSystemTime(const SYSTEMTIME * pTime, struct tm *tm);
 static int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm);
 static int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst);
 static int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime);
-static int years_compare(void* contex, const void* year1, const void* year2);
 static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaximumYear, DWORD dstMinimumYear, DWORD* findedYear);
 //Tests is current windows version suitable to given version parts
 static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor);
@@ -215,7 +288,8 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         return DT_TIMEZONE_NOT_FOUND;
     }
 
-    if (TzSpecificLocalTimeToSystemTime(&tzi, &tLocalTime, &tUniversalTime) == FALSE) {
+
+    if (TzSpecificLocalTimeToSystemTime((LPTIME_ZONE_INFORMATION)&tzi, (LPSYSTEMTIME)&tLocalTime, (LPSYSTEMTIME)&tUniversalTime) == FALSE) {
         return DT_CONVERT_ERROR;
     }
 
@@ -243,8 +317,8 @@ static int GetTziFromKey(const char szKey[], const char szValue[], REG_TZI_FORMA
         return EXIT_FAILURE;
     }
 
-    if (ERROR_SUCCESS != RegGetValueA(hkey_tz, NULL, szValue,
-                                      RRF_RT_REG_BINARY, NULL, ptzi, &dw)) {
+    if (ERROR_SUCCESS != RegQueryValueExA(hkey_tz, szValue,
+                                      NULL, NULL, (LPBYTE)ptzi, &dw)) {
         rc = EXIT_FAILURE;
     }
     else {
@@ -274,7 +348,7 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
     memset(tszSubkey, (int)NULL, subKeySize );
     memset(ptzi, 0, sizeof(DYNAMIC_TIME_ZONE_INFORMATION));
 
-    sprintf_s(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
+    snprintf(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
 
     if (ERROR_SUCCESS != (dw = RegOpenKeyA(HKEY_LOCAL_MACHINE, tszSubkey, &hkey_tz))) {
         rc = EXIT_FAILURE;
@@ -283,7 +357,7 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
 
     rc = 0;
     #define X(param, type, var) \
-        do if ((dw = sizeof(var)), (ERROR_SUCCESS != (dw = RegGetValueW(hkey_tz, NULL, param, type, NULL, &var, &dw)))) { \
+        do if ((dw = sizeof(var)), (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, param, NULL, NULL, (LPBYTE)&var, &dw)))) { \
             rc = EXIT_FAILURE; \
             goto ennd; \
         } while(0)
@@ -350,7 +424,7 @@ static int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime)
     LARGE_INTEGER jan1970FT = {0};
     LARGE_INTEGER utcFT = {0};
     UINT64 utcDosTime = 0;
-    jan1970FT.QuadPart = 116444736000000000I64; // january 1st 1970
+    jan1970FT.QuadPart = 116444736000000000; // january 1st 1970
 
 
     if (SystemTimeToFileTime(systemTime, (FILETIME*)&utcFT) == FALSE) {
@@ -449,6 +523,7 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
             continue;
         }
 
+
         if (EOF == sscanf_s(yearValueName, "%d", findedYear)) {
             continue;
         }
@@ -461,6 +536,7 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
         *findedYear = YEAR_WRONG_VALUE;
         return FALSE;
     }
+
 
 
     qsort_s(yearsArray.years, yearsArray.size, sizeof(DWORD), years_compare, NULL);
@@ -485,9 +561,9 @@ static
 BOOL
 WINAPI
 GetTimeZoneInformationForYearLower(
-    __in USHORT wYear,
-    __in_opt PDYNAMIC_TIME_ZONE_INFORMATION pdtzi,
-    __out LPTIME_ZONE_INFORMATION ptzi
+    /*__in*/ USHORT wYear,
+    /*__in_opt*/ PDYNAMIC_TIME_ZONE_INFORMATION pdtzi,
+    /*__out*/ LPTIME_ZONE_INFORMATION ptzi
     )
 {
     HKEY hkey_tz = NULL;
@@ -510,9 +586,10 @@ GetTimeZoneInformationForYearLower(
 
     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK, pdtzi->TimeZoneKeyName, sizeof(pdtzi->TimeZoneKeyName), timeZoneName, sizeof(timeZoneName), "\0", NULL);
     keyPath = malloc(keyPathSize);
-    sprintf_s(keyPath, keyPathSize, "%s%s\\%s", REG_TIME_ZONES, timeZoneName, DYNAMIC_DST);
+    snprintf(keyPath, keyPathSize, "%s%s\\%s", REG_TIME_ZONES, timeZoneName, DYNAMIC_DST);
 
     memset(ptzi, 0, sizeof(TIME_ZONE_INFORMATION));
+
     wcscpy_s(ptzi->StandardName, sizeof(ptzi->StandardName) / sizeof(WCHAR), pdtzi->StandardName);
     wcscpy_s(ptzi->DaylightName, sizeof(ptzi->DaylightName) / sizeof(WCHAR), pdtzi->DaylightName);
     dwErrorCode = RegOpenKeyA(HKEY_LOCAL_MACHINE, keyPath, &hkey_tz);
@@ -531,16 +608,16 @@ GetTimeZoneInformationForYearLower(
     }
     dw = sizeof(DWORD);
 
-    if (ERROR_SUCCESS != RegGetValueA(hkey_tz,
-                                      NULL, DYNAMIC_DST_FIRST_ENTRY,
-                                      RRF_RT_REG_DWORD, NULL, &dstMinimumYear, &dw)) {
+    if (ERROR_SUCCESS != RegQueryValueExA(hkey_tz,
+                                      DYNAMIC_DST_FIRST_ENTRY,
+                                      NULL, NULL, (LPBYTE)&dstMinimumYear, &dw)) {
         returnStatus = FALSE;
         goto GetTimeZoneInformationForYearLower_cleanup;
     }
 
-    if (ERROR_SUCCESS != RegGetValueA(hkey_tz,
-                                      NULL, DYNAMIC_DST_LAST_ENTRY,
-                                      RRF_RT_REG_DWORD, NULL, &dstMaximumYear, &dw)) {
+    if (ERROR_SUCCESS != RegQueryValueExA(hkey_tz,
+                                      DYNAMIC_DST_LAST_ENTRY,
+                                      NULL, NULL, (LPBYTE)&dstMaximumYear, &dw)) {
         returnStatus = FALSE;
         goto GetTimeZoneInformationForYearLower_cleanup;
     }
@@ -549,7 +626,7 @@ GetTimeZoneInformationForYearLower(
         goto GetTimeZoneInformationForYearLower_cleanup;
     }
 
-    sprintf_s(yearValueName, sizeof(yearValueName), "%d", findedYear);
+    snprintf(yearValueName, sizeof(yearValueName), "%d", findedYear);
 
     if (GetTziFromKey(keyPath, yearValueName, &regtzi) == EXIT_FAILURE) {
         memset(ptzi, 0, sizeof(TIME_ZONE_INFORMATION));
@@ -569,15 +646,7 @@ GetTimeZoneInformationForYearLower_cleanup:
     return returnStatus;
 }
 
-static int years_compare(void* contex, const void* year1, const void* year2)
-{
-    const DWORD* y1 = year1;
-    const DWORD* y2 = year2;
-    (void*)contex;
-    if (*y1 < *y2) return -1;
-    else if(*y1 > *y2) return 1;
-    else return 0;
-}
+
 
 dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
                 char *str_buffer, size_t str_buffer_size)
@@ -630,5 +699,3 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
     return DT_OK;
 
 }
-
-
