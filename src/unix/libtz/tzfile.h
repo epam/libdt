@@ -30,7 +30,11 @@ static char	tzfilehid[] = "@(#)tzfile.h	8.1";
 */
 
 #ifndef TZDIR
+#ifdef __sun
+#define TZDIR	"/usr/share/lib/zoneinfo" /* Time zone object file directory */
+#else
 #define TZDIR	"/usr/share/zoneinfo" /* Time zone object file directory */
+#endif
 #endif /* !defined TZDIR */
 
 #ifndef TZDEFAULT
