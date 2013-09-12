@@ -12,6 +12,7 @@
 #include <dt-private/tzmapping.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static const time_t WRONG_POSIX_TIME = -1;
 
 dt_status_t dt_now(dt_timestamp_t *result)
 {
@@ -80,7 +81,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
     const struct state *s = NULL;
     char path[PATH_MAX + sizeof(char) + 1] = {0,};
     struct tm tm = {0,};
-    time_t posix_time = -1;
+    time_t posix_time = WRONG_POSIX_TIME;
 
     dt_status_t status = DT_UNKNOWN_ERROR;
 
@@ -92,7 +93,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
 
     if (timezone == NULL) {
         posix_time = mktime(&tm);
-        if (posix_time != -1) {
+        if (posix_time != WRONG_POSIX_TIME) {
             first_timestamp->second = posix_time;
             first_timestamp->nano_second = representation->nano_second;
             return DT_OK;
@@ -106,7 +107,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         return DT_INVALID_ARGUMENT;
 
 
-    if (-1 == (posix_time = tz_mktime(timezone->state, &tm))) {
+    if (WRONG_POSIX_TIME == (posix_time = tz_mktime(timezone->state, &tm))) {
         tz_free(s);
         return DT_INVALID_ARGUMENT;
     }
@@ -163,9 +164,9 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
 dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
-    tz_aliases_t* aliases = NULL;
-    tz_alias_iterator_t* it = TZMAP_BEGIN;
-    tz_alias_t * alias = NULL;
+    tz_aliases_t *aliases = NULL;
+    tz_alias_iterator_t *it = TZMAP_BEGIN;
+    tz_alias_t *alias = NULL;
     char path[PATH_MAX + sizeof(char) + 1] = {0,};
 
     const struct state* s = NULL;
@@ -178,7 +179,7 @@ dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezon
         return status;
     }
 
-    while((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
+    while ((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
         if (alias->kind == PREFERED_TZMAP_TYPE) {
             strcat(path, TZDIR);
             strcat(path, "/");
