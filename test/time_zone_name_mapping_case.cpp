@@ -1,6 +1,6 @@
 #include "time_zone_name_mapping_case.h"
-#include <libtz/tzmapping.h>
-#include "libtz/dt_types.h"
+#include <dt-private/tzmapping.h>
+#include <libdt/dt_types.h>
 #include <set>
 #include <vector>
 #include <string>

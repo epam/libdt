@@ -1,5 +1,5 @@
 #include "basiccase.h"
-#include "libtz/dt.h"
+#include <libdt/dt.h>
 
 static const char* unrealTimezone = "notreal/timezone/where/no/light";
 static const char* testMoscowTimeZone =
@@ -151,7 +151,6 @@ TEST_F(BasicCase, localtime_tz)
     EXPECT_TRUE(localtime_tz(&testTime, testGMTNeg5TimeZone, &gmtNeg5Time) == EXIT_SUCCESS);
     EXPECT_TRUE(gmt5Time.tm_hour == 19);
     EXPECT_TRUE(gmtNeg5Time.tm_hour == 5);
-    //TODO: add law daylight based test
 
 }
 
@@ -188,7 +187,6 @@ TEST_F(BasicCase, mktime_tz)
     testTime = 666; // not a 0
     EXPECT_TRUE(mktime_tz(&gmtNeg5Time, testGMTNeg5TimeZone, &testTime) == EXIT_SUCCESS);
     EXPECT_TRUE (testTime == 0);
-    //TODO: add law daylight based test
 
 
 }

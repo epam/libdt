@@ -5,9 +5,9 @@
 #include <assert.h>
 
 #include "../dt_private.h"
-#include "libtz/dt.h"
+#include <libdt/dt.h>
 
-#include <libtz/tzmapping.h>
+#include <dt-private/tzmapping.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 

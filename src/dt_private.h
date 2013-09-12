@@ -10,8 +10,8 @@
  * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
 
-#include <libtz/dt_precise.h>
-#include <libtz/tzmapping.h>
+#include <libdt/dt_precise.h>
+#include <dt-private/tzmapping.h>
 
 #ifdef _WIN32
     #define PREFERED_TZMAP_TYPE TZMAP_WIN_STANDARD_TIME
