@@ -9,8 +9,8 @@
 #include <limits.h>
 
 #include <libtz/tzmapping.h>
-#include <src/tz.h>
-#include <src/tzfile.h>
+#include <libtz/tz.h>
+#include <libtz/tzfile.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
