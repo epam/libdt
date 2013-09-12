@@ -52,7 +52,6 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
 {
 
     const struct state *s = NULL;
-    char path[PATH_MAX + sizeof(char) + 1] = {0,};
     struct tm tm = {0,};
 
     if (timestamp == NULL || representation == NULL)
@@ -65,19 +64,10 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
         return dt_tm_to_representation(&tm, timestamp->nano_second, representation);
     }
 
-    if (tz != NULL && tz->time_zone_name != NULL) {
-        strcat(path, TZDIR);
-        strcat(path, "/");
-        strcat(path, tz->time_zone_name);
-    } else {
+    if (tz != NULL && tz->state == NULL)
         return DT_INVALID_ARGUMENT;
-    }
 
-    s = tz_alloc(path);
-    if (s == NULL)
-        return DT_TIMEZONE_NOT_FOUND;
-    if (tz_localtime_r(s, &(timestamp->second), &tm) == NULL) {
-        tz_free(s);
+    if (tz_localtime_r(tz->state, &(timestamp->second), &tm) == NULL) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -113,19 +103,11 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
 
     }
 
-    if (timezone != NULL && timezone->time_zone_name != NULL) {
-        strcat(path, TZDIR);
-        strcat(path, "/");
-        strcat(path, timezone->time_zone_name);
-    } else {
+    if (timezone != NULL && timezone->state == NULL)
         return DT_INVALID_ARGUMENT;
-    }
 
-    s = tz_alloc(path);
-    if (s == NULL)
-        return DT_TIMEZONE_NOT_FOUND;
 
-    if (-1 == (posix_time = tz_mktime(s, &tm))) {
+    if (-1 == (posix_time = tz_mktime(timezone->state, &tm))) {
         tz_free(s);
         return DT_INVALID_ARGUMENT;
     }
@@ -179,4 +161,45 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
     return DT_OK;
 }
 
+dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone)
+{
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    tz_aliases_t* aliases = NULL;
+    tz_alias_iterator_t* it = TZMAP_BEGIN;
+    tz_alias_t * alias = NULL;
+    char path[PATH_MAX + sizeof(char) + 1] = {0,};
 
+    const struct state* s = NULL;
+
+    if (timezone == NULL || timezone_name == NULL) {
+        return DT_INVALID_ARGUMENT;
+    }
+
+    if ((status = tzmap_map(timezone_name, &aliases)) != DT_OK) {
+        return status;
+    }
+
+    while((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
+        if (alias->kind == PREFERED_TZMAP_TYPE) {
+            strcat(path, TZDIR);
+            strcat(path, "/");
+            strcat(path, alias->name);
+            s = tz_alloc(path);
+            if (s == NULL)
+                return DT_TIMEZONE_NOT_FOUND;
+            timezone->state = s;
+            tzmap_free(aliases);
+            return DT_OK;
+        }
+    }
+
+    return status;
+}
+
+dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone)
+{
+    if (timezone == NULL)
+        return DT_INVALID_ARGUMENT;
+    tz_free(timezone->state);
+    return DT_OK;
+}
