@@ -46,7 +46,9 @@
 #define TM_YEAR_BASE   (1900)
 
 static   int conv_num(const char **, int *, int, int);
+#ifndef __GNUC__
 static int strncasecmp(char *s1, char *s2, size_t n);
+#endif
 
 static const char *day[7] = {
      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
@@ -393,6 +395,7 @@ static int conv_num(const char **buf, int *dest, int llim, int ulim)
     return (1);
 }
 
+#ifndef __GNUC__
 int strncasecmp(char *s1, char *s2, size_t n)
 {
     if (n == 0)
@@ -407,6 +410,6 @@ int strncasecmp(char *s1, char *s2, size_t n)
 
     return tolower(*(unsigned char *) s1) - tolower(*(unsigned char *) s2);
 }
-
+#endif
 
 //
