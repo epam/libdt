@@ -5,11 +5,14 @@
 #include <assert.h>
 
 #include "../dt_private.h"
+#include <limits.h>
+#include <libtz/tz.h>
+#include <libtz/tzfile.h>
 #include <libdt/dt.h>
-
 #include <dt-private/tzmapping.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static const time_t WRONG_POSIX_TIME = -1;
 
 dt_status_t dt_now(dt_timestamp_t *result)
 {
@@ -47,161 +50,72 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
 
 dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t* tz, dt_representation_t *representation)
 {
-    // FIXME: System timezone database usage!
 
-    if (!timestamp || !representation)
+    const struct state *s = NULL;
+    struct tm tm = {0,};
+
+    if (timestamp == NULL || representation == NULL)
         return DT_INVALID_ARGUMENT;
 
-    dt_status_t result = DT_UNKNOWN_ERROR;
 
-    extern char **environ;
-
-    char **fakeenv = NULL;
-    char **oldenv = NULL;
-
-    if (tz != NULL) {
-        // Preparing fake environment if TZ has been defined
-        int i = 0;
-        for (i = 0; environ[i] != NULL; ++i) {
-            continue;
-        }
-
-        fakeenv = malloc((i + 2) * sizeof *fakeenv);
-        size_t longest = 1024;
-        if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL)
-            return DT_MALLOC_ERROR;
-
-        int to = 0;
-        strcpy(fakeenv[to++], "TZ=");
-        int from = 0;
-        for (from = 0; environ[from] != NULL; ++from) {
-            if (strncmp(environ[from], "TZ=", 3) != 0)
-                fakeenv[to++] = environ[from];
-        }
-        fakeenv[to] = NULL;
+    if (tz == NULL) {
+        if (localtime_r(&(timestamp->second), &tm) == NULL)
+            return DT_SYSTEM_CALL_ERROR;
+        return dt_tm_to_representation(&tm, timestamp->nano_second, representation);
     }
 
-    if (pthread_mutex_lock(&mutex)) {
-        result = DT_SYSTEM_CALL_ERROR;
-        goto cleanup_fakeenv;
+    if (tz != NULL && tz->state == NULL)
+        return DT_INVALID_ARGUMENT;
+
+    if (tz_localtime_r(tz->state, &(timestamp->second), &tm) == NULL) {
+        return DT_INVALID_ARGUMENT;
     }
 
-    if (tz != NULL && tz->time_zone_name != NULL) {
-        // Substituting environment if TZ has been defined
-        oldenv = environ;
-        environ = fakeenv;
-        // Setting timezone
-        strcpy(&fakeenv[0][3], tz->time_zone_name);
-        tzset();
-    }
-
-    struct tm tm;
-    if (localtime_r(&(timestamp->second), &tm) == NULL) {
-        result = DT_INVALID_ARGUMENT;
-    } else {
-        result = DT_OK;
-    }
-    if (tz != NULL && tz->time_zone_name != NULL) {
-        // Restoring environment
-        environ = oldenv;
-        // Restoring timezone
-        tzset();
-    }
-unlock_mutex:
-    if (pthread_mutex_unlock(&mutex))
-        result = DT_SYSTEM_CALL_ERROR;
-
-cleanup_fakeenv:
-    if (tz != NULL && tz->time_zone_name != NULL)
-        free(fakeenv);
-
-    if (result == DT_OK)
-        result = dt_tm_to_representation(&tm, timestamp->nano_second, representation);
-
-    return result;
+    tz_free(s);
+    return dt_tm_to_representation(&tm, timestamp->nano_second, representation);
 }
 
 dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t *timezone,
                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp)
 {
-    // FIXME: System timezone database usage!
+    const struct state *s = NULL;
+    char path[PATH_MAX + sizeof(char) + 1] = {0,};
+    struct tm tm = {0,};
+    time_t posix_time = WRONG_POSIX_TIME;
+
+    dt_status_t status = DT_UNKNOWN_ERROR;
 
     if (!representation || !first_timestamp)
         return DT_INVALID_ARGUMENT;
 
-    dt_status_t result = DT_UNKNOWN_ERROR;
+    if (DT_OK != (status = dt_representation_to_tm(representation, &tm)))
+        return status;
 
-    extern char **environ;
-
-    char **fakeenv = NULL;
-    char **oldenv = NULL;
-
-    if (timezone && timezone->time_zone_name) {
-        // Preparing fake environment if TZ has been defined
-        int i = 0;
-        for (i = 0; environ[i] != NULL; ++i) {
-            continue;
+    if (timezone == NULL) {
+        posix_time = mktime(&tm);
+        if (posix_time != WRONG_POSIX_TIME) {
+            first_timestamp->second = posix_time;
+            first_timestamp->nano_second = representation->nano_second;
+            return DT_OK;
+        } else {
+            return DT_SYSTEM_CALL_ERROR;
         }
 
-        fakeenv = malloc((i + 2) * sizeof *fakeenv);
-        size_t longest = 1024;
-        if (fakeenv == NULL || (fakeenv[0] = malloc(longest + 4)) == NULL)
-            return DT_MALLOC_ERROR;
-
-        int to = 0;
-        strcpy(fakeenv[to++], "TZ=");
-        int from = 0;
-        for (from = 0; environ[from] != NULL; ++from) {
-            if (strncmp(environ[from], "TZ=", 3) != 0) {
-                fakeenv[to++] = environ[from];
-            }
-        }
-        fakeenv[to] = NULL;
     }
 
-    if (pthread_mutex_lock(&mutex)) {
-        result = DT_SYSTEM_CALL_ERROR;
-        goto cleanup_fakeenv;
+    if (timezone != NULL && timezone->state == NULL)
+        return DT_INVALID_ARGUMENT;
+
+
+    if (WRONG_POSIX_TIME == (posix_time = tz_mktime(timezone->state, &tm))) {
+        tz_free(s);
+        return DT_INVALID_ARGUMENT;
     }
 
-    if (timezone && timezone->time_zone_name) {
-        // Substituting environment if TZ has been defined
-        oldenv = environ;
-        environ = fakeenv;
-        // Setting timezone
-        strcpy(&fakeenv[0][3], timezone->time_zone_name);
-        tzset();
-    }
-
-    struct tm tm;
-    dt_representation_to_tm(representation, &tm);
-
-    time_t posix_time = mktime(&tm);
-    if (posix_time < 0) {
-        result = DT_INVALID_ARGUMENT;
-    } else {
-        result = DT_OK;
-    }
-
-    if (timezone && timezone->time_zone_name) {
-        // Restoring environment
-        environ = oldenv;
-        // Restoring timezone
-        tzset();
-    }
-unlock_mutex:
-    if (pthread_mutex_unlock(&mutex))
-        result = DT_SYSTEM_CALL_ERROR;
-
-cleanup_fakeenv:
-    if (timezone && timezone->time_zone_name)
-        free(fakeenv);
-
-    if (result == DT_OK) {
-        first_timestamp->second = posix_time;
-        first_timestamp->nano_second = representation->nano_second;
-    }
-    return result;
+    tz_free(s);
+    first_timestamp->second = posix_time;
+    first_timestamp->nano_second = representation->nano_second;
+    return DT_OK;
 }
 
 dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
@@ -247,4 +161,45 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
     return DT_OK;
 }
 
+dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone)
+{
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    tz_aliases_t *aliases = NULL;
+    tz_alias_iterator_t *it = TZMAP_BEGIN;
+    tz_alias_t *alias = NULL;
+    char path[PATH_MAX] = {0,};
 
+    const struct state* s = NULL;
+
+    if (timezone == NULL || timezone_name == NULL) {
+        return DT_INVALID_ARGUMENT;
+    }
+
+    if ((status = tzmap_map(timezone_name, &aliases)) != DT_OK) {
+        return status;
+    }
+
+    while ((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
+        if (alias->kind == PREFERED_TZMAP_TYPE) {
+            strcat(path, TZDIR);
+            strcat(path, "/");
+            strcat(path, alias->name);
+            s = tz_alloc(path);
+            if (s == NULL)
+                return DT_TIMEZONE_NOT_FOUND;
+            timezone->state = s;
+            tzmap_free(aliases);
+            return DT_OK;
+        }
+    }
+
+    return status;
+}
+
+dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone)
+{
+    if (timezone == NULL)
+        return DT_INVALID_ARGUMENT;
+    tz_free(timezone->state);
+    return DT_OK;
+}

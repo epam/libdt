@@ -70,7 +70,11 @@ typedef struct dt_representation {
 //! Timezone representation
 //! @note it's internal implementation can be changed from version to version
 typedef struct dt_timezone {
+#ifdef WIN32
     const char* time_zone_name;
+#else
+    const struct state* state;
+#endif
 } dt_timezone_t;
 
 #endif // _DT_TYPES_H

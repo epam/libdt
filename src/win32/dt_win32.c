@@ -686,3 +686,36 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
     return DT_OK;
 
 }
+
+dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone)
+{
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    tz_aliases_t* aliases = NULL;
+    tz_alias_iterator_t* it = TZMAP_BEGIN;
+    tz_alias_t * alias = NULL;
+
+    if (timezone == NULL || timezone_name == NULL) {
+        return DT_INVALID_ARGUMENT;
+    }
+
+    if ((status = tzmap_map(timezone_name, &aliases)) != DT_OK) {
+        return status;
+    }
+
+    while((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
+        if (alias->kind == PREFERED_TZMAP_TYPE) {
+            timezone->time_zone_name = alias->name;
+            tzmap_free(aliases);
+            return DT_OK;
+        }
+    }
+
+    return status;
+}
+
+dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone)
+{
+    if (timezone == NULL)
+        return DT_INVALID_ARGUMENT;
+    return DT_OK;
+}

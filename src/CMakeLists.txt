@@ -26,8 +26,10 @@ endif(WIN32)
 add_library(${PROJECT_NAME} ${SRC_LIST} )
 add_dependencies(${PROJECT_NAME} timezones-map)
 
-if(UNIX)
-  target_link_libraries(${PROJECT_NAME} rt m)
+if (UNIX)
+  target_link_libraries(${PROJECT_NAME} rt m tz-inline)
 endif(UNIX)
 
 include(../cmake/TZPack.cmake)
+
+add_subdirectory(unix/libtz)
