@@ -163,9 +163,10 @@ typedef long		int_fast64_t;
 ** Others might define it as a macro.
 ** Fix the former without affecting the latter.
 */
-
-#ifndef asctime_r
+#ifndef __sun
+#ifndef asctime_r 
 extern char *	asctime_r(struct tm const *, char *);
+#endif
 #endif
 
 /*

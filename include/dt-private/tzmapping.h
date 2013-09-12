@@ -21,7 +21,7 @@ typedef struct tz_aliases tz_aliases_t;
 //! Timezone name alias
 typedef struct tz_alias {
     tz_alias_kind_t kind;       //!< Alias kind
-    const char* name;           //!< Alternative time zone name
+    char* name;           //!< Alternative time zone name
 } tz_alias_t;
 
 //! Start iterator for any tz_aliases_t collection
