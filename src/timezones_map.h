@@ -1,4 +1,4 @@
-struct tz_unicode_mapping {char *other; char* territory; char* type;};
+struct tz_unicode_mapping {const char *other; const char* territory; const char* type;};
 const struct tz_unicode_mapping tz_unicode_map[] = {
 //Generated from windowsZones.xml
 //Obtained from local file
@@ -6,7 +6,6 @@ const struct tz_unicode_mapping tz_unicode_map[] = {
 {"Dateline Standard Time", "ZZ", "Etc/GMT+12"},
 {"UTC-11", "001", "Etc/GMT+11"},
 {"UTC-11", "AS", "Pacific/Pago_Pago"},
-
 {"UTC-11", "NU", "Pacific/Niue"},
 {"UTC-11", "UM", "Pacific/Midway"},
 {"UTC-11", "ZZ", "Etc/GMT+11"},

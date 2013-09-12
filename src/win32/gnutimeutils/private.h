@@ -74,11 +74,6 @@
 #undef LOCALE_HOME		/* not to be handled by tzcode itself */
 #endif /* defined LOCALE_HOME */
 
-#if HAVE_INCOMPATIBLE_CTIME_R
-#define asctime_r _incompatible_asctime_r
-#define ctime_r _incompatible_ctime_r
-#endif /* HAVE_INCOMPATIBLE_CTIME_R */
-
 /*
 ** Nested includes
 */
@@ -378,13 +373,6 @@ const char *	scheck(const char * string, const char * format);
 #ifndef TZ_DOMAIN
 #define TZ_DOMAIN "tz"
 #endif /* !defined TZ_DOMAIN */
-
-#if HAVE_INCOMPATIBLE_CTIME_R
-#undef asctime_r
-#undef ctime_r
-char *asctime_r(struct tm const *, char *);
-char *ctime_r(time_t const *, char *);
-#endif /* HAVE_INCOMPATIBLE_CTIME_R */
 
 #ifndef YEARSPERREPEAT
 #define YEARSPERREPEAT		400	/* years before a Gregorian repeat */

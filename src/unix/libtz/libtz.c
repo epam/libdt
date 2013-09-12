@@ -1483,26 +1483,7 @@ const time_t * const	timep;
 */
 	return asctime(localtime(timep));
 }
-#ifdef __sun
-char *
-ctime_r(timep, buf, size)
-const time_t * const	timep;
-char *			buf;
-int			size;
-{
-	struct tm	mytm;
-	return asctime_r(localtime_r(timep, &mytm), buf, size);
-}
-#else
-char *
-ctime_r(timep, buf)
-const time_t * const	timep;
-char *			buf;
-{
-	struct tm	mytm;
-	return asctime_r(localtime_r(timep, &mytm), buf);
-}
-#endif
+
 /*
 ** Adapted from code provided by Robert Elz, who writes:
 **	The "best" way to do mktime I think is based on an idea of Bob
