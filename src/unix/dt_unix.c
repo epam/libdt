@@ -167,7 +167,7 @@ dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezon
     tz_aliases_t *aliases = NULL;
     tz_alias_iterator_t *it = TZMAP_BEGIN;
     tz_alias_t *alias = NULL;
-    char path[PATH_MAX + sizeof(char) + 1] = {0,};
+    char path[PATH_MAX] = {0,};
 
     const struct state* s = NULL;
 
