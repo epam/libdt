@@ -1,8 +1,8 @@
 #ifndef TZMAPPING_H
 #define TZMAPPING_H
-#include <libtz/dt_types.h>
+#include <libdt/dt_types.h>
 /*!
- * \defgroup Mapping from olsen to standard windows time and back
+ * \defgroup TimezoneMapping Mapping from olsen to standard windows time and back
  * @{
  */
 

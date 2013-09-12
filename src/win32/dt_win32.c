@@ -4,7 +4,7 @@
 #include <string.h> /* for strlen, strcpy_s, strcat_s*/
 #include <memory.h> /* for malloc, free*/
 
-#include <libtz/dt.h>
+#include <libdt/dt.h>
 #include "../dt_private.h"
 
 // WinAPI

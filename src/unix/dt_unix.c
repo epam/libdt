@@ -5,12 +5,11 @@
 #include <assert.h>
 
 #include "../dt_private.h"
-#include "libtz/dt.h"
 #include <limits.h>
-
-#include <libtz/tzmapping.h>
 #include <libtz/tz.h>
 #include <libtz/tzfile.h>
+#include <libdt/dt.h>
+#include <dt-private/tzmapping.h>
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
