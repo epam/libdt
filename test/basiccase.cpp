@@ -59,7 +59,7 @@ static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon,
 
 static void dump_tm(const struct tm *tm);
 
-void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmExpected);
+inline void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmExpected);
 
 BasicCase::BasicCase()
 {
@@ -322,7 +322,7 @@ static void dump_tm(const struct tm *tm)
     printf("%04d-%02d-%02d %02d:%02d:%02d", tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 }
 
-void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
+inline void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmUtc)
 {
     time_t tm_ts;
     struct tm tm_ts_tm;
