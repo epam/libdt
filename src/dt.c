@@ -37,25 +37,25 @@ dt_bool_t dt_is_leap_year(int year)
     }
 }
 
-const char * dt_strerror(dt_status_t status)
+const char *dt_strerror(dt_status_t status)
 {
     switch (status) {
-    case DT_OK:
-        return no_error_message;
-    case DT_INVALID_ARGUMENT:
-        return invalid_argument_error_message;
-    case DT_TIMEZONE_NOT_FOUND:
-        return timezone_not_found_error_message;
-    case DT_SYSTEM_CALL_ERROR:
-        return system_call_error_message;
-    case DT_UNKNOWN_ERROR:
-        return unknown_error_message;
-    case DT_MALLOC_ERROR:
-        return malloc_error_message;
-    case DT_NO_MORE_ITEMS:
-        return no_more_items_error_message;
-    default:
-        return invalid_status_error_message;
+        case DT_OK:
+            return no_error_message;
+        case DT_INVALID_ARGUMENT:
+            return invalid_argument_error_message;
+        case DT_TIMEZONE_NOT_FOUND:
+            return timezone_not_found_error_message;
+        case DT_SYSTEM_CALL_ERROR:
+            return system_call_error_message;
+        case DT_UNKNOWN_ERROR:
+            return unknown_error_message;
+        case DT_MALLOC_ERROR:
+            return malloc_error_message;
+        case DT_NO_MORE_ITEMS:
+            return no_more_items_error_message;
+        default:
+            return invalid_status_error_message;
     }
 }
 
@@ -240,8 +240,8 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 
     seconds = lhs->seconds - rhs->seconds - (lhs->nano_seconds < rhs->nano_seconds ? 1L : 0L);
     nano_seconds = lhs->nano_seconds < rhs->nano_seconds ?
-                1000000000UL + lhs->nano_seconds - rhs->nano_seconds :
-                lhs->nano_seconds - rhs->nano_seconds;
+                   1000000000UL + lhs->nano_seconds - rhs->nano_seconds :
+                   lhs->nano_seconds - rhs->nano_seconds;
     s = dt_compare_intervals(lhs, rhs, &cr);
 
     if (s != DT_OK) {
@@ -278,8 +278,9 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
 static dt_status_t dt_init_representation_without_check(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
                                                         dt_representation_t *result)
 {
-    if (!result)
+    if (!result) {
         return DT_INVALID_ARGUMENT;
+    }
 
     memset(result, 0, sizeof(dt_representation_t));
     result->year = year;
@@ -295,8 +296,9 @@ static dt_status_t dt_init_representation_without_check(int year, int month, int
 dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second,
                                    dt_representation_t *result)
 {
-    if (!dt_validate_representation(year, month, day, hour, minute, second, nano_second))
+    if (!dt_validate_representation(year, month, day, hour, minute, second, nano_second)) {
         return DT_INVALID_ARGUMENT;
+    }
     return dt_init_representation_without_check(year, month, day, hour, minute, second, nano_second,
                                                 result);
 }
@@ -385,30 +387,36 @@ dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_
 }
 
 int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
-                char *str_buffer, size_t str_buffer_size) {
+                char *str_buffer, size_t str_buffer_size)
+{
     dt_representation_t rep = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
+    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0) {
         return DT_INVALID_ARGUMENT;
+    }
 
     status = dt_tm_to_representation(representation, 0, &rep);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return status;
+    }
 
     return dt_to_string(&rep, tz_name, fmt, str_buffer, str_buffer_size);
 }
 
-int strptime_tz(const char *str, const char *fmt, struct tm *representation) {
+int strptime_tz(const char *str, const char *fmt, struct tm *representation)
+{
     dt_representation_t rep = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!representation || !fmt || !str)
+    if (!representation || !fmt || !str) {
         return DT_INVALID_ARGUMENT;
+    }
 
     status = dt_from_string(str, fmt, &rep, NULL, 0);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return status;
+    }
 
     return dt_representation_to_tm(&rep, representation);
 }
@@ -421,25 +429,29 @@ int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
     dt_timezone_t tz = {0,};
 
 
-    if (!time || !result || !tz_name)
+    if (!time || !result || !tz_name) {
         return EXIT_FAILURE;
+    }
 
     if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
         return EXIT_FAILURE;
     }
 
     status = dt_posix_time_to_timestamp(*time, 0, &t);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return EXIT_FAILURE;
+    }
 
     status = dt_timestamp_to_representation(&t, &tz, &rep);
     dt_timezone_cleanup(&tz);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return EXIT_FAILURE;
+    }
 
     status = dt_representation_to_tm(&rep, result);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
@@ -452,24 +464,28 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
     dt_timezone_t tz = {0,};
     unsigned long nano = 0;
 
-    if (!tm || !result || !tz_name)
+    if (!tm || !result || !tz_name) {
         return EXIT_FAILURE;
+    }
     if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
         return EXIT_FAILURE;
     }
 
     status = dt_tm_to_representation(tm, 0, &rep);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return EXIT_FAILURE;
+    }
 
     status = dt_representation_to_timestamp(&rep, &tz, &t, NULL);
     dt_timezone_cleanup(&tz);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return EXIT_FAILURE;
+    }
 
     status = dt_timestamp_to_posix_time(&t, result, &nano);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

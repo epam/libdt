@@ -369,7 +369,7 @@ TEST_F(DtCase, representation_timestamp_conversion)
     dt_representation_t urr;
     dt_timezone_t tz_moscow = {0,};
     dt_timezone_t tz_berlin = {0,};
-    dt_timezone_t tz_utc= {0,};
+    dt_timezone_t tz_utc = {0,};
     //Lookup timezones
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
     EXPECT_EQ(dt_timezone_lookup(BERLIN_TZ_NAME, &tz_berlin), DT_OK);

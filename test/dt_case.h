@@ -6,7 +6,7 @@
 class DtCase : public ::testing::Test
 {
 public:
-        DtCase();
+    DtCase();
 };
 
 #endif // _DT_CASE_H

@@ -1,0 +1,12 @@
+--style=1tbs
+--indent=spaces=4
+--add-brackets
+--pad-oper
+--pad-header
+--convert-tabs
+--indent-preprocessor
+--align-pointer=name
+--indent-switches
+--indent-col1-comments
+--max-instatement-indent=80
+--lineend=linux
