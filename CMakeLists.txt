@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 include_directories(${CMAKE_SOURCE_DIR}/include/)
 find_package(Doxygen)
-
+include(AstyleFormatSource)
 if(${DOXYGEN_FOUND})
     message(STATUS "Doxygen was found you can build docs with 'doc' target - for user documentation and 'doc-develop' for development documentation and review them in ${CMAKE_SOURCE_DIR}/doc[-develop] directory")
     ADD_CUSTOM_TARGET(doc COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
