@@ -14,9 +14,9 @@
 #include <dt-private/tzmapping.h>
 
 #ifdef _WIN32
-    #define PREFERED_TZMAP_TYPE TZMAP_WIN_STANDARD_TIME
+#define PREFERED_TZMAP_TYPE TZMAP_WIN_STANDARD_TIME
 #else
-    #define PREFERED_TZMAP_TYPE TZMAP_OLSEN_NAME
+#define PREFERED_TZMAP_TYPE TZMAP_OLSEN_NAME
 #endif
 
 #ifdef __cplusplus
@@ -25,15 +25,15 @@ extern "C" {
 
 
 
-//! Converts a POSIX breakdown time structure to localized representation
-/*!
- * This function does not set tm.tm_wday and tm.tm_yday fields. It not check validate of result
- * \param tm POSIX breakdown time structure for the representation
- * \param nano_second nano seconds
- * \param representation Representation object [OUT]
- * \return Result status of the operation
- */
-dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation);
+    //! Converts a POSIX breakdown time structure to localized representation
+    /*!
+     * This function does not set tm.tm_wday and tm.tm_yday fields. It not check validate of result
+     * \param tm POSIX breakdown time structure for the representation
+     * \param nano_second nano seconds
+     * \param representation Representation object [OUT]
+     * \return Result status of the operation
+     */
+    dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation);
 
 
 #ifdef __cplusplus

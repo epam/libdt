@@ -16,12 +16,14 @@ static const time_t WRONG_POSIX_TIME = -1;
 
 dt_status_t dt_now(dt_timestamp_t *result)
 {
-    if (!result)
+    if (!result) {
         return DT_INVALID_ARGUMENT;
+    }
 
     struct timespec ts;
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0)
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
         return DT_SYSTEM_CALL_ERROR;
+    }
 
     result->second = ts.tv_sec;
     result->nano_second = ts.tv_nsec;
@@ -30,8 +32,9 @@ dt_status_t dt_now(dt_timestamp_t *result)
 
 dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result)
 {
-    if (time < 0 || !result)
+    if (time < 0 || !result) {
         return DT_INVALID_ARGUMENT;
+    }
 
     result->second = time;
     result->nano_second = nano_second;
@@ -40,32 +43,36 @@ dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, d
 
 dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
 {
-    if (!timestamp || !time || timestamp->second < 0)
+    if (!timestamp || !time || timestamp->second < 0) {
         return DT_INVALID_ARGUMENT;
+    }
 
     *time = timestamp->second;
     *nano_second = timestamp->nano_second;
     return DT_OK;
 }
 
-dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t* tz, dt_representation_t *representation)
+dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *tz, dt_representation_t *representation)
 {
 
     const struct state *s = NULL;
     struct tm tm = {0,};
 
-    if (timestamp == NULL || representation == NULL)
+    if (timestamp == NULL || representation == NULL) {
         return DT_INVALID_ARGUMENT;
+    }
 
 
     if (tz == NULL) {
-        if (localtime_r(&(timestamp->second), &tm) == NULL)
+        if (localtime_r(&(timestamp->second), &tm) == NULL) {
             return DT_SYSTEM_CALL_ERROR;
+        }
         return dt_tm_to_representation(&tm, timestamp->nano_second, representation);
     }
 
-    if (tz != NULL && tz->state == NULL)
+    if (tz != NULL && tz->state == NULL) {
         return DT_INVALID_ARGUMENT;
+    }
 
     if (tz_localtime_r(tz->state, &(timestamp->second), &tm) == NULL) {
         return DT_INVALID_ARGUMENT;
@@ -85,11 +92,13 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
 
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!representation || !first_timestamp)
+    if (!representation || !first_timestamp) {
         return DT_INVALID_ARGUMENT;
+    }
 
-    if (DT_OK != (status = dt_representation_to_tm(representation, &tm)))
+    if (DT_OK != (status = dt_representation_to_tm(representation, &tm))) {
         return status;
+    }
 
     if (timezone == NULL) {
         posix_time = mktime(&tm);
@@ -103,8 +112,9 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
 
     }
 
-    if (timezone != NULL && timezone->state == NULL)
+    if (timezone != NULL && timezone->state == NULL) {
         return DT_INVALID_ARGUMENT;
+    }
 
 
     if (WRONG_POSIX_TIME == (posix_time = tz_mktime(timezone->state, &tm))) {
@@ -124,16 +134,19 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
     dt_status_t status = DT_UNKNOWN_ERROR;
     struct tm tm = {0};
 
-    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0)
+    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0) {
         return DT_INVALID_ARGUMENT;
+    }
 
     status = dt_representation_to_tm(representation, &tm);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return status;
+    }
 
     size_t size = strftime(str_buffer, str_buffer_size, fmt, &tm);
-    if (size > 0)
+    if (size > 0) {
         return DT_OK;
+    }
     return status;
 
 }
@@ -145,23 +158,27 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
     struct tm tm = {0};
     dt_status_t status = DT_SYSTEM_CALL_ERROR;
 
-    if (!representation || !str || !fmt)
+    if (!representation || !str || !fmt) {
         return DT_INVALID_ARGUMENT;
+    }
 
     result = strptime(str, fmt, &tm);//FIXME: Why warning?
-    if (result == NULL)
+    if (result == NULL) {
         return status;
-    if (*result != '\0')// end of string
+    }
+    if (*result != '\0') { // end of string
         return status;
+    }
 
     status = dt_tm_to_representation_withoutcheck(&tm, 0, representation);
-    if (status != DT_OK)
+    if (status != DT_OK) {
         return status;
+    }
 
     return DT_OK;
 }
 
-dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezone)
+dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezone)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
     tz_aliases_t *aliases = NULL;
@@ -169,7 +186,7 @@ dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezon
     tz_alias_t *alias = NULL;
     char path[PATH_MAX] = {0,};
 
-    const struct state* s = NULL;
+    const struct state *s = NULL;
 
     if (timezone == NULL || timezone_name == NULL) {
         return DT_INVALID_ARGUMENT;
@@ -185,8 +202,9 @@ dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezon
             strcat(path, "/");
             strcat(path, alias->name);
             s = tz_alloc(path);
-            if (s == NULL)
+            if (s == NULL) {
                 return DT_TIMEZONE_NOT_FOUND;
+            }
             timezone->state = s;
             tzmap_free(aliases);
             return DT_OK;
@@ -198,8 +216,9 @@ dt_status_t dt_timezone_lookup(const char* timezone_name, dt_timezone_t *timezon
 
 dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone)
 {
-    if (timezone == NULL)
+    if (timezone == NULL) {
         return DT_INVALID_ARGUMENT;
+    }
     tz_free(timezone->state);
     return DT_OK;
 }
