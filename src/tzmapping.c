@@ -44,17 +44,17 @@ static tz_alias_iterator_t **insert_mapping(tz_aliases_t *aliases, tz_alias_iter
 
 
 
-    alias.name = tz->other;
+    alias.name = (const char *)tz->other;
     alias.kind = TZMAP_WIN_STANDARD_TIME;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
-    alias.name = tz->type;
+    alias.name = (const char *)tz->type;
     alias.kind = TZMAP_OLSEN_NAME;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
-    alias.name = tz->territory;
+    alias.name = (const char *)tz->territory;
     alias.kind = TZMAP_ABBREVIATION;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
