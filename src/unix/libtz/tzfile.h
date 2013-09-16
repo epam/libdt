@@ -25,18 +25,6 @@ static char	tzfilehid[] = "@(#)tzfile.h	8.1";
 #endif /* !defined NOID */
 #endif /* !defined lint */
 
-/*
-** Information about time zone files.
-*/
-
-#ifndef TZDIR
-#ifdef __sun //if we compile it in SunOS(Solaris 10)
-#define TZDIR	"/usr/share/lib/zoneinfo" /* Time zone object file directory */
-#else
-#define TZDIR	"/usr/share/zoneinfo" /* Time zone object file directory */
-#endif
-#endif /* !defined TZDIR */
-
 #ifndef TZDEFAULT
 #define TZDEFAULT	"localtime"
 #endif /* !defined TZDEFAULT */
