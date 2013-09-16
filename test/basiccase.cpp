@@ -1,49 +1,49 @@
 #include "basiccase.h"
 #include <libdt/dt.h>
 
-static const char* unrealTimezone = "notreal/timezone/where/no/light";
-static const char* testMoscowTimeZone =
-        #ifdef _WIN32
-        "Russian Standard Time"
-        #else
-        "Europe/Moscow"
-        #endif
-        ;
-static const char* testUTCTimeZone =
-        #ifdef _WIN32
-        "UTC"
-        #else
-        "Etc/UTC"
-        #endif
-        ;
-static const char* testGMTNeg5TimeZone =
-        #ifdef _WIN32
-        "West Asia Standard Time"
-        #else
-        "Etc/GMT-5"
-        #endif
-        ;
-static const char* testGMT5TimeZone =
-        #ifdef _WIN32
-        "SA Pacific Standard Time"
-        #else
-        "Etc/GMT+5"
-        #endif
-        ;
-static const char* testBerlinTimeZone =
-        #ifdef _WIN32
-        "W. Europe Standard Time"
-        #else
-        "Europe/Berlin"
-        #endif
-        ;
-static const char* testTimeZoneWithoutHistoricalLawInfo =
-        #ifdef _WIN32
-        "W. Europe Standard Time"
-        #else
-        "Europe/Berlin"
-        #endif
-        ;
+static const char *unrealTimezone = "notreal/timezone/where/no/light";
+static const char *testMoscowTimeZone =
+#ifdef _WIN32
+    "Russian Standard Time"
+#else
+    "Europe/Moscow"
+#endif
+    ;
+static const char *testUTCTimeZone =
+#ifdef _WIN32
+    "UTC"
+#else
+    "Etc/UTC"
+#endif
+    ;
+static const char *testGMTNeg5TimeZone =
+#ifdef _WIN32
+    "West Asia Standard Time"
+#else
+    "Etc/GMT-5"
+#endif
+    ;
+static const char *testGMT5TimeZone =
+#ifdef _WIN32
+    "SA Pacific Standard Time"
+#else
+    "Etc/GMT+5"
+#endif
+    ;
+static const char *testBerlinTimeZone =
+#ifdef _WIN32
+    "W. Europe Standard Time"
+#else
+    "Europe/Berlin"
+#endif
+    ;
+static const char *testTimeZoneWithoutHistoricalLawInfo =
+#ifdef _WIN32
+    "W. Europe Standard Time"
+#else
+    "Europe/Berlin"
+#endif
+    ;
 
 // Fills tm structure
 static void fillTm(struct tm *output, int tm_gmtoff,
@@ -280,8 +280,11 @@ static void fillTm(struct tm *output, int tm_gmtoff,
                    int tm_hour, int tm_isdst, int tm_mday,
                    int tm_min, int tm_mon, int tm_sec,
                    int tm_wday, int tm_yday, int tm_year,
-                   char *tm_zone) {
-    if (output == NULL) return;
+                   char *tm_zone)
+{
+    if (output == NULL) {
+        return;
+    }
     memset(output, 0, sizeof(struct tm));
 #ifdef __USE_BSD
     output->tm_gmtoff = tm_gmtoff;
@@ -341,7 +344,7 @@ TEST_F(BasicCase, utc_convert_mktime_tz)
     time_t currentTime = 0;
     time(&currentTime);
     localtime_tz(&currentTime, timeZone, &currentRepresentation);
-    
+
     mktime_tz(&currentRepresentation, timeZone, &resultTime);
 
     EXPECT_NE(resultTime, 0);
