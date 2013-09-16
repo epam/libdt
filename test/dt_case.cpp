@@ -648,7 +648,7 @@ TEST_F(DtCase, lookup_free_timezone)
 TEST_F(DtCase, edge_of_time_switch)
 {
     dt_representation_t r;
-    dt_timestamp_t t, t1;
+    dt_timestamp_t t;
     dt_representation_t result;
     dt_timezone_t tz_moscow = {0,};
     dt_timezone_t tz_utc = {0,};
@@ -668,7 +668,7 @@ TEST_F(DtCase, edge_of_time_switch)
     // non exists time 2:30 30.03.2008 in Moscow
     EXPECT_TRUE(dt_init_representation(2008, 3, 30, 2, 30, 0, 0, &r) == DT_OK);
     //EXPECT_NE(dt_representation_to_timestamp(&r, &tz_moscow, &t1, NULL), DT_OK);// non exist time!
-    dt_representation_to_timestamp(&r, &tz_moscow, &t1, NULL);//FIXME: must return error for non exist time
+    dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL);//FIXME: must return error for non exist time
 
     EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &result), DT_OK);
     EXPECT_EQ(result.hour, 22);
