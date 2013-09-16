@@ -644,3 +644,43 @@ TEST_F(DtCase, lookup_free_timezone)
 
 
 }
+
+TEST_F(DtCase, edge_of_time_switch)
+{
+    dt_representation_t r;
+    dt_timestamp_t t, t1;
+    dt_representation_t result;
+    dt_timezone_t tz_moscow = {0,};
+    dt_timezone_t tz_utc = {0,};
+    //Lookup timezones
+    EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
+    EXPECT_EQ(dt_timezone_lookup(UTC_TZ_NAME, &tz_utc), DT_OK);
+
+    // before switch time...
+    EXPECT_TRUE(dt_init_representation(2008, 3, 30, 1, 30, 0, 0, &r) == DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
+
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &result), DT_OK);
+    EXPECT_EQ(result.hour, 22);
+    EXPECT_EQ(result.minute, 30);
+    EXPECT_EQ(result.day, 29);
+
+    // non exists time 2:30 30.03.2008 in Moscow
+    EXPECT_TRUE(dt_init_representation(2008, 3, 30, 2, 30, 0, 0, &r) == DT_OK);
+    EXPECT_NE(dt_representation_to_timestamp(&r, &tz_moscow, &t1, NULL), DT_OK);// non exist time!
+
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &result), DT_OK);
+    EXPECT_EQ(result.hour, 22);
+    EXPECT_EQ(result.minute, 30);
+    EXPECT_EQ(result.day, 29);
+
+    // undefined double time
+    EXPECT_TRUE(dt_init_representation(2008, 10, 26, 2, 30, 0, 0, &r) == DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
+
+    EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &result), DT_OK);
+    EXPECT_EQ(result.hour, 22);
+    EXPECT_EQ(result.minute, 30);
+    EXPECT_EQ(result.day, 25);
+
+}
