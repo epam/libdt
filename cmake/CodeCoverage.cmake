@@ -70,48 +70,48 @@ ENDIF()
 # Pass them in list form, e.g.: "-j;2" for -j 2
 FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
 
-IF(NOT LCOV_PATH)
-    MESSAGE(WARNING "lcov not found! Coverage report will be unavailable")
-ENDIF() # NOT LCOV_PATH
+    IF(NOT LCOV_PATH)
+        MESSAGE(WARNING "lcov not found! Coverage report will be unavailable")
+    ENDIF() # NOT LCOV_PATH
 
-IF(NOT GENHTML_PATH)
-    MESSAGE(WARNING "genhtml not found! Coverage report will be unavailable")
-ENDIF() # NOT GENHTML_PATH
+    IF(NOT GENHTML_PATH)
+        MESSAGE(WARNING "genhtml not found! Coverage report will be unavailable")
+    ENDIF() # NOT GENHTML_PATH
 
-IF(WIN32)
-    set(LCOV_COMMAND ${PERL_EXECUTABLE})
-    set(GENHTML_COMMAND ${PERL_EXECUTABLE})
-    set(LCOV_COMMAND_ARGS ${LCOV_PATH_NATIVE})
-    set(GENHTML_COMMAND_ARGS ${GENHTML_PATH_NATIVE})
-ELSE(WIN32)
-    set(LCOV_COMMAND ${LCOV_PATH})
-    set(GENHTML_COMMAND ${GENHTML_PATH})
-ENDIF(WIN32)
-message(STATUS "LCOV_COMMAND is ${LCOV_COMMAND}")
-# Setup target
-ADD_CUSTOM_TARGET(${_targetname}
+    IF(WIN32)
+        set(LCOV_COMMAND ${PERL_EXECUTABLE})
+        set(GENHTML_COMMAND ${PERL_EXECUTABLE})
+        set(LCOV_COMMAND_ARGS ${LCOV_PATH_NATIVE})
+        set(GENHTML_COMMAND_ARGS ${GENHTML_PATH_NATIVE})
+    ELSE(WIN32)
+        set(LCOV_COMMAND ${LCOV_PATH})
+        set(GENHTML_COMMAND ${GENHTML_PATH})
+    ENDIF(WIN32)
+    message(STATUS "LCOV_COMMAND is ${LCOV_COMMAND}")
+    # Setup target
+    ADD_CUSTOM_TARGET(${_targetname}
 
-# Cleanup lcov
-${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --directory . --zerocounters
+    # Cleanup lcov
+    ${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --directory . --zerocounters
 
-# Run tests
-COMMAND ${_testrunner} ${ARGV3}
+    # Run tests
+    COMMAND ${_testrunner} ${ARGV3}
 
-# Capturing lcov counters and generating report
-COMMAND ${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --directory . --capture --output-file ${_outputname}.info
-COMMAND ${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --remove ${_outputname}.info 'tests\\*'  --output-file ${_outputname}.info.cleaned
-COMMAND ${GENHTML_COMMAND} ${GENHTML_COMMAND_ARGS} -o ${_outputname} ${_outputname}.info.cleaned
-COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info ${_outputname}.info.cleaned
+    # Capturing lcov counters and generating report
+    COMMAND ${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --directory . --capture --output-file ${_outputname}.info
+    COMMAND ${LCOV_COMMAND} ${LCOV_COMMAND_ARGS} --remove ${_outputname}.info 'tests\\*'  --output-file ${_outputname}.info.cleaned
+    COMMAND ${GENHTML_COMMAND} ${GENHTML_COMMAND_ARGS} -o ${_outputname} ${_outputname}.info.cleaned
+    COMMAND ${CMAKE_COMMAND} -E remove ${_outputname}.info ${_outputname}.info.cleaned
 
-WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
-)
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
+    )
 
-# Show info where to find the report
-ADD_CUSTOM_COMMAND(TARGET ${_targetname} POST_BUILD
-COMMAND ;
-COMMENT "Open ./${_outputname}/index.html in your browser to view the coverage report."
-)
+    # Show info where to find the report
+    ADD_CUSTOM_COMMAND(TARGET ${_targetname} POST_BUILD
+        COMMAND ;
+        COMMENT "Open ./${_outputname}/index.html in your browser to view the coverage report."
+    )
 
 ENDFUNCTION() # SETUP_TARGET_FOR_COVERAGE
 
@@ -122,30 +122,30 @@ ENDFUNCTION() # SETUP_TARGET_FOR_COVERAGE
 # Pass them in list form, e.g.: "-j;2" for -j 2
 FUNCTION(SETUP_TARGET_FOR_COVERAGE_COBERTURA _targetname _testrunner _outputname)
 
-IF(NOT PYTHON_EXECUTABLE)
-MESSAGE(FATAL_ERROR "Python not found! Coverage report will be unavailable")
-ENDIF() # NOT PYTHON_EXECUTABLE
+    IF(NOT PYTHON_EXECUTABLE)
+        MESSAGE(FATAL_ERROR "Python not found! Coverage report will be unavailable")
+    ENDIF() # NOT PYTHON_EXECUTABLE
 
-IF(NOT GCOVR_PATH)
-MESSAGE(FATAL_ERROR "gcovr not found! Coverage report will be unavailable")
-ENDIF() # NOT GCOVR_PATH
+    IF(NOT GCOVR_PATH)
+        MESSAGE(FATAL_ERROR "gcovr not found! Coverage report will be unavailable")
+    ENDIF() # NOT GCOVR_PATH
 
-ADD_CUSTOM_TARGET(${_targetname}
+    ADD_CUSTOM_TARGET(${_targetname}
 
-# Run tests
-${_testrunner} ${ARGV3}
+    # Run tests
+    ${_testrunner} ${ARGV3}
 
-# Running gcovr
-COMMAND ${GCOVR_PATH} -x -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.xml
-WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-COMMENT "Running gcovr to produce Cobertura code coverage report."
-)
+    # Running gcovr
+    COMMAND ${GCOVR_PATH} -x -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.xml
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Running gcovr to produce Cobertura code coverage report."
+    )
 
-# Show info where to find the report
-ADD_CUSTOM_COMMAND(TARGET ${_targetname} POST_BUILD
-COMMAND ;
-COMMENT "Cobertura code coverage report saved in ${_outputname}.xml."
-)
+    # Show info where to find the report
+    ADD_CUSTOM_COMMAND(TARGET ${_targetname} POST_BUILD
+        COMMAND ;
+        COMMENT "Cobertura code coverage report saved in ${_outputname}.xml."
+    )
 
 ENDFUNCTION() # SETUP_TARGET_FOR_COVERAGE_COBERTURA
 

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <libdt/dt.h>
 #include "dt_private.h"
 
 #include <stdio.h>
@@ -16,16 +15,7 @@
  * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
 
-static const char *no_error_message = "<No error>";
-static const char *invalid_argument_error_message = "Invalid argument";
-static const char *timezone_not_found_error_message = "Timezone not found";
-static const char *system_call_error_message = "System call error";
-static const char *unknown_error_message = "Unknown error";
-static const char *malloc_error_message = "malloc returned NULL";
-static const char *no_more_items_error_message = "No more items in collection";
-static const char *invalid_status_error_message = "<Invalid result status>";
-
-const int month_days[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+static const int month_days[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 dt_bool_t dt_is_leap_year(int year)
 {
@@ -39,6 +29,15 @@ dt_bool_t dt_is_leap_year(int year)
 
 const char *dt_strerror(dt_status_t status)
 {
+    static const char *no_error_message = "<No error>";
+    static const char *invalid_argument_error_message = "Invalid argument";
+    static const char *timezone_not_found_error_message = "Timezone not found";
+    static const char *system_call_error_message = "System call error";
+    static const char *unknown_error_message = "Unknown error";
+    static const char *malloc_error_message = "malloc returned NULL";
+    static const char *no_more_items_error_message = "No more items in collection";
+    static const char *invalid_status_error_message = "<Invalid result status>";
+
     switch (status) {
         case DT_OK:
             return no_error_message;
@@ -62,8 +61,7 @@ const char *dt_strerror(dt_status_t status)
 dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second)
 {
     // Simple checking for invalid values
-    if (year == 0 || month < 1 || month > 12 || day < 1 || hour < 0 || hour > 24 || minute < 0 || minute > 59 || second < 0 ||
-            second > 59 || nano_second < 0UL || nano_second > 999999999UL) {
+    if (year == 0 || month < 1 || month > 12 || day < 1 || hour > 24 || minute > 59 || second > 59 || nano_second > 999999999UL) {
         return DT_FALSE;
     }
     // Passage from Julian to Gregorian calendar
@@ -78,34 +76,34 @@ dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned sh
     return day <= month_days[month] ? DT_TRUE : DT_FALSE;
 }
 
-dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, int *result)
+dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_resiult_t *result)
 {
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
     if (lhs->second > rhs->second) {
-        *result = 1;
+        *result = MORE;
         return DT_OK;
     }
     if (lhs->second < rhs->second) {
-        *result = -1;
+        *result = LESS;
         return DT_OK;
     }
     if (lhs->nano_second > rhs->nano_second) {
-        *result = 1;
+        *result = MORE;
         return DT_OK;
     }
     if (lhs->nano_second < rhs->nano_second) {
-        *result = -1;
+        *result = LESS;
         return DT_OK;
     }
-    *result = 0;
+    *result = EQUAL;
     return DT_OK;
 }
 
 dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
 {
-    int cr = 0;
+    dt_compare_resiult_t cr = EQUAL;
     const dt_timestamp_t *lower_timestamp = NULL;
     const dt_timestamp_t *higher_timestamp = NULL;
     dt_bool_t is_forward = DT_FALSE;
@@ -128,7 +126,7 @@ dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *r
     if (s != DT_OK) {
         return s;
     }
-    if (cr == 0) {
+    if (cr == EQUAL) {
         // Equal timestamps case
         result->duration.seconds = 0L;
         result->duration.nano_seconds = 0L;
@@ -185,28 +183,28 @@ dt_status_t dt_init_interval(long seconds, unsigned long nano_seconds, dt_interv
     return DT_OK;
 }
 
-dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, int *result)
+dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_resiult_t *result)
 {
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
     }
     if (lhs->seconds > rhs->seconds) {
-        *result = 1;
+        *result = MORE;
         return DT_OK;
     }
     if (lhs->seconds < rhs->seconds) {
-        *result = -1;
+        *result = LESS;
         return DT_OK;
     }
     if (lhs->nano_seconds > rhs->nano_seconds) {
-        *result = 1;
+        *result = MORE;
         return DT_OK;
     }
     if (lhs->nano_seconds < rhs->nano_seconds) {
-        *result = -1;
+        *result = LESS;
         return DT_OK;
     }
-    *result = 0;
+    *result = EQUAL;
     return 0;
 }
 
@@ -229,7 +227,7 @@ dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 
 dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result)
 {
-    int cr = 0;
+    dt_compare_resiult_t cr = 0;
     unsigned long seconds = 0;
     unsigned long nano_seconds = 0;
     dt_status_t s = DT_UNKNOWN_ERROR;
@@ -239,9 +237,11 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
     }
 
     seconds = lhs->seconds - rhs->seconds - (lhs->nano_seconds < rhs->nano_seconds ? 1L : 0L);
-    nano_seconds = lhs->nano_seconds < rhs->nano_seconds ?
-                   1000000000UL + lhs->nano_seconds - rhs->nano_seconds :
-                   lhs->nano_seconds - rhs->nano_seconds;
+    if (lhs->nano_seconds < rhs->nano_seconds) {
+        nano_seconds = 1000000000UL + lhs->nano_seconds - rhs->nano_seconds;
+    } else {
+        nano_seconds = lhs->nano_seconds - rhs->nano_seconds;
+    }
     s = dt_compare_intervals(lhs, rhs, &cr);
 
     if (s != DT_OK) {
@@ -324,7 +324,7 @@ dt_status_t dt_representation_day_of_week(const dt_representation_t *representat
 
 dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *day_of_year)
 {
-    int i = 0;
+    unsigned i = 0;
     // TODO: Julian calendar support - now only Gregorian is supported
     if (!representation || !day_of_year) {
         return DT_INVALID_ARGUMENT;

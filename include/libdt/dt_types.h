@@ -29,6 +29,13 @@ typedef enum {
     DT_TRUE
 } dt_bool_t;
 
+//! Compare result
+typedef enum {
+    LESS = -1,
+    EQUAL = 0,
+    MORE = 1
+} dt_compare_resiult_t;
+
 #define DT_SECONDS_PER_DAY 86400
 #define DT_SECONDS_PER_HOUR 3600
 #define DT_SECONDS_PER_MINUTE 60
