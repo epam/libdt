@@ -1,5 +1,5 @@
 #include "posixcase.h"
-#include <libdt/dt.h>
+#include <libdt/dt_posix.h>
 
 static const char *unrealTimezone = "notreal/timezone/where/no/light";
 static const char *testMoscowTimeZone =
@@ -126,12 +126,12 @@ TEST_F(PosixCase, localtime_tz)
     //Wrong arguments :
     struct tm tm;
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_TRUE(localtime_tz(NULL, testMoscowTimeZone, &tm) == EXIT_FAILURE);
+    EXPECT_EQ(localtime_tz(NULL, testMoscowTimeZone, &tm), NULL);
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_TRUE(localtime_tz(&testTime, NULL, &tm) == EXIT_FAILURE);
-    EXPECT_TRUE(localtime_tz(&testTime, testMoscowTimeZone, NULL) == EXIT_FAILURE);
+    EXPECT_EQ(localtime_tz(&testTime, NULL, &tm), NULL);
+    EXPECT_EQ(localtime_tz(&testTime, testMoscowTimeZone, NULL), NULL);
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_NE(localtime_tz(&testTime, unrealTimezone, &tm), EXIT_SUCCESS);
+    EXPECT_EQ(localtime_tz(&testTime, unrealTimezone, &tm), NULL);
     memset(&tm, 0, sizeof (struct tm));
     testTime = 0;
 
@@ -144,9 +144,9 @@ TEST_F(PosixCase, localtime_tz)
     memset(&gmt5Time, 0, sizeof (struct tm));
     memset(&gmtNeg5Time, 0, sizeof (struct tm));
     testTime = 0;
-    EXPECT_TRUE(localtime_tz(&testTime, testUTCTimeZone, &utcTime) == EXIT_SUCCESS);
-    EXPECT_TRUE(localtime_tz(&testTime, testGMT5TimeZone, &gmt5Time) == EXIT_SUCCESS);
-    EXPECT_TRUE(localtime_tz(&testTime, testGMTNeg5TimeZone, &gmtNeg5Time) == EXIT_SUCCESS);
+    EXPECT_NE(localtime_tz(&testTime, testUTCTimeZone, &utcTime), NULL);
+    EXPECT_NE(localtime_tz(&testTime, testGMT5TimeZone, &gmt5Time), NULL);
+    EXPECT_NE(localtime_tz(&testTime, testGMTNeg5TimeZone, &gmtNeg5Time), NULL);
     EXPECT_TRUE(gmt5Time.tm_hour == 19);
     EXPECT_TRUE(gmtNeg5Time.tm_hour == 5);
 
@@ -191,6 +191,7 @@ TEST_F(PosixCase, mktime_tz)
 
 TEST_F(PosixCase, wrongStringConvert)
 {
+    //TODO: remove or reorganize this case on win32 platform
     const char *timeOnly = "08:31";
     const char *timeOnlyWrong = "08:31a";
     const char *timeOnlyFormat = "%H:%M";
@@ -221,6 +222,7 @@ TEST_F(PosixCase, wrongStringConvert)
 
 TEST_F(PosixCase, toStringConvert)
 {
+    //TODO: remove or reorganize this case on win32 platform
     const char *timeOnly1 = "08:31";
     const char *timeOnlyFormat1 = "%H:%M";
     const char *timeOnly2 = "11/09/2001 16:54:12";
@@ -251,6 +253,7 @@ TEST_F(PosixCase, toStringConvert)
 
 TEST_F(PosixCase, fromStringConvert)
 {
+    //TODO: remove or reorganize this case on win32 platform
     const char *timeOnly1 = "08:31";
     const char *timeOnlyFormat1 = "%H:%M";
     const char *timeOnly2 = "11/09/2001 16:54:12";
@@ -321,9 +324,9 @@ inline void test_tm(const struct tm *tm, const char *tz_name, const struct tm *t
     time_t tm_ts;
     struct tm tm_ts_tm;
     struct tm tmUtcToEquasion = {0};
-    EXPECT_TRUE(mktime_tz(tm, tz_name, &tm_ts) == 0);
-    EXPECT_TRUE(localtime_tz(&tm_ts, tz_name, &tm_ts_tm) == 0);
-    EXPECT_TRUE(localtime_tz(&tm_ts, testUTCTimeZone, &tmUtcToEquasion) == 0);
+    EXPECT_NE(mktime_tz(tm, tz_name, &tm_ts), NULL);
+    EXPECT_NE(localtime_tz(&tm_ts, tz_name, &tm_ts_tm), NULL);
+    EXPECT_NE(localtime_tz(&tm_ts, testUTCTimeZone, &tmUtcToEquasion), NULL);
 
     EXPECT_EQ(tmUtc->tm_hour, tmUtcToEquasion.tm_hour);
 }

@@ -10,7 +10,7 @@
  * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
 
-#include <libdt/dt_precise.h>
+#include <libdt/dt.h>
 #include <dt-private/tzmapping.h>
 
 #ifdef _WIN32

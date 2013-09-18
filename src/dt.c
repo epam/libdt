@@ -1,4 +1,4 @@
-#include <libdt/dt.h>
+#include<libdt/dt_posix.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
