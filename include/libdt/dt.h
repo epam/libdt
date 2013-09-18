@@ -10,7 +10,7 @@
  * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
 
-#include <time.h>
+
 #include <libdt/dt_types.h>
 
 #ifdef __cplusplus
