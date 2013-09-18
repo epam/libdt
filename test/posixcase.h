@@ -2,10 +2,10 @@
 #define BASICCASE_H
 #define _VARIADIC_MAX 10
 #include <gtest/gtest.h>
-class BasicCase : public ::testing::Test
+class PosixCase : public ::testing::Test
 {
 public:
-    BasicCase();
+    PosixCase();
 };
 
 #endif // BASICCASE_H

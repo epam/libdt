@@ -1,4 +1,4 @@
-#include "basiccase.h"
+#include "posixcase.h"
 #include <libdt/dt.h>
 
 static const char *unrealTimezone = "notreal/timezone/where/no/light";
@@ -59,11 +59,11 @@ static void fillTmRepresentationOnly(struct tm *output, int tm_year, int tm_mon,
 
 inline void test_tm(const struct tm *tm, const char *tz_name, const struct tm *tmExpected);
 
-BasicCase::BasicCase()
+PosixCase::PosixCase()
 {
 }
 
-TEST_F(BasicCase, historic_tz_check)
+TEST_F(PosixCase, historic_tz_check)
 {
     struct tm tm;
     struct tm tmUtc;
@@ -120,7 +120,7 @@ TEST_F(BasicCase, historic_tz_check)
     test_tm(&tm, testTimeZoneWithoutHistoricalLawInfo, &tmUtc);
 }
 
-TEST_F(BasicCase, localtime_tz)
+TEST_F(PosixCase, localtime_tz)
 {
     time_t testTime = 0;
     //Wrong arguments :
@@ -152,7 +152,7 @@ TEST_F(BasicCase, localtime_tz)
 
 }
 
-TEST_F(BasicCase, mktime_tz)
+TEST_F(PosixCase, mktime_tz)
 {
 
     time_t testTime = 0;
@@ -189,7 +189,7 @@ TEST_F(BasicCase, mktime_tz)
 
 }
 
-TEST_F(BasicCase, wrongStringConvert)
+TEST_F(PosixCase, wrongStringConvert)
 {
     const char *timeOnly = "08:31";
     const char *timeOnlyWrong = "08:31a";
@@ -219,7 +219,7 @@ TEST_F(BasicCase, wrongStringConvert)
     EXPECT_NE(strftime_tz(&tr, testUTCTimeZone, timeOnlyFormatWrong, buf, 0), EXIT_SUCCESS);
 }
 
-TEST_F(BasicCase, toStringConvert)
+TEST_F(PosixCase, toStringConvert)
 {
     const char *timeOnly1 = "08:31";
     const char *timeOnlyFormat1 = "%H:%M";
@@ -249,7 +249,7 @@ TEST_F(BasicCase, toStringConvert)
     EXPECT_STREQ(timeOnly2, buf);
 }
 
-TEST_F(BasicCase, fromStringConvert)
+TEST_F(PosixCase, fromStringConvert)
 {
     const char *timeOnly1 = "08:31";
     const char *timeOnlyFormat1 = "%H:%M";
@@ -328,7 +328,7 @@ inline void test_tm(const struct tm *tm, const char *tz_name, const struct tm *t
     EXPECT_EQ(tmUtc->tm_hour, tmUtcToEquasion.tm_hour);
 }
 
-TEST_F(BasicCase, utc_convert_mktime_tz)
+TEST_F(PosixCase, utc_convert_mktime_tz)
 {
     struct tm currentRepresentation = {0,};
     const char *timeZone = "UTC";
