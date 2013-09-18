@@ -205,7 +205,7 @@ dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *
         return DT_OK;
     }
     *result = EQUAL;
-    return 0;
+    return DT_OK;
 }
 
 dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result)
