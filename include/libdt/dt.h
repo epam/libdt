@@ -42,9 +42,8 @@ extern "C" {
      * \param second Second
      * \param nano_second Nano-second
      * \return Validation result
-     *
-     * TODO: Leap seconds support!
      */
+    //TODO: Leap seconds support!
     dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
                                          unsigned long nano_second);
 

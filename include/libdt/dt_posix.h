@@ -27,7 +27,7 @@ extern "C" {
     //! Converts time_t to local time in specific Time Zone. See man localtime.
     /*!
      * @param time - time to format
-     * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
+     * @param tz_name - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
      * @param result - variable for result. Value will be set to local time representation
      * @return pointer to result tm instance, or NULL in error case.
      */
@@ -35,9 +35,9 @@ extern "C" {
 
     //! Converts local time in specific Time Zone to time_t. See man mktime.
     /*!
-     * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
+     * @param tz_ame - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
      * @param result - variable for result. Value will be set to local time representation
-     * @param time - time to format
+     * @param tm - tm instance which will be used to make timestamp
      * @return converted time returned or DT_POSIX_WRONG_TIME in error case.
      */
     time_t mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
