@@ -82,28 +82,28 @@ dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_
         return DT_INVALID_ARGUMENT;
     }
     if (lhs->second > rhs->second) {
-        *result = MORE;
+        *result = DT_GREATER;
         return DT_OK;
     }
     if (lhs->second < rhs->second) {
-        *result = LESS;
+        *result = DT_LESSER;
         return DT_OK;
     }
     if (lhs->nano_second > rhs->nano_second) {
-        *result = MORE;
+        *result = DT_GREATER;
         return DT_OK;
     }
     if (lhs->nano_second < rhs->nano_second) {
-        *result = LESS;
+        *result = DT_LESSER;
         return DT_OK;
     }
-    *result = EQUAL;
+    *result = DT_EQUALS;
     return DT_OK;
 }
 
 dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
 {
-    dt_compare_result_t cr = EQUAL;
+    dt_compare_result_t cr = DT_EQUALS;
     const dt_timestamp_t *lower_timestamp = NULL;
     const dt_timestamp_t *higher_timestamp = NULL;
     dt_bool_t is_forward = DT_FALSE;
@@ -126,7 +126,7 @@ dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *r
     if (s != DT_OK) {
         return s;
     }
-    if (cr == EQUAL) {
+    if (cr == DT_EQUALS) {
         // Equal timestamps case
         result->duration.seconds = 0L;
         result->duration.nano_seconds = 0L;
@@ -189,22 +189,22 @@ dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *
         return DT_INVALID_ARGUMENT;
     }
     if (lhs->seconds > rhs->seconds) {
-        *result = MORE;
+        *result = DT_GREATER;
         return DT_OK;
     }
     if (lhs->seconds < rhs->seconds) {
-        *result = LESS;
+        *result = DT_LESSER;
         return DT_OK;
     }
     if (lhs->nano_seconds > rhs->nano_seconds) {
-        *result = MORE;
+        *result = DT_GREATER;
         return DT_OK;
     }
     if (lhs->nano_seconds < rhs->nano_seconds) {
-        *result = LESS;
+        *result = DT_LESSER;
         return DT_OK;
     }
-    *result = EQUAL;
+    *result = DT_EQUALS;
     return DT_OK;
 }
 

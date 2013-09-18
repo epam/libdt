@@ -667,7 +667,7 @@ TEST_F(DtCase, edge_of_time_switch)
 
     // non exists time 2:30 30.03.2008 in Moscow
     EXPECT_TRUE(dt_init_representation(2008, 3, 30, 2, 30, 0, 0, &r) == DT_OK);
-    //EXPECT_NE(dt_representation_to_timestamp(&r, &tz_moscow, &t1, NULL), DT_OK);// non exist time!
+    //EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t1, NULL), DT_INVALID_REPRESENTATION);
     dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL);//FIXME: must return error for non exist time
 
     EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &result), DT_OK);
@@ -677,7 +677,7 @@ TEST_F(DtCase, edge_of_time_switch)
 
     // undefined double time
     EXPECT_TRUE(dt_init_representation(2008, 10, 26, 2, 30, 0, 0, &r) == DT_OK);
-    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &t, NULL), DT_OK);//TODO: must return both timestamps
 
     EXPECT_EQ(dt_timestamp_to_representation(&t, &tz_utc, &result), DT_OK);
     EXPECT_EQ(result.hour, 22);
