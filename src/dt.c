@@ -76,7 +76,7 @@ dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned sh
     return day <= month_days[month] ? DT_TRUE : DT_FALSE;
 }
 
-dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_resiult_t *result)
+dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_result_t *result)
 {
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
@@ -103,7 +103,7 @@ dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_
 
 dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result)
 {
-    dt_compare_resiult_t cr = EQUAL;
+    dt_compare_result_t cr = EQUAL;
     const dt_timestamp_t *lower_timestamp = NULL;
     const dt_timestamp_t *higher_timestamp = NULL;
     dt_bool_t is_forward = DT_FALSE;
@@ -183,7 +183,7 @@ dt_status_t dt_init_interval(long seconds, unsigned long nano_seconds, dt_interv
     return DT_OK;
 }
 
-dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_resiult_t *result)
+dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_result_t *result)
 {
     if (!lhs || !rhs || !result) {
         return DT_INVALID_ARGUMENT;
@@ -227,7 +227,7 @@ dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 
 dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result)
 {
-    dt_compare_resiult_t cr = 0;
+    dt_compare_result_t cr = 0;
     unsigned long seconds = 0;
     unsigned long nano_seconds = 0;
     dt_status_t s = DT_UNKNOWN_ERROR;

@@ -82,7 +82,7 @@ TEST_F(DtCase, now_compare_timestamps)
     sleep(1);
     dt_timestamp_t ts_02;
     EXPECT_EQ(dt_now(&ts_02), DT_OK);
-    dt_compare_resiult_t cr;
+    dt_compare_result_t cr;
     EXPECT_EQ(dt_compare_timestamps(NULL, &ts_02, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_timestamps(&ts_01, NULL, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_timestamps(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
@@ -261,7 +261,7 @@ TEST_F(DtCase, compare_interval)
     EXPECT_TRUE(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
     dt_interval_t i_02;
     EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
-    dt_compare_resiult_t cr;
+    dt_compare_result_t cr;
     EXPECT_EQ(dt_compare_intervals(NULL, &i_02, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_intervals(&i_01, NULL, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_intervals(&i_01, &i_02, NULL), DT_INVALID_ARGUMENT);

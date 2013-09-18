@@ -69,7 +69,7 @@ extern "C" {
      * \param result Zero if timestamps are equal, less than zero if first timestamp is before second and more than zero otherwise [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_resiult_t *result);
+    dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_result_t *result);
 
     //! Returns an offset between timestamps
     /*!
@@ -113,7 +113,7 @@ extern "C" {
      * \param result Zero if intervals are equal, less than zero if first intervals is less than second and more than zero otherwise [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_resiult_t *result);
+    dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_result_t *result);
 
     //! Summarizes two intervals
     /*!
