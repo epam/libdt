@@ -1,5 +1,5 @@
-#ifndef _DT_PRECISE_H
-#define _DT_PRECISE_H
+#ifndef _DT_H
+#define _DT_H
 
 /*
  * Cross-platform date/time handling library for C.
@@ -325,4 +325,4 @@ extern "C" {
 }
 #endif
 
-#endif // _DT_PRECISE_H
+#endif // _DT_H

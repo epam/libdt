@@ -1,5 +1,5 @@
-#ifndef _DT_H
-#define _DT_H
+#ifndef _DT_POSIX_H
+#define _DT_POSIX_H
 
 /*
  * Cross-platform date/time handling library for C.
@@ -12,6 +12,7 @@
  */
 
 #include <time.h>
+#define DT_POSIX_WRONG_TIME -1//! < When you use standard library you this time stamp is reserved for reporting errors purposes
 
 
 #ifdef __cplusplus
@@ -28,18 +29,18 @@ extern "C" {
      * @param time - time to format
      * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
      * @param result - variable for result. Value will be set to local time representation
-     * @return on success, EXIT_SUCCESS is returned or EXIT_FAILURE in error case.
+     * @return pointer to result tm instance, or NULL in error case.
      */
-    int localtime_tz(const time_t *time, const char *tz_name, struct tm *result);
+    struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *result);
 
     //! Converts local time in specific Time Zone to time_t. See man mktime.
     /*!
-     * @param time - time to format
      * @param tzName - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
      * @param result - variable for result. Value will be set to local time representation
-     * @return on success, EXIT_SUCCESS is returned or EXIT_FAILURE in error case.
+     * @param time - time to format
+     * @return converted time returned or DT_POSIX_WRONG_TIME in error case.
      */
-    int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
+    time_t mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
 
     //! Converts representation to string. See man strftime.
     /*!
@@ -68,4 +69,4 @@ extern "C" {
 }
 #endif
 
-#endif // _DT_H
+#endif // _DT_POSIX_H

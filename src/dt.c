@@ -1,4 +1,5 @@
-#include<libdt/dt_posix.h>
+#include <libdt/dt_posix.h>
+#include <libdt/dt.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -421,8 +422,7 @@ int strptime_tz(const char *str, const char *fmt, struct tm *representation)
     return dt_representation_to_tm(&rep, representation);
 }
 
-int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
-{
+struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *result) {
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
@@ -430,33 +430,33 @@ int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
 
 
     if (!time || !result || !tz_name) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     status = dt_posix_time_to_timestamp(*time, 0, &t);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     status = dt_timestamp_to_representation(&t, &tz, &rep);
     dt_timezone_cleanup(&tz);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     status = dt_representation_to_tm(&rep, result);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
-    return EXIT_SUCCESS;
+    return result;
 }
 
-int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
+time_t mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
@@ -465,26 +465,26 @@ int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
     unsigned long nano = 0;
 
     if (!tm || !result || !tz_name) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
     if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
     status = dt_tm_to_representation(tm, 0, &rep);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
     status = dt_representation_to_timestamp(&rep, &tz, &t, NULL);
     dt_timezone_cleanup(&tz);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
     status = dt_timestamp_to_posix_time(&t, result, &nano);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
     return EXIT_SUCCESS;
