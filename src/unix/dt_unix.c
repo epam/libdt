@@ -6,12 +6,11 @@
 
 #include "../dt_private.h"
 #include <limits.h>
-#include <libtz/tz.h>
-#include <libtz/tzfile.h>
+#include "libtz/tz.h"
+#include "libtz/tzfile.h"
 #include <libdt/dt.h>
-#include <dt-private/tzmapping.h>
+#include "dt-private/tzmapping.h"
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static const time_t WRONG_POSIX_TIME = -1;
 
 dt_status_t dt_now(dt_timestamp_t *result)
@@ -54,8 +53,6 @@ dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *
 
 dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *tz, dt_representation_t *representation)
 {
-
-    const struct state *s = NULL;
     struct tm tm = {0,};
 
     if (timestamp == NULL || representation == NULL) {
@@ -78,15 +75,12 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
         return DT_INVALID_ARGUMENT;
     }
 
-    tz_free(s);
     return dt_tm_to_representation(&tm, timestamp->nano_second, representation);
 }
 
 dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t *timezone,
                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp)
 {
-    const struct state *s = NULL;
-    char path[PATH_MAX + sizeof(char) + 1] = {0,};
     struct tm tm = {0,};
     time_t posix_time = WRONG_POSIX_TIME;
 
@@ -118,11 +112,9 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
 
 
     if (WRONG_POSIX_TIME == (posix_time = tz_mktime(timezone->state, &tm))) {
-        tz_free(s);
         return DT_INVALID_ARGUMENT;
     }
 
-    tz_free(s);
     first_timestamp->second = posix_time;
     first_timestamp->nano_second = representation->nano_second;
     return DT_OK;

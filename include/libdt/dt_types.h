@@ -20,6 +20,7 @@ typedef enum {
     DT_TOO_SMALL_BUFFER,                    //!< Too small buffer has been provided to function
     DT_CONVERT_ERROR,                       //!< Convertations errors
     DT_NO_MORE_ITEMS,                       //!< No more items for enumeration available
+    DT_INVALID_REPRESENTATION,              //!< Representation of non exists time stamp
     DT_UNKNOWN_ERROR                        //!< Unknown error
 } dt_status_t;
 
@@ -28,6 +29,13 @@ typedef enum {
     DT_FALSE = 0,
     DT_TRUE
 } dt_bool_t;
+
+//! Compare result
+typedef enum {
+    DT_LESSER = -1,
+    DT_EQUALS = 0,
+    DT_GREATER = 1
+} dt_compare_result_t;
 
 #define DT_SECONDS_PER_DAY 86400
 #define DT_SECONDS_PER_HOUR 3600

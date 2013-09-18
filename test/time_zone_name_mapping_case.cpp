@@ -9,7 +9,6 @@
 static const char *invalidTimeZone = "Invalid time zone it misspresented in natural world";
 static const char *windowsStandardTimeHawaianName = "Hawaiian Standard Time";
 static const char *olsenHawaianName = "Pacific/Honolulu";
-static const char *abbrHawaianName = "CK";
 static const char *abbrTerritory = "001";
 static const char *aliasesOlsenForHawaian[] = {"Pacific/Rarotonga", "Pacific/Tahiti", "Pacific/Johnston",
                                                "Pacific/Honolulu", "Etc/GMT+10"
