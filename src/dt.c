@@ -387,41 +387,6 @@ dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_
     return dt_init_representation_without_check(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
 }
 
-int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
-                char *str_buffer, size_t str_buffer_size)
-{
-    dt_representation_t rep = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0) {
-        return DT_INVALID_ARGUMENT;
-    }
-
-    status = dt_tm_to_representation(representation, 0, &rep);
-    if (status != DT_OK) {
-        return status;
-    }
-
-    return dt_to_string(&rep, tz_name, fmt, str_buffer, str_buffer_size);
-}
-
-int strptime_tz(const char *str, const char *fmt, struct tm *representation)
-{
-    dt_representation_t rep = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    if (!representation || !fmt || !str) {
-        return DT_INVALID_ARGUMENT;
-    }
-
-    status = dt_from_string(str, fmt, &rep, NULL, 0);
-    if (status != DT_OK) {
-        return status;
-    }
-
-    return dt_representation_to_tm(&rep, representation);
-}
-
 struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *result) {
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};

@@ -42,26 +42,23 @@ extern "C" {
      */
     time_t mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
 
-    //! Converts representation to string. See man strftime.
-    /*!
-     * \param representation Representation to convert
-     * \param tz_name Optional timezone name, could be NULL if local timezone is considered
-     * \param fmt Format string, see strptime()/strftime() plus "%f" for nano-seconds
-     * \param str_buffer Buffer to fill [OUT]
-     * \param str_buffer_size A size of the buffer to fill
-     * \return Result status of the operation. 0 on success and <0 in other cases
-     */
-    int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
-                    char *str_buffer, size_t str_buffer_size);
 
-    //! Converts string to representation. See man strptime.
+#if defined(_WIN32)
     /*!
-     * \param str A NULL-terminated string to parse
-     * \param fmt Format string, see strptime()/strftime() plus "%f" for nano-seconds
-     * \param representation Representation object to fill [OUT]
-     * \return Result status of the operation
+     * \brief libdt_strptime Converts string to representation. See man strptime.
+     * Because strptime there is not implemented in windows standard library, we provide there
+     * our implementation
+     * @attention Please do not use it directly, special for you, and cross-platform purposes there was introduced macro strptime
+     * \param buf string to convert
+     * \param fmt format which define how to convert buf to tm
+     * \param tm output tm instance
+     * \return NULL on failure, otherwise pointer to last not interpretated symbol from buf
      */
-    int strptime_tz(const char *str, const char *fmt, struct tm *representation);
+    char *libdt_strptime(const char *buf, const char *fmt, struct tm *tm);
+#ifndef strptime
+#define strptime libdt_strptime
+#endif
+#endif
 
     /*! @}*/
 

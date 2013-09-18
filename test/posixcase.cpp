@@ -191,69 +191,24 @@ TEST_F(PosixCase, mktime_tz)
 
 TEST_F(PosixCase, wrongStringConvert)
 {
-    //TODO: remove or reorganize this case on win32 platform
     const char *timeOnly = "08:31";
     const char *timeOnlyWrong = "08:31a";
     const char *timeOnlyFormat = "%H:%M";
     const char *timeOnlyFormatWrong = "H:M";
 
     struct tm tr = {0,};
-    size_t buf_size = 1024;
-    char buf[1024] = {0,};
 
     tr.tm_hour = 8;
     tr.tm_min = 612;
-    EXPECT_NE(strptime_tz(NULL, timeOnlyFormat, &tr), EXIT_SUCCESS);
-    EXPECT_NE(strptime_tz(timeOnlyWrong, NULL, NULL), EXIT_SUCCESS);
-    EXPECT_NE(strptime_tz(timeOnlyWrong, timeOnlyFormat, &tr), EXIT_SUCCESS);
 
-    printf("%d\n", __LINE__);
-    return;
-    EXPECT_NE(strptime_tz(timeOnly, timeOnlyFormatWrong, &tr), EXIT_SUCCESS);
+    EXPECT_EQ(strptime(timeOnlyWrong, timeOnlyFormat, &tr), timeOnlyWrong + 5);
+    EXPECT_EQ(strptime(timeOnly, timeOnlyFormatWrong, &tr), (char *)NULL);
 
-    printf("%d\n", __LINE__);
 
-    EXPECT_NE(strftime_tz(NULL, testUTCTimeZone, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(strftime_tz(&tr, NULL, timeOnlyFormatWrong, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(strftime_tz(&tr, testUTCTimeZone, NULL, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(strftime_tz(&tr, testUTCTimeZone, timeOnlyFormatWrong, NULL, buf_size), EXIT_SUCCESS);
-    EXPECT_NE(strftime_tz(&tr, testUTCTimeZone, timeOnlyFormatWrong, buf, 0), EXIT_SUCCESS);
-}
-
-TEST_F(PosixCase, toStringConvert)
-{
-    //TODO: remove or reorganize this case on win32 platform
-    const char *timeOnly1 = "08:31";
-    const char *timeOnlyFormat1 = "%H:%M";
-    const char *timeOnly2 = "11/09/2001 16:54:12";
-    const char *timeOnlyFormat2 = "%d/%m/%Y %H:%M:%S";
-
-    struct tm tr1 = {0,};
-    struct tm tr2 = {0,};
-    size_t buf_size = 1024;
-    char buf[1024] = {0,};
-
-    tr1.tm_hour = 8;
-    tr1.tm_min = 31;
-    tr1.tm_mday = 1;
-
-    EXPECT_EQ(strftime_tz(&tr1, testUTCTimeZone, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_STREQ(timeOnly1, buf);
-
-    tr2.tm_mday = 11;
-    tr2.tm_mon = 8;
-    tr2.tm_year = 2001 - 1900;
-    tr2.tm_min = 54;
-    tr2.tm_hour = 16;
-    tr2.tm_sec = 12;
-
-    EXPECT_EQ(strftime_tz(&tr2, testUTCTimeZone, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_STREQ(timeOnly2, buf);
 }
 
 TEST_F(PosixCase, fromStringConvert)
 {
-    //TODO: remove or reorganize this case on win32 platform
     const char *timeOnly1 = "08:31";
     const char *timeOnlyFormat1 = "%H:%M";
     const char *timeOnly2 = "11/09/2001 16:54:12";
@@ -263,12 +218,12 @@ TEST_F(PosixCase, fromStringConvert)
     struct tm tr2 = {0,};
 
 
-    EXPECT_EQ(strptime_tz(timeOnly1, timeOnlyFormat1, &tr1), EXIT_SUCCESS);
+    EXPECT_NE(strptime(timeOnly1, timeOnlyFormat1, &tr1), (char *)NULL);
     EXPECT_EQ(tr1.tm_hour, 8);
     EXPECT_EQ(tr1.tm_min, 31);
 
 
-    EXPECT_EQ(strptime_tz(timeOnly2, timeOnlyFormat2, &tr2), EXIT_SUCCESS);
+    EXPECT_NE(strptime(timeOnly2, timeOnlyFormat2, &tr2), (char *)NULL);
     EXPECT_EQ(tr2.tm_mday, 11);
     EXPECT_EQ(tr2.tm_mon, 8);
     EXPECT_EQ(tr2.tm_year, 2001 - 1900);
