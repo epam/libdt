@@ -421,12 +421,13 @@ struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *resu
     return result;
 }
 
-time_t mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
+time_t mktime_tz(const struct tm *tm, const char *tz_name)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
     dt_timezone_t tz = {0,};
+    time_t result = DT_POSIX_WRONG_TIME;
     unsigned long nano = 0;
 
     if (!tm || !result || !tz_name) {
@@ -447,10 +448,11 @@ time_t mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
         return DT_POSIX_WRONG_TIME;
     }
 
-    status = dt_timestamp_to_posix_time(&t, result, &nano);
+    status = dt_timestamp_to_posix_time(&t, &result, &nano);
     if (status != DT_OK) {
         return DT_POSIX_WRONG_TIME;
     }
 
-    return EXIT_SUCCESS;
+
+    return result;
 }

@@ -70,22 +70,6 @@ extern "C" {
      */
     dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation);
 
-    //! Lookups timezone object for future usage in corresponding api.
-    /*!
-     * \param timezone_name name of timezone for lookup, it can be in olsen database format, or in windows standard time format
-     ** \param timezone [IN/OUT]pointer to timezone object
-     * \return Result status of the operation
-     */
-    dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezone);
-
-    //! Free resources connected with timezone object
-    //! @note memory allocated for dt_timezone_t objec won't be free
-    /*!
-     * \param timezone pointer to timezone object
-     * \return Result status of the operation
-     */
-    dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone);
-
     /*! @}*/
 
 #ifdef __cplusplus

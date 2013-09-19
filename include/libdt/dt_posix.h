@@ -35,28 +35,27 @@ extern "C" {
 
     //! Converts local time in specific Time Zone to time_t. See man mktime.
     /*!
-     * @param tz_ame - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
-     * @param result - variable for result. Value will be set to local time representation
      * @param tm - tm instance which will be used to make timestamp
+     * @param tz_name - name of time zone. Must be in format <Area>/<Place, such as Europe/Moscow or Asia/Oral.
      * @return converted time returned or DT_POSIX_WRONG_TIME in error case.
      */
-    time_t mktime_tz(const struct tm *tm, const char *tz_name, time_t *result);
+    time_t mktime_tz(const struct tm *tm, const char *tz_name);
 
 
 #if defined(_WIN32)
+#ifndef strptime
+#define strptime libdt_strptime
     /*!
      * \brief libdt_strptime Converts string to representation. See man strptime.
      * Because strptime there is not implemented in windows standard library, we provide there
      * our implementation
-     * @attention Please do not use it directly, special for you, and cross-platform purposes there was introduced macro strptime
+     * @attention Please pay attention - this function is provided only for win32 platform, in other platforms it must be a part of libc
      * \param buf string to convert
      * \param fmt format which define how to convert buf to tm
      * \param tm output tm instance
      * \return NULL on failure, otherwise pointer to last not interpretated symbol from buf
      */
-    char *libdt_strptime(const char *buf, const char *fmt, struct tm *tm);
-#ifndef strptime
-#define strptime libdt_strptime
+    char *strptime(const char *buf, const char *fmt, struct tm *tm);
 #endif
 #endif
 

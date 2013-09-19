@@ -159,12 +159,12 @@ TEST_F(PosixCase, mktime_tz)
     //Wrong arguments :
     struct tm tm;
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_EQ(mktime_tz(NULL, testMoscowTimeZone, &testTime), DT_POSIX_WRONG_TIME);
+    EXPECT_EQ((testTime = mktime_tz(NULL, testMoscowTimeZone)), DT_POSIX_WRONG_TIME);
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_EQ(mktime_tz(&tm, NULL, &testTime), DT_POSIX_WRONG_TIME);
-    EXPECT_EQ(mktime_tz(NULL, testMoscowTimeZone, &testTime), DT_POSIX_WRONG_TIME);
+    EXPECT_EQ((testTime = mktime_tz(&tm, NULL)), DT_POSIX_WRONG_TIME);
+    EXPECT_EQ((testTime = mktime_tz(NULL, testMoscowTimeZone)), DT_POSIX_WRONG_TIME);
     memset(&tm, 0, sizeof (struct tm));
-    EXPECT_EQ(mktime_tz(&tm, unrealTimezone, &testTime), DT_POSIX_WRONG_TIME);
+    EXPECT_EQ((testTime = mktime_tz(&tm, unrealTimezone)), DT_POSIX_WRONG_TIME);
 
     //Useful behaivor :
     struct tm utcTime;
@@ -175,15 +175,15 @@ TEST_F(PosixCase, mktime_tz)
     fillTm(&gmtNeg5Time, 18000, 5, 0, 1, 0, 0, 0, 4, 0, 1970, 0);// 1 january of 1970 (GMT-5)
 
     testTime = 666; // not a 0
-    EXPECT_NE(mktime_tz(&utcTime, testUTCTimeZone, &testTime), DT_POSIX_WRONG_TIME);
+    EXPECT_NE((testTime = mktime_tz(&utcTime, testUTCTimeZone)), DT_POSIX_WRONG_TIME);
     EXPECT_TRUE (testTime == 0);
 
     testTime = 666; // not a 0
-    EXPECT_NE(mktime_tz(&gmt5Time, testGMT5TimeZone, &testTime), DT_POSIX_WRONG_TIME);
+    EXPECT_NE((testTime = mktime_tz(&gmt5Time, testGMT5TimeZone)), DT_POSIX_WRONG_TIME);
     EXPECT_TRUE (testTime == 0);
 
     testTime = 666; // not a 0
-    EXPECT_NE(mktime_tz(&gmtNeg5Time, testGMTNeg5TimeZone, &testTime), DT_POSIX_WRONG_TIME);
+    EXPECT_NE((testTime = mktime_tz(&gmtNeg5Time, testGMTNeg5TimeZone)), DT_POSIX_WRONG_TIME);
     EXPECT_TRUE (testTime == 0);
 
 
@@ -279,7 +279,7 @@ inline void test_tm(const struct tm *tm, const char *tz_name, const struct tm *t
     time_t tm_ts;
     struct tm tm_ts_tm;
     struct tm tmUtcToEquasion = {0};
-    EXPECT_NE(mktime_tz(tm, tz_name, &tm_ts), DT_POSIX_WRONG_TIME);
+    EXPECT_NE((tm_ts = mktime_tz(tm, tz_name)), DT_POSIX_WRONG_TIME);
     EXPECT_NE(localtime_tz(&tm_ts, tz_name, &tm_ts_tm), (struct tm *)NULL);
     EXPECT_NE(localtime_tz(&tm_ts, testUTCTimeZone, &tmUtcToEquasion), (struct tm *)NULL);
 
@@ -296,7 +296,8 @@ TEST_F(PosixCase, utc_convert_mktime_tz)
     time(&currentTime);
     localtime_tz(&currentTime, timeZone, &currentRepresentation);
 
-    mktime_tz(&currentRepresentation, timeZone, &resultTime);
+    resultTime = mktime_tz(&currentRepresentation, timeZone);
 
     EXPECT_NE(resultTime, 0);
+    EXPECT_NE(resultTime, DT_POSIX_WRONG_TIME);
 }
