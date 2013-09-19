@@ -5,6 +5,7 @@
 #include <memory.h> /* for malloc, free*/
 
 #include <libdt/dt.h>
+#include <libdt/dt_posix.h>
 #include "../dt_private.h"
 
 // WinAPI
@@ -702,7 +703,7 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
 #ifdef __cplusplus
 extern "C" {
 #endif
-    char *strptime(const char *buf, const char *fmt, struct tm *tm);
+
 #ifdef __cplusplus
 }
 #endif
@@ -718,7 +719,7 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
         return DT_INVALID_ARGUMENT;
     }
 
-    result = strptime(str, fmt, &tm);
+    result = libdt_strptime(str, fmt, &tm);
     if (result == NULL) {
         return status;
     }

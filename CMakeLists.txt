@@ -14,4 +14,5 @@ else()
     message(WARNING "Doxygen not found documentation will be unavailable")
 endif()
 
+
 subdirs(src test include resources scripts)

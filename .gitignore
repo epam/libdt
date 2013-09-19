@@ -2,3 +2,5 @@
 build*
 doc/
 doc-devel/
+src/timezones_map.h
+*.orig

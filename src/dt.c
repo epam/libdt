@@ -1,3 +1,4 @@
+#include <libdt/dt_posix.h>
 #include <libdt/dt.h>
 #include <stdlib.h>
 #include <string.h>
@@ -386,43 +387,7 @@ dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_
     return dt_init_representation_without_check(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
 }
 
-int strftime_tz(const struct tm *representation, const char *tz_name, const char *fmt,
-                char *str_buffer, size_t str_buffer_size)
-{
-    dt_representation_t rep = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0) {
-        return DT_INVALID_ARGUMENT;
-    }
-
-    status = dt_tm_to_representation(representation, 0, &rep);
-    if (status != DT_OK) {
-        return status;
-    }
-
-    return dt_to_string(&rep, tz_name, fmt, str_buffer, str_buffer_size);
-}
-
-int strptime_tz(const char *str, const char *fmt, struct tm *representation)
-{
-    dt_representation_t rep = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    if (!representation || !fmt || !str) {
-        return DT_INVALID_ARGUMENT;
-    }
-
-    status = dt_from_string(str, fmt, &rep, NULL, 0);
-    if (status != DT_OK) {
-        return status;
-    }
-
-    return dt_representation_to_tm(&rep, representation);
-}
-
-int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
-{
+struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *result) {
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
@@ -430,62 +395,64 @@ int localtime_tz(const time_t *time, const char *tz_name, struct tm *result)
 
 
     if (!time || !result || !tz_name) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     status = dt_posix_time_to_timestamp(*time, 0, &t);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     status = dt_timestamp_to_representation(&t, &tz, &rep);
     dt_timezone_cleanup(&tz);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
     status = dt_representation_to_tm(&rep, result);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return NULL;
     }
 
-    return EXIT_SUCCESS;
+    return result;
 }
 
-int mktime_tz(const struct tm *tm, const char *tz_name, time_t *result)
+time_t mktime_tz(const struct tm *tm, const char *tz_name)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
     dt_timezone_t tz = {0,};
+    time_t result = DT_POSIX_WRONG_TIME;
     unsigned long nano = 0;
 
     if (!tm || !result || !tz_name) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
     if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
     status = dt_tm_to_representation(tm, 0, &rep);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
     status = dt_representation_to_timestamp(&rep, &tz, &t, NULL);
     dt_timezone_cleanup(&tz);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
-    status = dt_timestamp_to_posix_time(&t, result, &nano);
+    status = dt_timestamp_to_posix_time(&t, &result, &nano);
     if (status != DT_OK) {
-        return EXIT_FAILURE;
+        return DT_POSIX_WRONG_TIME;
     }
 
-    return EXIT_SUCCESS;
+
+    return result;
 }
