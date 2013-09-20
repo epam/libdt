@@ -28,6 +28,7 @@ static const char DYNAMIC_DST_LAST_ENTRY[] = "LastEntry";
 #endif
 
 #if __GNUC__
+#include <wchar.h>
 WINBASEAPI BOOL WINAPI TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
 //
 // RRF - Registry Routine Flags (for RegGetValue)
@@ -60,13 +61,12 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     BOOLEAN DynamicDaylightTimeDisabled;
 } DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
 #define sscanf_s sscanf
-#ifndef _WIN32
+
 wchar_t *wcscpy_s (wchar_t *dest, size_t size, const wchar_t *source)
 {
     (void *)&size;
     return wcscpy(dest, source);
 }
-#endif
 void qsort_s(void *base, size_t length, size_t size,
              int (*compare)(const void *, const void *), void *context)
 {
@@ -123,6 +123,7 @@ static int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime);
 static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaximumYear, DWORD dstMinimumYear, DWORD *findedYear);
 //Tests is current windows version suitable to given version parts
 static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor);
+char *libdt_strptime(const char *buf, const char *fmt, struct tm *tm);
 
 typedef struct _YEARS_ARRAY {
     size_t size;
@@ -367,7 +368,7 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
     subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
     tszSubkey = (char *)malloc(subKeySize);
 
-    memset(tszSubkey, (int)NULL, subKeySize );
+    memset(tszSubkey, 0, subKeySize );
     memset(ptzi, 0, sizeof(DYNAMIC_TIME_ZONE_INFORMATION));
 
     snprintf(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
