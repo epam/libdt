@@ -60,13 +60,13 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     BOOLEAN DynamicDaylightTimeDisabled;
 } DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
 #define sscanf_s sscanf
-
+#ifndef _WIN32
 wchar_t *wcscpy_s (wchar_t *dest, size_t size, const wchar_t *source)
 {
     (void *)&size;
     return wcscpy(dest, source);
 }
-
+#endif
 void qsort_s(void *base, size_t length, size_t size,
              int (*compare)(const void *, const void *), void *context)
 {

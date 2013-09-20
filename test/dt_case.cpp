@@ -1,5 +1,6 @@
 #include "dt_case.h"
 #include "libdt/dt.h"
+#include <time.h>
 
 #define MOSCOW_WINDOWS_STANDARD_TZ_NAME "Russian Standard Time"
 #define MOSCOW_OLSEN_TZ_NAME  "Europe/Moscow"
