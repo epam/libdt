@@ -1,9 +1,9 @@
 #make timezones map
 include(DefaultsSetup)
 find_package(PythonInterp 2.6 REQUIRED )
-if(PYTHON_VERSION_MAJOR GREATER 2)
-    message(FATAL_ERROR "Python major version more then 2 not supported")
-endif()
+#if(PYTHON_VERSION_MAJOR GREATER 2)
+#    message(FATAL_ERROR "Python major version more then 2 not supported")
+#endif()
 set(LIBTZ_TIMEZONES_MAPPING_HEADER ${CMAKE_SOURCE_DIR}/src/timezones_map.h)
 set(LIBTZ_TIMEZONES_MAPPING_GENERATOR_SCRIPT ${CMAKE_SOURCE_DIR}/scripts/transform.py)
 setDefault(LIBTZ_TIMEZONES_MAPPING_GENERATOR_FALLBACK_SOURCE ${CMAKE_SOURCE_DIR}/resources/windowsZones.xml)

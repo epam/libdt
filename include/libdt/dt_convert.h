@@ -30,13 +30,14 @@ extern "C" {
      */
     dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second);
 
-#if defined(_WIN32)
+#ifdef _WIN32
+#ifndef __GNUC__
     struct timespec {
         time_t tv_sec;                          //!< Seconds
         long tv_nsec;                           //!< Nano-seconds
     };
 #endif
-
+#endif
     //! Converts interval to timespec structure
     /*!
      * \param interval Interval to convert to timespec structure

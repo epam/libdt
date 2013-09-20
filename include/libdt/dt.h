@@ -229,13 +229,12 @@ extern "C" {
     //! Converts representation to string
     /*!
      * \param representation Representation to convert
-     * \param tz_name Optional timezone name, could be NULL if local timezone is considered
      * \param fmt Format string, see strptime()/strftime() plus "%f" for nano-seconds
      * \param str_buffer Buffer to fill [OUT]
      * \param str_buffer_size A size of the buffer to fill
      * \return Result status of the operation
      */
-    dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
+    dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
                              char *str_buffer, size_t str_buffer_size);
 
     //! Converts string to representation
@@ -243,12 +242,9 @@ extern "C" {
      * \param str A NULL-terminated string to parse
      * \param fmt Format string, see strptime()/strftime() plus "%f" for nano-seconds
      * \param representation Representation object to fill [OUT]
-     * \param tz_name_buffer Optional buffer to fill in with timezone name, could be NULL [OUT]
-     * \param tz_name_buffer_size Timezone name buffer size, ignored if tz_name_buffer == NULL
      * \return Result status of the operation
      */
-    dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation,
-                               char *tz_name_buffer, size_t tz_name_buffer_size);
+    dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation);
 
     /*! @}*/
 
