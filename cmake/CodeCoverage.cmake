@@ -28,9 +28,11 @@ if(WIN32)
 
     if(LCOV_ROOT)
         find_file(LCOV_PATH lcov PATHS "${LCOV_ROOT}\\bin\\")
-        string(REGEX REPLACE "[/]" "\\\\" LCOV_PATH_NATIVE ${LCOV_PATH})
+        set(LCOV_PATH_NATIVE ${LCOV_PATH})
+        #string(REGEX REPLACE "[/]" "\\\\" LCOV_PATH_NATIVE ${LCOV_PATH})
         find_file(GENHTML_PATH genhtml PATHS "${LCOV_ROOT}\\bin\\")
-        string(REGEX REPLACE "[/]" "\\\\" GENHTML_PATH_NATIVE ${GENHTML_PATH})
+        set(GENHTML_PATH_NATIVE ${GENHTML_PATH})
+       # string(REGEX REPLACE "[/]" "\\\\" GENHTML_PATH_NATIVE ${GENHTML_PATH})
     else(LCOV_ROOT)
         message(STATUS "LCOV_ROOT is not set! Coverage report will be unavailable")
     endif(LCOV_ROOT)
@@ -136,7 +138,9 @@ ENDIF() # NOT GCOVR_PATH
     ${_testrunner} ${ARGV3}
 
 # Running gcovr
-COMMAND ${PYTHON_EXECUTABLE} ${GCOVR_PATH} --html -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.html
+COMMAND ${PYTHON_EXECUTABLE} ${GCOVR_PATH} -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/'
+COMMAND ${PYTHON_EXECUTABLE} ${GCOVR_PATH} --html  -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.html
+COMMAND ${PYTHON_EXECUTABLE} ${GCOVR_PATH} --xml   -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.xml
 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 COMMENT "Running gcovr to produce Cobertura code coverage report."
 )
@@ -144,7 +148,7 @@ COMMENT "Running gcovr to produce Cobertura code coverage report."
     # Show info where to find the report
     ADD_CUSTOM_COMMAND(TARGET ${_targetname} POST_BUILD
         COMMAND ;
-        COMMENT "Cobertura code coverage report saved in ${_outputname}.xml."
+        COMMENT "Cobertura code coverage report saved in '${_outputname}.html' and '${_outputname}.xml'"
     )
 
 ENDFUNCTION() # SETUP_TARGET_FOR_COVERAGE_COBERTURA
