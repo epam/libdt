@@ -678,14 +678,14 @@ GetTimeZoneInformationForYearLower_cleanup:
 
 
 
-dt_status_t dt_to_string(const dt_representation_t *representation, const char *tz_name, const char *fmt,
+dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
                          char *str_buffer, size_t str_buffer_size)
 {
     size_t size = 0;
     struct tm tm = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!representation || !tz_name || !fmt || !str_buffer || str_buffer_size <= 0) {
+    if (!representation || !fmt || !str_buffer || str_buffer_size <= 0) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -708,8 +708,7 @@ extern "C" {
 }
 #endif
 
-dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation,
-                           char *tz_name_buffer, size_t tz_name_buffer_size)
+dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation)
 {
     char *result = NULL;
     struct tm tm = {0};

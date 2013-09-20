@@ -559,16 +559,15 @@ TEST_F(DtCase, wrongStringConvert)
     tr.hour = 8;
     tr.minute = 612;
 
-    EXPECT_NE(dt_from_string(NULL, timeOnlyFormat, &tr, NULL, 0), DT_OK);
-    EXPECT_NE(dt_from_string(timeOnlyWrong, NULL, NULL, NULL, 0), DT_OK);
-    EXPECT_NE(dt_from_string(timeOnlyWrong, timeOnlyFormat, &tr, NULL, 0), DT_OK);
-    EXPECT_NE(dt_from_string(timeOnly, timeOnlyFormatWrong, &tr, NULL, 0), DT_OK);
+    EXPECT_NE(dt_from_string(NULL, timeOnlyFormat, &tr), DT_OK);
+    EXPECT_NE(dt_from_string(timeOnlyWrong, NULL, NULL), DT_OK);
+    EXPECT_NE(dt_from_string(timeOnlyWrong, timeOnlyFormat, &tr), DT_OK);
+    EXPECT_NE(dt_from_string(timeOnly, timeOnlyFormatWrong, &tr), DT_OK);
 
-    EXPECT_NE(dt_to_string(NULL, UTC_TZ_NAME, timeOnlyFormatWrong, buf, buf_size), DT_OK);
-    EXPECT_NE(dt_to_string(&tr, NULL, timeOnlyFormatWrong, buf, buf_size), DT_OK);
-    EXPECT_NE(dt_to_string(&tr, UTC_TZ_NAME, NULL, buf, buf_size), DT_OK);
-    EXPECT_NE(dt_to_string(&tr, UTC_TZ_NAME, timeOnlyFormatWrong, NULL, buf_size), DT_OK);
-    EXPECT_NE(dt_to_string(&tr, UTC_TZ_NAME, timeOnlyFormatWrong, buf, 0), DT_OK);
+    EXPECT_NE(dt_to_string(NULL, timeOnlyFormatWrong, buf, buf_size), DT_OK);
+    EXPECT_NE(dt_to_string(&tr, NULL, buf, buf_size), DT_OK);
+    EXPECT_NE(dt_to_string(&tr, timeOnlyFormatWrong, NULL, buf_size), DT_OK);
+    EXPECT_NE(dt_to_string(&tr, timeOnlyFormatWrong, buf, 0), DT_OK);
 }
 
 TEST_F(DtCase, toStringConvert)
@@ -586,7 +585,7 @@ TEST_F(DtCase, toStringConvert)
     tr1.hour = 8;
     tr1.minute = 31;
 
-    EXPECT_EQ(dt_to_string(&tr1, UTC_TZ_NAME, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_EQ(dt_to_string(&tr1, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
     EXPECT_STREQ(timeOnly1, buf);
 
     tr2.day = 11;
@@ -596,7 +595,7 @@ TEST_F(DtCase, toStringConvert)
     tr2.hour = 16;
     tr2.second = 12;
 
-    EXPECT_EQ(dt_to_string(&tr2, UTC_TZ_NAME, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
+    EXPECT_EQ(dt_to_string(&tr2, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
     EXPECT_STREQ(timeOnly2, buf);
 }
 
@@ -611,12 +610,12 @@ TEST_F(DtCase, fromStringConvert)
     dt_representation_t tr2 = {0,};
 
 
-    EXPECT_EQ(dt_from_string(timeOnly1, timeOnlyFormat1, &tr1, NULL, 0), DT_OK);
+    EXPECT_EQ(dt_from_string(timeOnly1, timeOnlyFormat1, &tr1), DT_OK);
     EXPECT_EQ(tr1.hour, 8);
     EXPECT_EQ(tr1.minute, 31);
 
 
-    EXPECT_EQ(dt_from_string(timeOnly2, timeOnlyFormat2, &tr2, NULL, 0), EXIT_SUCCESS);
+    EXPECT_EQ(dt_from_string(timeOnly2, timeOnlyFormat2, &tr2), EXIT_SUCCESS);
     EXPECT_EQ(tr2.day, 11);
     EXPECT_EQ(tr2.month, 9);
     EXPECT_EQ(tr2.year, 2001);
