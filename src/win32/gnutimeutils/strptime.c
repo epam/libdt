@@ -41,7 +41,6 @@
  */
 #define ALT_E          0x01
 #define ALT_O          0x02
-//#define LEGAL_ALT(x)       { if (alt_format & ~(x)) return (0); }
 #define LEGAL_ALT(x)       { ; }
 #define TM_YEAR_BASE   (1900)
 
@@ -449,5 +448,3 @@ int strncasecmp(char *s1, char *s2, size_t n)
     return tolower(*(unsigned char *) s1) - tolower(*(unsigned char *) s2);
 }
 #endif
-
-//

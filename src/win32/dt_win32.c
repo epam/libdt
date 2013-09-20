@@ -685,7 +685,7 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
     struct tm tm = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
 
-    if (!representation || !fmt || !str_buffer || str_buffer_size <= 0) {
+    if (!representation || !fmt || !str_buffer || str_buffer_size == 0) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -697,16 +697,7 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
     }
 
     return status;
-
 }
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef __cplusplus
-}
-#endif
 
 dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation)
 {
