@@ -79,7 +79,7 @@ typedef struct dt_representation {
 //! @note it's internal implementation can be changed from version to version
 typedef struct dt_timezone {
 #if defined(__CYGWIN__) || defined(WIN32)
-    const char *time_zone_name;
+    struct _TIME_DYNAMIC_ZONE_INFORMATION *dtzi;
 #else
     const struct state *state;
 #endif
