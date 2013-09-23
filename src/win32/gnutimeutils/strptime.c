@@ -29,7 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <conio.h>
 #include <ctype.h>
 #include <string.h>
 #include <time.h>

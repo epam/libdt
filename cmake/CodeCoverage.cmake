@@ -28,9 +28,11 @@ if(WIN32)
 
     if(LCOV_ROOT)
         find_file(LCOV_PATH lcov PATHS "${LCOV_ROOT}\\bin\\")
-        string(REGEX REPLACE "[/]" "\\\\" LCOV_PATH_NATIVE ${LCOV_PATH})
+        set(LCOV_PATH_NATIVE ${LCOV_PATH})
+        #string(REGEX REPLACE "[/]" "\\\\" LCOV_PATH_NATIVE ${LCOV_PATH})
         find_file(GENHTML_PATH genhtml PATHS "${LCOV_ROOT}\\bin\\")
-        string(REGEX REPLACE "[/]" "\\\\" GENHTML_PATH_NATIVE ${GENHTML_PATH})
+        set(GENHTML_PATH_NATIVE ${GENHTML_PATH})
+       # string(REGEX REPLACE "[/]" "\\\\" GENHTML_PATH_NATIVE ${GENHTML_PATH})
     else(LCOV_ROOT)
         message(STATUS "LCOV_ROOT is not set! Coverage report will be unavailable")
     endif(LCOV_ROOT)
@@ -122,29 +124,31 @@ ENDFUNCTION() # SETUP_TARGET_FOR_COVERAGE
 # Pass them in list form, e.g.: "-j;2" for -j 2
 FUNCTION(SETUP_TARGET_FOR_COVERAGE_COBERTURA _targetname _testrunner _outputname)
 
-    IF(NOT PYTHON_EXECUTABLE)
-        MESSAGE(FATAL_ERROR "Python not found! Coverage report will be unavailable")
-    ENDIF() # NOT PYTHON_EXECUTABLE
+IF(NOT PYTHON_EXECUTABLE)
+MESSAGE(WARNING "Python not found! Coverage report will be unavailable")
+ENDIF() # NOT PYTHON_EXECUTABLE
 
-    IF(NOT GCOVR_PATH)
-        MESSAGE(FATAL_ERROR "gcovr not found! Coverage report will be unavailable")
-    ENDIF() # NOT GCOVR_PATH
+IF(NOT GCOVR_PATH)
+MESSAGE(WARNING "gcovr not found! Coverage report will be unavailable")
+ENDIF() # NOT GCOVR_PATH
 
     ADD_CUSTOM_TARGET(${_targetname}
 
     # Run tests
     ${_testrunner} ${ARGV3}
 
-    # Running gcovr
-    COMMAND ${GCOVR_PATH} -x -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.xml
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMENT "Running gcovr to produce Cobertura code coverage report."
-    )
+# Running gcovr
+COMMAND ${PYTHON_EXECUTABLE} ${GCOVR_PATH} -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/'
+COMMAND ${PYTHON_EXECUTABLE} ${GCOVR_PATH} --html  -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.html
+COMMAND ${PYTHON_EXECUTABLE} ${GCOVR_PATH} --xml   -r ${CMAKE_SOURCE_DIR} -e '${CMAKE_SOURCE_DIR}/tests/' -o ${_outputname}.xml
+WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+COMMENT "Running gcovr to produce Cobertura code coverage report."
+)
 
     # Show info where to find the report
     ADD_CUSTOM_COMMAND(TARGET ${_targetname} POST_BUILD
         COMMAND ;
-        COMMENT "Cobertura code coverage report saved in ${_outputname}.xml."
+        COMMENT "Cobertura code coverage report saved in '${_outputname}.html' and '${_outputname}.xml'"
     )
 
 ENDFUNCTION() # SETUP_TARGET_FOR_COVERAGE_COBERTURA

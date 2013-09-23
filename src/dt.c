@@ -271,8 +271,8 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
     v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000UL;
     rv = v * rhs;
 
-    result->seconds = (unsigned long)floorl(rv);
-    result->nano_seconds = (unsigned long)floorl(fmodl(rv, 1.0) * 1000000000UL);
+    result->seconds = (unsigned long)floor(rv);
+    result->nano_seconds = (unsigned long)floor(fmod(rv, 1.0) * 1000000000UL);
     return DT_OK;
 }
 

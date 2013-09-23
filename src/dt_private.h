@@ -13,8 +13,8 @@
 #include <libdt/dt.h>
 #include <dt-private/tzmapping.h>
 
-#ifdef _WIN32
-#define PREFERED_TZMAP_TYPE TZMAP_WIN_STANDARD_TIME
+#if defined(__CYGWIN__) || defined(WIN32)
+#define PREFFERED_TZMAP_TYPE TZMAP_WIN_STANDARD_TIME
 #else
 #define PREFERED_TZMAP_TYPE TZMAP_OLSEN_NAME
 #endif

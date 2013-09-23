@@ -78,7 +78,7 @@ typedef struct dt_representation {
 //! Timezone representation
 //! @note it's internal implementation can be changed from version to version
 typedef struct dt_timezone {
-#ifdef WIN32
+#if defined(__CYGWIN__) || defined(WIN32)
     const char *time_zone_name;
 #else
     const struct state *state;

@@ -42,7 +42,7 @@ extern "C" {
     time_t mktime_tz(const struct tm *tm, const char *tz_name);
 
 
-#if defined(_WIN32)
+#if defined(__CYGWIN__) || defined(WIN32)
 #ifndef strptime
 #define strptime libdt_strptime
     /*!
