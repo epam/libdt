@@ -188,7 +188,7 @@ extern "C" {
      * \param representation Timestamp representation [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *tz, dt_representation_t *representation);
+    dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *timezone, dt_representation_t *representation);
 
     //! Returns a timestamps for a representation in timezone by it's name
     /*!
