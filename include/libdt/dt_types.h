@@ -34,7 +34,8 @@ typedef enum {
 typedef enum {
     DT_LESSER = -1,
     DT_EQUALS = 0,
-    DT_GREATER = 1
+    DT_GREATER = 1,
+    DT_COMPARSION_FAIL
 } dt_compare_result_t;
 
 #define DT_SECONDS_PER_DAY 86400

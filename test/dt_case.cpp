@@ -1,10 +1,11 @@
 #include "dt_case.h"
 #include "libdt/dt.h"
 #include <time.h>
+#include "libdt/dt_posix.h"
 
 #define MOSCOW_WINDOWS_STANDARD_TZ_NAME "Russian Standard Time"
 #define MOSCOW_OLSEN_TZ_NAME  "Europe/Moscow"
-#define UNREAL_TIMEZONE_NAME "this time zone is unreal, you can not find it anywhere, so good luck"
+#define UNREAL_TIMEZONE_NAME "this time zone is unreal, you cannot find it anywhere, so good luck"
 
 #ifdef _WIN32
 
@@ -14,7 +15,7 @@
 #define GMT_MINUS_5_TZ_NAME "GMT-5"
 #define GMT_PLUS_5_TZ_NAME "GMT+5"
 
-#include <Windows.h>
+#include <windows.h>
 #define sleep(x) Sleep(x*1000)
 
 #else
@@ -77,13 +78,13 @@ TEST_F(DtCase, validate_representation)
 
 TEST_F(DtCase, now_compare_timestamps)
 {
-    dt_timestamp_t ts_01;
+    dt_timestamp_t ts_01 = {0,};
     EXPECT_EQ(dt_now(NULL), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_now(&ts_01), DT_OK);
     sleep(1);
-    dt_timestamp_t ts_02;
+    dt_timestamp_t ts_02 = {0,};
     EXPECT_EQ(dt_now(&ts_02), DT_OK);
-    dt_compare_result_t cr;
+    dt_compare_result_t cr = DT_COMPARSION_FAIL;
     EXPECT_EQ(dt_compare_timestamps(NULL, &ts_02, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_timestamps(&ts_01, NULL, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_timestamps(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
@@ -98,9 +99,9 @@ TEST_F(DtCase, now_compare_timestamps)
 
 TEST_F(DtCase, offset_to)
 {
-    dt_timestamp_t ts_01;
-    dt_timestamp_t ts_02;
-    dt_offset_t o;
+    dt_timestamp_t ts_01 = {0,};
+    dt_timestamp_t ts_02 = {0,};
+    dt_offset_t o = {0,};
     dt_timezone_t tz_moscow = {0,};
 
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
@@ -109,7 +110,7 @@ TEST_F(DtCase, offset_to)
     EXPECT_EQ(dt_offset_between(&ts_01, NULL, &o), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
 
-    dt_representation_t r;
+    dt_representation_t r = {0,};
     EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
     EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_01, NULL) == DT_OK);
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_01, &o), DT_OK);
@@ -144,9 +145,9 @@ TEST_F(DtCase, offset_to)
 
 TEST_F(DtCase, apply_offset)
 {
-    dt_timestamp_t ts_01;
-    dt_timestamp_t ts_02;
-    dt_offset_t o;
+    dt_timestamp_t ts_01 = {0,};
+    dt_timestamp_t ts_02 = {0,};
+    dt_offset_t o = {0,};
     dt_timezone_t tz_moscow = {0,};
 
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
@@ -155,10 +156,10 @@ TEST_F(DtCase, apply_offset)
     EXPECT_EQ(dt_apply_offset(&ts_01, NULL, &ts_02), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_apply_offset(&ts_01, &o, NULL), DT_INVALID_ARGUMENT);
 
-    dt_representation_t r;
+    dt_representation_t r = {0,};
     EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789UL, &r) == DT_OK);
     EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_01, NULL) == DT_OK);
-    dt_representation_t rr;
+    dt_representation_t rr = {0,};
 
     EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 100UL, &o.duration) == DT_OK);
     o.is_forward = DT_TRUE;
@@ -214,10 +215,11 @@ TEST_F(DtCase, apply_offset)
 
 TEST_F(DtCase, posix_time_to_and_from_timestamp)
 {
-    time_t rtm;
+    time_t rtm = DT_POSIX_WRONG_TIME;
     time_t now = time(NULL);
-    dt_timestamp_t ts;
-    unsigned long nano_second;
+    dt_timestamp_t ts = {0,};
+    unsigned long nano_second = 0;
+    dt_offset_t o = {0,};
 
     EXPECT_EQ(dt_posix_time_to_timestamp(-1, 123456789L, &ts), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_posix_time_to_timestamp(0, 123456789L, NULL), DT_INVALID_ARGUMENT);
@@ -226,10 +228,10 @@ TEST_F(DtCase, posix_time_to_and_from_timestamp)
     EXPECT_EQ(dt_timestamp_to_posix_time(&ts, NULL, NULL), DT_INVALID_ARGUMENT);
 
     EXPECT_EQ(dt_posix_time_to_timestamp(0, 123456789L, &ts), DT_OK);
-    dt_offset_t o;
+
     EXPECT_TRUE(dt_init_interval(DT_SECONDS_PER_DAY, 0, &o.duration) == DT_OK);
     o.is_forward = DT_FALSE;
-    dt_timestamp_t nts;
+    dt_timestamp_t nts = {0,};
     EXPECT_TRUE(dt_apply_offset(&ts, &o, &nts) == DT_OK);
     EXPECT_EQ(dt_timestamp_to_posix_time(&nts, &rtm, &nano_second), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_timestamp_to_posix_time(&ts, &rtm, &nano_second), DT_OK);
@@ -244,7 +246,7 @@ TEST_F(DtCase, posix_time_to_and_from_timestamp)
 
 TEST_F(DtCase, init_interval)
 {
-    dt_interval_t i;
+    dt_interval_t i = {0,};
     EXPECT_EQ(dt_init_interval(1, 1000100500L, NULL), DT_INVALID_ARGUMENT);
 
     EXPECT_EQ(dt_init_interval(1, 100500L, &i), DT_OK);
@@ -258,11 +260,11 @@ TEST_F(DtCase, init_interval)
 
 TEST_F(DtCase, compare_interval)
 {
-    dt_interval_t i_01;
+    dt_interval_t i_01 = {0,};
     EXPECT_TRUE(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
-    dt_interval_t i_02;
+    dt_interval_t i_02 = {0,};
     EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
-    dt_compare_result_t cr;
+    dt_compare_result_t cr = DT_COMPARSION_FAIL;
     EXPECT_EQ(dt_compare_intervals(NULL, &i_02, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_intervals(&i_01, NULL, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_intervals(&i_01, &i_02, NULL), DT_INVALID_ARGUMENT);
@@ -283,11 +285,11 @@ TEST_F(DtCase, compare_interval)
 
 TEST_F(DtCase, sum_intervals)
 {
-    dt_interval_t i_01;
+    dt_interval_t i_01 = {0,};
     EXPECT_TRUE(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
-    dt_interval_t i_02;
+    dt_interval_t i_02 = {0,};
     EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
-    dt_interval_t ri;
+    dt_interval_t ri = {0,};
     EXPECT_EQ(dt_sum_intervals(NULL, &i_02, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sum_intervals(&i_01, NULL, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sum_intervals(&i_01, &i_02, NULL), DT_INVALID_ARGUMENT);
@@ -302,11 +304,11 @@ TEST_F(DtCase, sum_intervals)
 
 TEST_F(DtCase, sub_intervals)
 {
-    dt_interval_t i_01;
+    dt_interval_t i_01 = {0,};
     EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_01) == DT_OK);
-    dt_interval_t i_02;
+    dt_interval_t i_02 = {0,};
     EXPECT_TRUE(dt_init_interval(3L, 123456789L, &i_02) == DT_OK);
-    dt_interval_t ri;
+    dt_interval_t ri = {0,};
     EXPECT_EQ(dt_sub_intervals(NULL, &i_02, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sub_intervals(&i_01, NULL, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, NULL), DT_INVALID_ARGUMENT);
@@ -321,9 +323,9 @@ TEST_F(DtCase, sub_intervals)
 
 TEST_F(DtCase, miltiply_interval)
 {
-    dt_interval_t i;
+    dt_interval_t i = {0,};
     EXPECT_TRUE(dt_init_interval(3L, 500000000L, &i) == DT_OK);
-    dt_interval_t ri;
+    dt_interval_t ri = {0,};
     EXPECT_EQ(dt_mul_interval(NULL, 2.5, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_mul_interval(&i, 2.5, NULL), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_mul_interval(&i, 2.5, &ri), DT_OK);
@@ -336,7 +338,7 @@ TEST_F(DtCase, miltiply_interval)
 
 TEST_F(DtCase, init_representation)
 {
-    dt_representation_t r;
+    dt_representation_t r = {0,};
     EXPECT_EQ(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789, NULL), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_init_representation(2012, 12, 21, 8, 30, 45, -1, &r), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_init_representation(2012, 12, 21, 8, 30, 45, 1000000000, &r), DT_INVALID_ARGUMENT);
@@ -364,10 +366,10 @@ TEST_F(DtCase, init_representation)
 
 TEST_F(DtCase, representation_timestamp_conversion)
 {
-    dt_representation_t r;
-    dt_timestamp_t t;
-    dt_representation_t rr;
-    dt_representation_t urr;
+    dt_representation_t r = {0,};
+    dt_timestamp_t t = {0,};
+    dt_representation_t rr = {0,};
+    dt_representation_t urr = {0,};
     dt_timezone_t tz_moscow = {0,};
     dt_timezone_t tz_berlin = {0,};
     dt_timezone_t tz_utc = {0,};
@@ -448,8 +450,8 @@ TEST_F(DtCase, representation_timestamp_conversion)
 
 TEST_F(DtCase, representation_day_of_week)
 {
-    dt_representation_t r;
-    int dow;
+    dt_representation_t r = {0,};
+    int dow = 0;
     EXPECT_TRUE(dt_init_representation(2013, 8, 11, 8, 0, 0, 0, &r) == DT_OK);
     EXPECT_EQ(dt_representation_day_of_week(NULL, &dow), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_representation_day_of_week(&r, NULL), DT_INVALID_ARGUMENT);
@@ -480,8 +482,8 @@ TEST_F(DtCase, representation_day_of_week)
 
 TEST_F(DtCase, representation_day_of_year)
 {
-    dt_representation_t r;
-    int doy;
+    dt_representation_t r = {0,};
+    int doy = 0;
 
     EXPECT_EQ(dt_representation_day_of_year(NULL, &doy), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_representation_day_of_year(&r, NULL), DT_INVALID_ARGUMENT);
@@ -502,8 +504,8 @@ TEST_F(DtCase, representation_day_of_year)
 
 TEST_F(DtCase, representation_to_tm)
 {
-    dt_representation_t r;
-    struct tm tm;
+    dt_representation_t r = {0,};
+    struct tm tm = {0,};
 
     EXPECT_EQ(dt_representation_to_tm(NULL, &tm), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_representation_to_tm(&r, NULL), DT_INVALID_ARGUMENT);
@@ -522,14 +524,14 @@ TEST_F(DtCase, representation_to_tm)
 
 TEST_F(DtCase, tm_to_representation)
 {
-    struct tm tm;
+    struct tm tm = {0,};
     tm.tm_year = 112;
     tm.tm_mon = 11;
     tm.tm_mday = 21;
     tm.tm_hour = 8;
     tm.tm_min = 30;
     tm.tm_sec = -1;
-    dt_representation_t r;
+    dt_representation_t r = {0,};
 
     EXPECT_EQ(dt_tm_to_representation(NULL, 123456789, &r), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_tm_to_representation(&tm, 0, NULL), DT_INVALID_ARGUMENT);
@@ -647,9 +649,9 @@ TEST_F(DtCase, lookup_free_timezone)
 
 TEST_F(DtCase, edge_of_time_switch)
 {
-    dt_representation_t r;
-    dt_timestamp_t t;
-    dt_representation_t result;
+    dt_representation_t r = {0,};
+    dt_timestamp_t t = {0,};
+    dt_representation_t result = {0,};
     dt_timezone_t tz_moscow = {0,};
     dt_timezone_t tz_utc = {0,};
     //Lookup timezones
