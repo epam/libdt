@@ -22,6 +22,9 @@ static const DWORD YEAR_WRONG_VALUE = 0xFFFFFFFF; // any way wrong value for a y
 static const size_t YEARS_ARRAY_SEED = 10; // seed which setups how often will be memeory reallocation given in years array
 static const char DYNAMIC_DST_FIRST_ENTRY[] = "FirstEntry";
 static const char DYNAMIC_DST_LAST_ENTRY[] = "LastEntry";
+static const LPSTR REG_TZI = "TZI";
+static const LPWSTR REG_DLT = L"Dlt";
+static const LPWSTR REG_STD = L"Std";
 
 #if ( (defined(_WIN32) || defined(WIN32) ) && ( defined(_MSC_VER) ) )
 #define snprintf sprintf_s
@@ -343,9 +346,19 @@ static int GetTziFromKey(const char szKey[], const char szValue[], REG_TZI_FORMA
     return rc;
 }
 
+
+static void RegTziToDynamicTimeZoneInfo(REG_TZI_FORMAT *regtzi, DYNAMIC_TIME_ZONE_INFORMATION *ptzi)
+{
+    ptzi->Bias = regtzi->Bias;
+    ptzi->DaylightBias = regtzi->DaylightBias;
+    ptzi->DaylightDate = regtzi->DaylightDate;
+    ptzi->StandardBias = regtzi->StandardBias;
+    ptzi->StandardDate = regtzi->StandardDate;
+
+}
+
 static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
 {
-    int rc = EXIT_FAILURE;
     HKEY hkey_tz = NULL;
     DWORD dw = 0;
     REG_TZI_FORMAT regtzi = {0,};
@@ -365,30 +378,34 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
     snprintf(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
 
     if (ERROR_SUCCESS != (dw = RegOpenKeyA(HKEY_LOCAL_MACHINE, tszSubkey, &hkey_tz))) {
-        rc = EXIT_FAILURE;
-        goto ennd;
+
+        RegCloseKey(hkey_tz);
+        free(tszSubkey);
+        return EXIT_FAILURE;
     }
 
-    rc = 0;
-#define X(param, type, var) \
-    do if ((dw = sizeof(var)), (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, param, NULL, NULL, (LPBYTE)&var, &dw)))) { \
-            rc = EXIT_FAILURE; \
-            goto ennd; \
-        } while(0)
-    GetTziFromKey(tszSubkey, "TZI", &regtzi);
-    X(L"Std", RRF_RT_REG_SZ, ptzi->StandardName);
-    X(L"Dlt", RRF_RT_REG_SZ, ptzi->DaylightName);
-#undef X
-    ptzi->Bias = regtzi.Bias;
-    ptzi->DaylightBias = regtzi.DaylightBias;
-    ptzi->DaylightDate = regtzi.DaylightDate;
-    ptzi->StandardBias = regtzi.StandardBias;
-    ptzi->StandardDate = regtzi.StandardDate;
+    GetTziFromKey(tszSubkey, REG_TZI, &regtzi);
+
+    dw = sizeof(ptzi->StandardName);
+    if (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, REG_STD, NULL, NULL, (LPBYTE)&ptzi->StandardName, &dw))) {
+                RegCloseKey(hkey_tz);
+                free(tszSubkey);
+                return EXIT_FAILURE;
+    }
+
+    dw = sizeof(ptzi->StandardName);
+    if (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, REG_DLT, NULL, NULL, (LPBYTE)&ptzi->DaylightName, &dw))) {
+                RegCloseKey(hkey_tz);
+                free(tszSubkey);
+                return EXIT_FAILURE;
+    }
+
+    RegTziToDynamicTimeZoneInfo(&regtzi, ptzi);
     MultiByteToWideChar(CP_ACP, MB_COMPOSITE, szStandardName, -1 , ptzi->TimeZoneKeyName, sizeof(ptzi->TimeZoneKeyName));
-ennd:
+
     RegCloseKey(hkey_tz);
     free(tszSubkey);
-    return rc;
+    return EXIT_SUCCESS;
 }
 
 static int TmFromSystemTime(const SYSTEMTIME *pTime, struct tm *tm)
