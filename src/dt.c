@@ -404,6 +404,7 @@ struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *resu
 
     status = dt_posix_time_to_timestamp(*time, 0, &t);
     if (status != DT_OK) {
+        dt_timezone_cleanup(&tz);
         return NULL;
     }
 
@@ -439,6 +440,7 @@ time_t mktime_tz(const struct tm *tm, const char *tz_name)
 
     status = dt_tm_to_representation(tm, 0, &rep);
     if (status != DT_OK) {
+        dt_timezone_cleanup(&tz);
         return DT_POSIX_WRONG_TIME;
     }
 

@@ -9,9 +9,9 @@
 #include "../dt_private.h"
 
 // WinAPI
-#include <Windows.h>
-#include <WinReg.h>
-#include <WinBase.h>
+#include <windows.h>
+#include <winreg.h>
+#include <winbase.h>
 #include <winnt.h>
 
 
@@ -64,12 +64,13 @@ typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
     BOOLEAN DynamicDaylightTimeDisabled;
 } DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
 #define sscanf_s sscanf
-
+#if !defined(_WSTRING_S_DEFINED)
 wchar_t *wcscpy_s (wchar_t *dest, size_t size, const wchar_t *source)
 {
     (void *)&size;
     return wcscpy(dest, source);
 }
+#endif
 void qsort_s(void *base, size_t length, size_t size,
              int (*compare)(const void *, const void *), void *context)
 {
@@ -388,16 +389,16 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
 
     dw = sizeof(ptzi->StandardName);
     if (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, REG_STD, NULL, NULL, (LPBYTE)&ptzi->StandardName, &dw))) {
-                RegCloseKey(hkey_tz);
-                free(tszSubkey);
-                return EXIT_FAILURE;
+        RegCloseKey(hkey_tz);
+        free(tszSubkey);
+        return EXIT_FAILURE;
     }
 
     dw = sizeof(ptzi->StandardName);
     if (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, REG_DLT, NULL, NULL, (LPBYTE)&ptzi->DaylightName, &dw))) {
-                RegCloseKey(hkey_tz);
-                free(tszSubkey);
-                return EXIT_FAILURE;
+        RegCloseKey(hkey_tz);
+        free(tszSubkey);
+        return EXIT_FAILURE;
     }
 
     RegTziToDynamicTimeZoneInfo(&regtzi, ptzi);

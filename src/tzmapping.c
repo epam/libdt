@@ -169,5 +169,6 @@ dt_status_t tzmap_free(tz_aliases_t *aliases)
         it = it->next;
         free(forFree);
     }
+    aliases->begin.next = NULL;
     return DT_OK;
 }

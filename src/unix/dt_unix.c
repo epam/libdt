@@ -19,7 +19,7 @@ dt_status_t dt_now(dt_timestamp_t *result)
         return DT_INVALID_ARGUMENT;
     }
 
-    struct timespec ts;
+    struct timespec ts = {0,};
     if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
         return DT_SYSTEM_CALL_ERROR;
     }

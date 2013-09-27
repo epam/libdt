@@ -65,8 +65,8 @@ PosixCase::PosixCase()
 
 TEST_F(PosixCase, historic_tz_check)
 {
-    struct tm tm;
-    struct tm tmUtc;
+    struct tm tm = {0,};
+    struct tm tmUtc = {0,};
 
     //Most old law rule
     fillTmRepresentationOnly(&tm, 2009, 7, 15, 8, 0, 0);
@@ -124,7 +124,7 @@ TEST_F(PosixCase, localtime_tz)
 {
     time_t testTime = 0;
     //Wrong arguments :
-    struct tm tm;
+    struct tm tm = {0,};
     memset(&tm, 0, sizeof (struct tm));
     EXPECT_EQ(localtime_tz(NULL, testMoscowTimeZone, &tm), (struct tm *)NULL);
     memset(&tm, 0, sizeof (struct tm));
@@ -137,9 +137,9 @@ TEST_F(PosixCase, localtime_tz)
 
     //Useful Behaivor :
     //standard timezone encoding behaivor
-    struct tm utcTime;
-    struct tm gmt5Time;
-    struct tm gmtNeg5Time;
+    struct tm utcTime = {0,};
+    struct tm gmt5Time = {0,};
+    struct tm gmtNeg5Time = {0,};
     memset(&utcTime, 0, sizeof (struct tm));
     memset(&gmt5Time, 0, sizeof (struct tm));
     memset(&gmtNeg5Time, 0, sizeof (struct tm));
@@ -157,7 +157,7 @@ TEST_F(PosixCase, mktime_tz)
 
     time_t testTime = 0;
     //Wrong arguments :
-    struct tm tm;
+    struct tm tm = {0,};
     memset(&tm, 0, sizeof (struct tm));
     EXPECT_EQ((testTime = mktime_tz(NULL, testMoscowTimeZone)), DT_POSIX_WRONG_TIME);
     memset(&tm, 0, sizeof (struct tm));
@@ -167,11 +167,11 @@ TEST_F(PosixCase, mktime_tz)
     EXPECT_EQ((testTime = mktime_tz(&tm, unrealTimezone)), DT_POSIX_WRONG_TIME);
 
     //Useful behaivor :
-    struct tm utcTime;
+    struct tm utcTime = {0,};
     fillTm(&utcTime, 0, 0, 0, 1, 0, 0, 0, 4, 0, 1970, 0);// 1 january of 1970 (UTC)
-    struct tm gmt5Time;
+    struct tm gmt5Time = {0,};
     fillTm(&gmt5Time, -18000, 19, 0, 31, 0, 11, 0, 3, 364, 1969, 0);// 31 december of 1969
-    struct tm gmtNeg5Time;
+    struct tm gmtNeg5Time = {0,};
     fillTm(&gmtNeg5Time, 18000, 5, 0, 1, 0, 0, 0, 4, 0, 1970, 0);// 1 january of 1970 (GMT-5)
 
     testTime = 666; // not a 0

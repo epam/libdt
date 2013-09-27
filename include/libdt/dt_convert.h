@@ -30,7 +30,7 @@ extern "C" {
      */
     dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second);
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_TIMESPEC_DEFINED)
     struct timespec {
         time_t tv_sec;                          //!< Seconds
         long tv_nsec;                           //!< Nano-seconds
