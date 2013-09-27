@@ -389,16 +389,16 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
 
     dw = sizeof(ptzi->StandardName);
     if (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, REG_STD, NULL, NULL, (LPBYTE)&ptzi->StandardName, &dw))) {
-        RegCloseKey(hkey_tz);
-        free(tszSubkey);
-        return EXIT_FAILURE;
+                RegCloseKey(hkey_tz);
+                free(tszSubkey);
+                return EXIT_FAILURE;
     }
 
     dw = sizeof(ptzi->StandardName);
     if (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, REG_DLT, NULL, NULL, (LPBYTE)&ptzi->DaylightName, &dw))) {
-        RegCloseKey(hkey_tz);
-        free(tszSubkey);
-        return EXIT_FAILURE;
+                RegCloseKey(hkey_tz);
+                free(tszSubkey);
+                return EXIT_FAILURE;
     }
 
     RegTziToDynamicTimeZoneInfo(&regtzi, ptzi);
