@@ -755,10 +755,11 @@ dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezon
     while ((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
         if (alias->kind == PREFFERED_TZMAP_TYPE) {
             native_tz_name = alias->name;
-            tzmap_free(aliases);
             break;
         }
     }
+
+    tzmap_free(aliases);
 
     if (native_tz_name != NULL) {
         timezone->dtzi = malloc(sizeof(*timezone->dtzi));

@@ -4,8 +4,9 @@
 #include <string.h>
 #include <math.h>
 #include "dt_private.h"
-
+#include <limits.h>
 #include <stdio.h>
+#include <float.h>
 
 /*
  * Cross-platform date/time handling library for C.
@@ -15,11 +16,14 @@
  * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
  * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
-
 static const int month_days[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+static const unsigned long MAX_NANOSECONDS = 999999999UL;
 
 dt_bool_t dt_is_leap_year(int year)
 {
+    if (year <= 0) {
+        return DT_FALSE;
+    }
     if (year < 1582) {
         // No leap year in Julian calendar
         return (abs(year) % 4 == 0);
@@ -37,6 +41,7 @@ const char *dt_strerror(dt_status_t status)
     static const char *unknown_error_message = "Unknown error";
     static const char *malloc_error_message = "malloc returned NULL";
     static const char *no_more_items_error_message = "No more items in collection";
+    static const char *overflow_error_message = "Operation caused owerflow";
     static const char *invalid_status_error_message = "<Invalid result status>";
 
     switch (status) {
@@ -54,6 +59,8 @@ const char *dt_strerror(dt_status_t status)
             return malloc_error_message;
         case DT_NO_MORE_ITEMS:
             return no_more_items_error_message;
+        case DT_OVERFLOW:
+            return overflow_error_message;
         default:
             return invalid_status_error_message;
     }
@@ -76,12 +83,25 @@ dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned sh
     // Checking month days
     return day <= month_days[month] ? DT_TRUE : DT_FALSE;
 }
+dt_bool_t dt_validate_timestamp(const dt_timestamp_t *timestamp)
+{
+    if (timestamp == NULL) {
+        return DT_FALSE;
+    }
+
+    if (timestamp->nano_second > MAX_NANOSECONDS) {
+        return DT_FALSE;
+    }
+
+    return DT_TRUE;
+}
 
 dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_result_t *result)
 {
-    if (!lhs || !rhs || !result) {
+    if (dt_validate_timestamp(lhs) != DT_TRUE || dt_validate_timestamp(rhs) != DT_TRUE || !result) {
         return DT_INVALID_ARGUMENT;
     }
+
     if (lhs->second > rhs->second) {
         *result = DT_GREATER;
         return DT_OK;
@@ -118,15 +138,16 @@ dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *r
     }
 
     s = dt_compare_timestamps(lhs, rhs, &cr);
+    if (s != DT_OK) {
+        return s;
+    }
     lower_timestamp = cr < 0 ? lhs : rhs;
     higher_timestamp = cr < 0 ? rhs : lhs;
     seconds = higher_timestamp->second - lower_timestamp->second;
     nano_seconds = (long) higher_timestamp->nano_second - (long) lower_timestamp->nano_second;
     is_forward = cr < 0 ? DT_TRUE : DT_FALSE;
 
-    if (s != DT_OK) {
-        return s;
-    }
+
     if (cr == DT_EQUALS) {
         // Equal timestamps case
         result->duration.seconds = 0L;
@@ -145,27 +166,42 @@ dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *r
     return DT_OK;
 }
 
+dt_bool_t dt_validate_offset(const dt_offset_t *offset)
+{
+    if (offset == NULL || dt_validate_interval(&offset->duration) != DT_TRUE) {
+        return DT_FALSE;
+    }
+    return DT_TRUE;
+}
+
 dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
 {
     long second = 0;
     unsigned long nano_second = 0;
-    if (!lhs || !rhs || !result) {
+    if (dt_validate_timestamp(lhs) != DT_TRUE || dt_validate_offset(rhs) != DT_TRUE || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
     if (rhs->is_forward) {
         nano_second = lhs->nano_second + rhs->duration.nano_seconds;
         second = lhs->second + rhs->duration.seconds + nano_second / 1000000000UL;
+        if (second < lhs->second || second < rhs->duration.seconds) {
+            return DT_OVERFLOW;
+        }
         nano_second %= 1000000000UL;
     } else {
-        if (lhs->nano_second > rhs->duration.nano_seconds) {
+        if (lhs->nano_second >= rhs->duration.nano_seconds) {
             nano_second = lhs->nano_second - rhs->duration.nano_seconds;
-            second = lhs->second - rhs->duration.seconds + nano_second / 1000000000UL;
-            nano_second %= 1000000000UL;
+            second = lhs->second - rhs->duration.seconds;
+            if ((second > lhs->second || second < -lhs->second) && lhs->second != 0) {
+                return DT_OVERFLOW;
+            }
         } else {
             nano_second = rhs->duration.nano_seconds - lhs->nano_second;
-            second = lhs->second - rhs->duration.seconds - nano_second / 1000000000UL - 1;
-            nano_second %= 1000000000UL;
+            second = lhs->second - rhs->duration.seconds - 1;
+            if ((second > lhs->second || second < -lhs->second) && lhs->second != 0) {
+                return DT_OVERFLOW;
+            }
             nano_second = 1000000000UL - nano_second;
         }
     }
@@ -174,21 +210,31 @@ dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, d
     return DT_OK;
 }
 
-dt_status_t dt_init_interval(long seconds, unsigned long nano_seconds, dt_interval_t *result)
+dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result)
 {
+    unsigned long nano_seconds_delta = 0;
     if (!result) {
         return DT_INVALID_ARGUMENT;
     }
-    result->seconds = seconds + nano_seconds / 1000000000UL;
+
+    nano_seconds_delta = nano_seconds / 1000000000UL;
+
+    result->seconds = seconds + nano_seconds_delta;
     result->nano_seconds = nano_seconds % 1000000000UL;
+
+    if (result->seconds < seconds || result->seconds < nano_seconds_delta) {
+        return DT_OVERFLOW;
+    }
+
     return DT_OK;
 }
 
 dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_result_t *result)
 {
-    if (!lhs || !rhs || !result) {
+    if (dt_validate_interval(lhs) == DT_FALSE || dt_validate_interval(rhs) == DT_FALSE || !result) {
         return DT_INVALID_ARGUMENT;
     }
+
     if (lhs->seconds > rhs->seconds) {
         *result = DT_GREATER;
         return DT_OK;
@@ -214,11 +260,15 @@ dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
     unsigned long seconds = 0;
     unsigned long nano_seconds = 0;
 
-    if (!lhs || !rhs || !result) {
+    if (dt_validate_interval(lhs) == DT_FALSE || dt_validate_interval(rhs) == DT_FALSE || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
     seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000UL;
+
+    if (seconds < lhs->seconds || seconds < rhs->seconds) {
+        return DT_OVERFLOW;
+    }
     nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000UL;
 
     result->seconds = seconds;
@@ -249,9 +299,7 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
         return s;
     }
     if (cr <= 0) {
-        result->seconds = 0L;
-        result->nano_seconds = 0L;
-        return DT_OK;
+        return DT_OVERFLOW;
     }
 
     result->seconds = seconds;
@@ -261,17 +309,23 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 
 dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t *result)
 {
-    long double v = 0;
-    long double rv = 0;
+    double v = 0;
+    double rv = 0;
 
-    if (!lhs || !result) {
+    if (dt_validate_interval(lhs) == DT_FALSE || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
-    v = (long double) lhs->seconds + (long double) lhs->nano_seconds / 1000000000UL;
+    v = (double) lhs->seconds + (double) lhs->nano_seconds / 1000000000.0;
     rv = v * rhs;
+    if (!isfinite(rv)) {
+        return DT_OVERFLOW;
+    }
 
     result->seconds = (unsigned long)floor(rv);
+    if (result->seconds == 0 && v != 0 && rhs != 0) {
+        return DT_OVERFLOW;
+    }
     result->nano_seconds = (unsigned long)floor(fmod(rv, 1.0) * 1000000000UL);
     return DT_OK;
 }
@@ -457,4 +511,16 @@ time_t mktime_tz(const struct tm *tm, const char *tz_name)
 
 
     return result;
+}
+
+dt_bool_t dt_validate_interval(const dt_interval_t *test)
+{
+    if (test == NULL) {
+        return DT_FALSE;
+    }
+    if (test->nano_seconds > MAX_NANOSECONDS) {
+        return DT_FALSE;
+    }
+
+    return DT_TRUE;
 }

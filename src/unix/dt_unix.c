@@ -42,7 +42,7 @@ dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, d
 
 dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
 {
-    if (!timestamp || !time || timestamp->second < 0) {
+    if (dt_validate_timestamp(timestamp) != DT_TRUE || !time || timestamp->second < 0) {
         return DT_INVALID_ARGUMENT;
     }
 
