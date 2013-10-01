@@ -53,5 +53,7 @@ endif(NOT CYGWIN)
 endif(UNIX)
 
 include(../cmake/TZPack.cmake)
-
+if(DOXYGEN_FOUND)
+    add_dependencies(${PROJECT_NAME} doc)
+endif()
 add_subdirectory(unix/libtz)
