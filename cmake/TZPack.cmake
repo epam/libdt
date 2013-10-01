@@ -1,7 +1,7 @@
 set(CPACK_PACKAGE_VENDOR "EPAM Systems")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Crossplatform library for date time manipulation and locale convertations")
 set(CPACK_GENERATOR "TGZ")
-install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION lib)
+install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 install(FILES ${CMAKE_SOURCE_DIR}/include/libdt/dt.h DESTINATION include/libdt)
 install(FILES ${CMAKE_SOURCE_DIR}/include/libdt/dt_posix.h DESTINATION include/libdt)
 install(FILES ${CMAKE_SOURCE_DIR}/include/libdt/dt_convert.h DESTINATION include/libdt)
