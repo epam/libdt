@@ -33,6 +33,7 @@ if(NOT CYGWIN)
     add_definitions(-DTZDIR="${SYSTEM_TZ_DIR}")
 
     file(GLOB SRC_LIST ${SRC_LIST} "unix/*.c")
+    file(GLOB SRC_LIST ${SRC_LIST} "unix/libtz/*.c")
     include_directories(. unix)
 endif(NOT CYGWIN)
 endif(UNIX)
@@ -48,7 +49,7 @@ add_dependencies(${PROJECT_NAME} timezones-map format-source)
 
 if(UNIX)
 if(NOT CYGWIN)
-    target_link_libraries(${PROJECT_NAME} rt m tz-inline)
+    target_link_libraries(${PROJECT_NAME} rt m)
 endif(NOT CYGWIN)
 endif(UNIX)
 
