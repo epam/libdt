@@ -20,7 +20,7 @@ dt_status_t dt_now(dt_timestamp_t *result)
     }
 
     struct timespec ts = {0,};
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0) {
+    if (clock_gettime(CLOCK_REALTIME, &ts) < 0) {
         return DT_SYSTEM_CALL_ERROR;
     }
 
