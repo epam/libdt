@@ -19,6 +19,15 @@
 static const int month_days[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 static const unsigned long MAX_NANOSECONDS = 999999999UL;
 
+static dt_bool_t is_unsigned_logn_sum_overflows(unsigned long lhs, unsigned long rhs)
+{
+    unsigned long long int max = ULONG_MAX;
+    if (rhs > max - lhs ) {
+        return DT_TRUE;
+    }
+    return DT_FALSE;
+}
+
 dt_bool_t dt_is_leap_year(int year)
 {
     if (year <= 0) {
@@ -133,7 +142,7 @@ dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *r
     dt_status_t s = DT_UNKNOWN_ERROR;
 
 
-    if (!lhs || !rhs || !result) {
+    if (dt_validate_timestamp(lhs) != DT_TRUE || dt_validate_timestamp(rhs) != DT_TRUE || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -174,57 +183,75 @@ dt_bool_t dt_validate_offset(const dt_offset_t *offset)
     return DT_TRUE;
 }
 
+static dt_status_t dt_apply_offset_forward(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
+{
+
+    unsigned long duration_seconds_full_part = 0;
+    unsigned long nanoseconds_second_part = 0;
+
+    result->nano_second = lhs->nano_second + rhs->duration.nano_seconds;//cannot be owerflowed
+    nanoseconds_second_part = result->nano_second / 1000000000UL;
+    duration_seconds_full_part = rhs->duration.seconds + nanoseconds_second_part;
+    if (is_unsigned_logn_sum_overflows(rhs->duration.seconds, nanoseconds_second_part) == DT_TRUE ||
+            (lhs->second > 0 && duration_seconds_full_part > LONG_MAX)) {
+        return DT_OVERFLOW;
+    }
+
+    result->second = duration_seconds_full_part + lhs->second;
+    result->nano_second %= 1000000000UL;
+    return DT_OK;
+}
+
+static dt_status_t dt_apply_offset_backward(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
+{
+    if (lhs->nano_second >= rhs->duration.nano_seconds) {
+        if (lhs->second > 0 && rhs->duration.seconds > LONG_MAX - lhs->second) {
+            return DT_OVERFLOW;
+        }
+        result->nano_second = lhs->nano_second - rhs->duration.nano_seconds;
+        result->second = lhs->second - rhs->duration.seconds;
+    } else {
+        if (lhs->second > LONG_MAX - 1 || (lhs->second > 0 && rhs->duration.seconds > LONG_MAX - lhs->second - 1)) {
+            return DT_OVERFLOW;
+        }
+        result->nano_second = rhs->duration.nano_seconds - lhs->nano_second;
+        result->second = lhs->second - rhs->duration.seconds - 1;
+        result->nano_second = 1000000000UL - result->nano_second;
+    }
+    return DT_OK;
+}
+
 dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
 {
-    long second = 0;
-    unsigned long nano_second = 0;
+
     if (dt_validate_timestamp(lhs) != DT_TRUE || dt_validate_offset(rhs) != DT_TRUE || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
+
     if (rhs->is_forward) {
-        nano_second = lhs->nano_second + rhs->duration.nano_seconds;
-        second = lhs->second + rhs->duration.seconds + nano_second / 1000000000UL;
-        if (second < lhs->second || second < rhs->duration.seconds) {
-            return DT_OVERFLOW;
-        }
-        nano_second %= 1000000000UL;
+        return dt_apply_offset_forward(lhs, rhs, result);
     } else {
-        if (lhs->nano_second >= rhs->duration.nano_seconds) {
-            nano_second = lhs->nano_second - rhs->duration.nano_seconds;
-            second = lhs->second - rhs->duration.seconds;
-            if ((second > lhs->second || second < -lhs->second) && lhs->second != 0) {
-                return DT_OVERFLOW;
-            }
-        } else {
-            nano_second = rhs->duration.nano_seconds - lhs->nano_second;
-            second = lhs->second - rhs->duration.seconds - 1;
-            if ((second > lhs->second || second < -lhs->second) && lhs->second != 0) {
-                return DT_OVERFLOW;
-            }
-            nano_second = 1000000000UL - nano_second;
-        }
+        return dt_apply_offset_backward(lhs, rhs, result);
     }
-    result->second = second;
-    result->nano_second = nano_second;
     return DT_OK;
 }
 
 dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result)
 {
-    unsigned long nano_seconds_delta = 0;
+    unsigned long seconds_delta = 0;
     if (!result) {
         return DT_INVALID_ARGUMENT;
     }
 
-    nano_seconds_delta = nano_seconds / 1000000000UL;
+    seconds_delta = nano_seconds / 1000000000UL;
 
-    result->seconds = seconds + nano_seconds_delta;
-    result->nano_seconds = nano_seconds % 1000000000UL;
-
-    if (result->seconds < seconds || result->seconds < nano_seconds_delta) {
+    if (is_unsigned_logn_sum_overflows(seconds, seconds_delta) == DT_TRUE) {
         return DT_OVERFLOW;
     }
+
+    result->seconds = seconds + seconds_delta;
+    result->nano_seconds = nano_seconds % 1000000000UL;
 
     return DT_OK;
 }
@@ -259,16 +286,20 @@ dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
 {
     unsigned long seconds = 0;
     unsigned long nano_seconds = 0;
+    unsigned long seconds_nanoseconds_part = 0;
+    unsigned long full_seconds_part  = 0;
 
     if (dt_validate_interval(lhs) == DT_FALSE || dt_validate_interval(rhs) == DT_FALSE || !result) {
         return DT_INVALID_ARGUMENT;
     }
 
-    seconds = lhs->seconds + rhs->seconds + (lhs->nano_seconds + rhs->nano_seconds) / 1000000000UL;
-
-    if (seconds < lhs->seconds || seconds < rhs->seconds) {
+    seconds_nanoseconds_part = (lhs->nano_seconds + rhs->nano_seconds) / 1000000000UL;
+    full_seconds_part = rhs->seconds + seconds_nanoseconds_part;
+    if (is_unsigned_logn_sum_overflows(rhs->seconds, seconds_nanoseconds_part) == DT_TRUE ||
+            is_unsigned_logn_sum_overflows(lhs->seconds, full_seconds_part) == DT_TRUE) {
         return DT_OVERFLOW;
     }
+    seconds = lhs->seconds + full_seconds_part;
     nano_seconds = (lhs->nano_seconds + rhs->nano_seconds) % 1000000000UL;
 
     result->seconds = seconds;
@@ -287,20 +318,22 @@ dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs,
         return DT_INVALID_ARGUMENT;
     }
 
+    s = dt_compare_intervals(lhs, rhs, &cr);
+
+    if (s != DT_OK) {
+        return s;
+    }
+    if (cr == DT_LESSER) {
+        return DT_OVERFLOW;
+    }
+
     seconds = lhs->seconds - rhs->seconds - (lhs->nano_seconds < rhs->nano_seconds ? 1L : 0L);
     if (lhs->nano_seconds < rhs->nano_seconds) {
         nano_seconds = 1000000000UL + lhs->nano_seconds - rhs->nano_seconds;
     } else {
         nano_seconds = lhs->nano_seconds - rhs->nano_seconds;
     }
-    s = dt_compare_intervals(lhs, rhs, &cr);
 
-    if (s != DT_OK) {
-        return s;
-    }
-    if (cr <= 0) {
-        return DT_OVERFLOW;
-    }
 
     result->seconds = seconds;
     result->nano_seconds = nano_seconds;

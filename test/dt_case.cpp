@@ -36,20 +36,24 @@ static const dt_interval_t invalid_interval = { ULONG_MAX,
                                                 MAX_NANOSECONDS + 1
                                               };
 
-static const dt_interval_t overflawable_interval = { (ULONG_MAX / 2) + 1,
+static const dt_interval_t overflowable_interval = { ULONG_MAX,
                                                      MAX_NANOSECONDS
                                                    };
 
-static const dt_timestamp_t overflawable_timestamp = { LONG_MAX,
+static const dt_timestamp_t overflowable_timestamp = { LONG_MAX,
                                                        MAX_NANOSECONDS
                                                      };
+
+static const dt_timestamp_t overflowable_timestamp_negative = { LONG_MIN,
+                                                                MAX_NANOSECONDS
+                                                              };
 
 static const dt_timestamp_t invalid_timestamp = { LONG_MAX,
                                                   MAX_NANOSECONDS + 1
                                                 };
 
 static const dt_offset_t invalid_offset = {invalid_interval, DT_FALSE};
-static const dt_offset_t overflawable_offset = {overflawable_interval, DT_FALSE};
+static const dt_offset_t overflawable_offset = {overflowable_interval, DT_FALSE};
 
 DtCase::DtCase() :
     ::testing::Test()
@@ -104,7 +108,7 @@ TEST_F(DtCase, validate_timestamps)
     dt_timestamp_t timestamp = invalid_timestamp;
     EXPECT_EQ(dt_validate_timestamp(NULL), DT_FALSE);
     EXPECT_EQ(dt_validate_timestamp(&timestamp), DT_FALSE);
-    timestamp = overflawable_timestamp;
+    timestamp = overflowable_timestamp;
     EXPECT_EQ(dt_validate_timestamp(&timestamp), DT_TRUE);
 }
 
@@ -135,15 +139,23 @@ TEST_F(DtCase, now_compare_timestamps)
 }
 
 
-TEST_F(DtCase, offset_to)
+TEST_F(DtCase, offset_between)
 {
     dt_timestamp_t ts_01 = {0,};
     dt_timestamp_t ts_02 = {0,};
     dt_offset_t o = {0,};
     dt_timezone_t tz_moscow = {0,};
+    dt_representation_t r = {0,};
 
+    //init timestamps
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
+    EXPECT_EQ(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &ts_01, NULL), DT_OK);
+    EXPECT_EQ(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r), DT_OK);
+    EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &ts_02, NULL), DT_OK);
+    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
 
+    //invalid arguments
     EXPECT_EQ(dt_offset_between(NULL, &ts_02, &o), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_offset_between(&ts_01, NULL, &o), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
@@ -151,16 +163,12 @@ TEST_F(DtCase, offset_to)
     EXPECT_EQ(dt_offset_between(&invalid_timestamp, &ts_01, &o), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_offset_between(&ts_01, &invalid_timestamp, &o), DT_INVALID_ARGUMENT);
 
-    dt_representation_t r = {0,};
-    EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789L, &r) == DT_OK);
-    EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_01, NULL) == DT_OK);
+    //buisness
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_01, &o), DT_OK);
     EXPECT_EQ(o.is_forward, DT_TRUE);
     EXPECT_EQ(o.duration.seconds, 0L);
     EXPECT_EQ(o.duration.nano_seconds, 0L);
 
-    EXPECT_TRUE(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r) == DT_OK);
-    EXPECT_TRUE(dt_representation_to_timestamp(&r, &tz_moscow, &ts_02, NULL) == DT_OK);
     EXPECT_EQ(dt_offset_between(&ts_01, &ts_02, &o), DT_OK);
     EXPECT_EQ(o.is_forward, DT_TRUE);
     EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY);
@@ -181,7 +189,7 @@ TEST_F(DtCase, offset_to)
     EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
     EXPECT_EQ(o.duration.nano_seconds, 876543311L);
 
-    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
+
 }
 
 TEST_F(DtCase, validate_offset)
@@ -191,16 +199,55 @@ TEST_F(DtCase, validate_offset)
     EXPECT_EQ(dt_validate_offset(&invalid_offset), DT_FALSE);
     EXPECT_EQ(dt_validate_offset(&offset), DT_TRUE);
 }
+TEST_F(DtCase, apply_offset_overflow)
+{
+    dt_timestamp_t ts_01 = {1, 1};
+    dt_timestamp_t ts_02 = {1, 1};
+
+    dt_timestamp_t invalid_timestamp_for_apply_offset = overflowable_timestamp;
+    dt_offset_t invalid_offset_for_apply_offset = {overflowable_interval, DT_TRUE};
+
+    EXPECT_EQ(dt_apply_offset(&invalid_timestamp_for_apply_offset, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+    invalid_offset_for_apply_offset = overflawable_offset;
+    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+
+    //positive forward case
+    invalid_offset_for_apply_offset.is_forward = DT_TRUE;
+    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+    invalid_offset_for_apply_offset = overflawable_offset;
+    invalid_offset_for_apply_offset.duration.seconds--;
+    invalid_offset_for_apply_offset.is_forward = DT_TRUE;
+    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+
+
+    //positive backward case
+    invalid_offset_for_apply_offset.is_forward = DT_FALSE;
+    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+    invalid_offset_for_apply_offset = overflawable_offset;
+    invalid_offset_for_apply_offset.is_forward = DT_FALSE;
+    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+
+    //negative forward case
+    invalid_offset_for_apply_offset = overflawable_offset;
+    invalid_offset_for_apply_offset.is_forward = DT_TRUE;
+    invalid_offset_for_apply_offset.duration.seconds--;
+    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp_negative, &invalid_offset_for_apply_offset, &ts_02), DT_OK);
+
+    //negative backward case
+    invalid_offset_for_apply_offset = overflawable_offset;
+    invalid_offset_for_apply_offset.is_forward = DT_FALSE;
+    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp_negative, &invalid_offset_for_apply_offset, &ts_02), DT_OK);
+
+}
 
 TEST_F(DtCase, apply_offset)
 {
     dt_timestamp_t ts_01 = {1, 1};
     dt_timestamp_t ts_02 = {1, 1};
-    dt_offset_t o = {1, 1};
+    dt_offset_t o = {{1, 0}, DT_TRUE};
 
     dt_timezone_t tz_moscow = {0,};
-    dt_timestamp_t invalid_timestamp_for_apply_offset = overflawable_timestamp;
-    dt_offset_t invalid_offset_for_apply_offset = {overflawable_interval, DT_TRUE};
+
 
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
@@ -210,11 +257,6 @@ TEST_F(DtCase, apply_offset)
 
     EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset, &ts_02), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_apply_offset(&invalid_timestamp, &o, &ts_02), DT_INVALID_ARGUMENT);
-    EXPECT_EQ(dt_apply_offset(&invalid_timestamp_for_apply_offset, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
-    invalid_offset_for_apply_offset = overflawable_offset;
-    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
-    invalid_offset_for_apply_offset.is_forward = DT_TRUE;
-    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
 
     dt_representation_t r = {0,};
     EXPECT_TRUE(dt_init_representation(2012, 12, 21, 8, 30, 45, 123456789UL, &r) == DT_OK);
@@ -333,6 +375,7 @@ TEST_F(DtCase, init_interval)
     EXPECT_EQ(i.nano_seconds, 100500L);
 
     EXPECT_EQ(dt_init_interval(std::numeric_limits<unsigned long>::max(), std::numeric_limits<unsigned long>::max(), &i), DT_OVERFLOW);
+    EXPECT_EQ(dt_init_interval(std::numeric_limits<unsigned long>::max(), MAX_NANOSECONDS + 1 , &i), DT_OVERFLOW);
     EXPECT_EQ(dt_init_interval(std::numeric_limits<unsigned long>::max(), 123UL, &i), DT_OK);
 }
 
@@ -380,7 +423,7 @@ TEST_F(DtCase, sum_intervals)
     EXPECT_EQ(dt_sum_intervals(&i_01, &i_02, NULL), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sum_intervals(&invalid_interval, &i_02, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sum_intervals(&i_01, &invalid_interval, &ri), DT_INVALID_ARGUMENT);
-    EXPECT_EQ(dt_sum_intervals(&overflawable_interval, &overflawable_interval, &ri), DT_OVERFLOW);
+    EXPECT_EQ(dt_sum_intervals(&overflowable_interval, &overflowable_interval, &ri), DT_OVERFLOW);
 
     EXPECT_EQ(dt_sum_intervals(&i_01, &i_02, &ri), DT_OK);
     EXPECT_EQ(ri.seconds, 3L);
@@ -404,7 +447,7 @@ TEST_F(DtCase, sub_intervals)
     EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, NULL), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sub_intervals(&invalid_interval, &i_02, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_sub_intervals(&i_01, &invalid_interval, &ri), DT_INVALID_ARGUMENT);
-    EXPECT_EQ(dt_sub_intervals(&i_01, &overflawable_interval, &ri), DT_OVERFLOW);
+    EXPECT_EQ(dt_sub_intervals(&i_01, &overflowable_interval, &ri), DT_OVERFLOW);
 
     EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, &ri), DT_OVERFLOW);
     EXPECT_TRUE(dt_init_interval(1L, 900000000L, &i_02) == DT_OK);
@@ -417,7 +460,7 @@ TEST_F(DtCase, miltiply_interval)
 {
     dt_interval_t i = {0,};
     dt_interval_t ri = {0,};
-    dt_interval_t dt_mul_overflawable_interval = overflawable_interval;
+    dt_interval_t dt_mul_overflawable_interval = overflowable_interval;
     dt_mul_overflawable_interval.seconds = invalid_interval.seconds;
 
     EXPECT_EQ(dt_mul_interval(&i, std::numeric_limits<double>::max(), &ri), DT_OK);
@@ -433,7 +476,7 @@ TEST_F(DtCase, miltiply_interval)
     EXPECT_EQ(dt_mul_interval(&invalid_interval, 2.5, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_mul_interval(&i, std::numeric_limits<double>::max(), &ri), DT_OVERFLOW);
 
-    EXPECT_EQ(dt_mul_interval(&overflawable_interval, MAX_NANOSECONDS, &ri), DT_OVERFLOW);
+    EXPECT_EQ(dt_mul_interval(&overflowable_interval, MAX_NANOSECONDS, &ri), DT_OVERFLOW);
 
     EXPECT_EQ(dt_mul_interval(&i, 2.5, &ri), DT_OK);
     EXPECT_EQ(ri.seconds, 8L);
