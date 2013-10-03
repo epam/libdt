@@ -204,14 +204,18 @@ static dt_status_t dt_apply_offset_forward(const dt_timestamp_t *lhs, const dt_o
 
 static dt_status_t dt_apply_offset_backward(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
 {
+
+
     if (lhs->nano_second >= rhs->duration.nano_seconds) {
-        if (lhs->second > 0 && rhs->duration.seconds > (unsigned long)(LONG_MAX - lhs->second)) {
+        if ((lhs->second > 0 && rhs->duration.seconds >  LONG_MIN + lhs->second ) ||
+                (lhs->second <= 0 && rhs->duration.seconds > LONG_MIN - lhs->second)) {
             return DT_OVERFLOW;
         }
         result->nano_second = lhs->nano_second - rhs->duration.nano_seconds;
         result->second = lhs->second - rhs->duration.seconds;
     } else {
-        if (lhs->second > LONG_MAX - 1 || (lhs->second > 0 && rhs->duration.seconds > (unsigned long)(LONG_MAX - lhs->second - 1))) {
+        if ((lhs->second > 0 && lhs->second > 0 && rhs->duration.seconds > LONG_MIN + lhs->second + 1 ) ||
+                (lhs->second <= 0 && rhs->duration.seconds > LONG_MIN + 1 - lhs->second)) {
             return DT_OVERFLOW;
         }
         result->nano_second = rhs->duration.nano_seconds - lhs->nano_second;

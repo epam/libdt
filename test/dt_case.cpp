@@ -4,6 +4,7 @@
 #include "libdt/dt_posix.h"
 #include <limits>
 #include <limits.h>
+#include <float.h>
 
 #define MOSCOW_WINDOWS_STANDARD_TZ_NAME "Russian Standard Time"
 #define MOSCOW_OLSEN_TZ_NAME  "Europe/Moscow"
@@ -205,12 +206,8 @@ TEST_F(DtCase, apply_offset_overflow)
     dt_timestamp_t ts_01 = {1, 1};
     dt_timestamp_t ts_02 = {1, 1};
 
-    dt_timestamp_t invalid_timestamp_for_apply_offset = overflowable_timestamp;
-    dt_offset_t invalid_offset_for_apply_offset = {overflowable_interval, DT_TRUE};
 
-    EXPECT_EQ(dt_apply_offset(&invalid_timestamp_for_apply_offset, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
-    invalid_offset_for_apply_offset = overflawable_offset;
-    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+    dt_offset_t invalid_offset_for_apply_offset = {overflowable_interval, DT_TRUE};
 
     //positive forward case
     invalid_offset_for_apply_offset.is_forward = DT_TRUE;
@@ -220,24 +217,32 @@ TEST_F(DtCase, apply_offset_overflow)
     invalid_offset_for_apply_offset.is_forward = DT_TRUE;
     EXPECT_EQ(dt_apply_offset(&overflowable_timestamp, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
 
-
-    //positive backward case
-    invalid_offset_for_apply_offset.is_forward = DT_FALSE;
-    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
-    invalid_offset_for_apply_offset = overflawable_offset;
-    invalid_offset_for_apply_offset.is_forward = DT_FALSE;
-    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
-
     //negative forward case
     invalid_offset_for_apply_offset = overflawable_offset;
     invalid_offset_for_apply_offset.is_forward = DT_TRUE;
     invalid_offset_for_apply_offset.duration.seconds--;
     EXPECT_EQ(dt_apply_offset(&overflowable_timestamp_negative, &invalid_offset_for_apply_offset, &ts_02), DT_OK);
 
-    //negative backward case
-    invalid_offset_for_apply_offset = overflawable_offset;
-    invalid_offset_for_apply_offset.is_forward = DT_FALSE;
-    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp_negative, &invalid_offset_for_apply_offset, &ts_02), DT_OK);
+    //backward case
+    dt_timestamp_t maximum_overflowable_backward_timestamp = {LONG_MAX - 1, 0};
+    dt_timestamp_t minimum_overflowable_backward_timestamp = {LONG_MIN, 0};
+    dt_timestamp_t maximum_overflowable_backward_timestamp_for_max_nanoseconds = {LONG_MAX - 1 - 1, 0};
+    dt_timestamp_t minimum_overflowable_backward_timestamp_for_max_nanoseconds = {LONG_MIN + 1 , 0};
+    dt_offset_t maximum_offset_backward = {{ULONG_MAX, 0}, DT_FALSE};
+    dt_offset_t minimum_offset_backward = {{1, 0}, DT_FALSE};
+    dt_offset_t maximum_offset_backward_max_nanoseconds = {{ULONG_MAX, MAX_NANOSECONDS}, DT_FALSE};
+    dt_offset_t minimum_offset_backward_max_nanoseconds = {{1, MAX_NANOSECONDS}, DT_FALSE};
+
+    EXPECT_EQ(dt_apply_offset(&maximum_overflowable_backward_timestamp, &maximum_offset_backward, &ts_02), DT_OVERFLOW);
+    EXPECT_EQ(dt_apply_offset(&minimum_overflowable_backward_timestamp, &minimum_offset_backward, &ts_02), DT_OVERFLOW);
+
+    EXPECT_EQ(dt_apply_offset(&maximum_overflowable_backward_timestamp_for_max_nanoseconds,
+                              &maximum_offset_backward_max_nanoseconds, &ts_02), DT_OVERFLOW);
+    EXPECT_EQ(dt_apply_offset(&minimum_overflowable_backward_timestamp_for_max_nanoseconds,
+                              &minimum_offset_backward_max_nanoseconds, &ts_02), DT_OVERFLOW);
+
+
+
 
 }
 
