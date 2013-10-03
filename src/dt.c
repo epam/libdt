@@ -205,13 +205,13 @@ static dt_status_t dt_apply_offset_forward(const dt_timestamp_t *lhs, const dt_o
 static dt_status_t dt_apply_offset_backward(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result)
 {
     if (lhs->nano_second >= rhs->duration.nano_seconds) {
-        if (lhs->second > 0 && rhs->duration.seconds > LONG_MAX - lhs->second) {
+        if (lhs->second > 0 && rhs->duration.seconds > (unsigned long)(LONG_MAX - lhs->second)) {
             return DT_OVERFLOW;
         }
         result->nano_second = lhs->nano_second - rhs->duration.nano_seconds;
         result->second = lhs->second - rhs->duration.seconds;
     } else {
-        if (lhs->second > LONG_MAX - 1 || (lhs->second > 0 && rhs->duration.seconds > LONG_MAX - lhs->second - 1)) {
+        if (lhs->second > LONG_MAX - 1 || (lhs->second > 0 && rhs->duration.seconds > (unsigned long)(LONG_MAX - lhs->second - 1))) {
             return DT_OVERFLOW;
         }
         result->nano_second = rhs->duration.nano_seconds - lhs->nano_second;
@@ -351,9 +351,14 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
 
     v = (double) lhs->seconds + (double) lhs->nano_seconds / 1000000000.0;
     rv = v * rhs;
+#if defined(__CYGWIN__) || defined(WIN32)
+    if (!_finite(rv)) {
+#else
     if (!isfinite(rv)) {
+#endif
         return DT_OVERFLOW;
     }
+
 
     result->seconds = (unsigned long)floor(rv);
     if (result->seconds == 0 && v != 0 && rhs != 0) {

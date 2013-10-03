@@ -153,7 +153,6 @@ TEST_F(DtCase, offset_between)
     EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &ts_01, NULL), DT_OK);
     EXPECT_EQ(dt_init_representation(2012, 12, 22, 8, 30, 45, 123456889L, &r), DT_OK);
     EXPECT_EQ(dt_representation_to_timestamp(&r, &tz_moscow, &ts_02, NULL), DT_OK);
-    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
 
     //invalid arguments
     EXPECT_EQ(dt_offset_between(NULL, &ts_02, &o), DT_INVALID_ARGUMENT);
@@ -188,6 +187,8 @@ TEST_F(DtCase, offset_between)
     EXPECT_EQ(o.is_forward, DT_FALSE);
     EXPECT_EQ(o.duration.seconds, DT_SECONDS_PER_DAY - 1);
     EXPECT_EQ(o.duration.nano_seconds, 876543311L);
+
+    EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
 
 
 }
@@ -374,9 +375,9 @@ TEST_F(DtCase, init_interval)
     EXPECT_EQ(i.seconds, 2);
     EXPECT_EQ(i.nano_seconds, 100500L);
 
-    EXPECT_EQ(dt_init_interval(std::numeric_limits<unsigned long>::max(), std::numeric_limits<unsigned long>::max(), &i), DT_OVERFLOW);
-    EXPECT_EQ(dt_init_interval(std::numeric_limits<unsigned long>::max(), MAX_NANOSECONDS + 1 , &i), DT_OVERFLOW);
-    EXPECT_EQ(dt_init_interval(std::numeric_limits<unsigned long>::max(), 123UL, &i), DT_OK);
+    EXPECT_EQ(dt_init_interval(ULONG_MAX, ULONG_MAX, &i), DT_OVERFLOW);
+    EXPECT_EQ(dt_init_interval(ULONG_MAX, MAX_NANOSECONDS + 1 , &i), DT_OVERFLOW);
+    EXPECT_EQ(dt_init_interval(ULONG_MAX, 123UL, &i), DT_OK);
 }
 
 TEST_F(DtCase, compare_interval)
@@ -463,7 +464,7 @@ TEST_F(DtCase, miltiply_interval)
     dt_interval_t dt_mul_overflawable_interval = overflowable_interval;
     dt_mul_overflawable_interval.seconds = invalid_interval.seconds;
 
-    EXPECT_EQ(dt_mul_interval(&i, std::numeric_limits<double>::max(), &ri), DT_OK);
+    EXPECT_EQ(dt_mul_interval(&i, DBL_MAX, &ri), DT_OK);
     EXPECT_EQ(ri.seconds, 0);
     EXPECT_EQ(ri.nano_seconds, 0);
 
@@ -474,7 +475,7 @@ TEST_F(DtCase, miltiply_interval)
     EXPECT_EQ(dt_mul_interval(NULL, 2.5, &ri), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_mul_interval(&i, 2.5, NULL), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_mul_interval(&invalid_interval, 2.5, &ri), DT_INVALID_ARGUMENT);
-    EXPECT_EQ(dt_mul_interval(&i, std::numeric_limits<double>::max(), &ri), DT_OVERFLOW);
+    EXPECT_EQ(dt_mul_interval(&i, DBL_MAX, &ri), DT_OVERFLOW);
 
     EXPECT_EQ(dt_mul_interval(&overflowable_interval, MAX_NANOSECONDS, &ri), DT_OVERFLOW);
 
