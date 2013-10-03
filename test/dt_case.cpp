@@ -203,25 +203,28 @@ TEST_F(DtCase, validate_offset)
 }
 TEST_F(DtCase, apply_offset_overflow)
 {
-    dt_timestamp_t ts_01 = {1, 1};
-    dt_timestamp_t ts_02 = {1, 1};
+    dt_timestamp_t result = {1L, 1UL};
 
 
-    dt_offset_t invalid_offset_for_apply_offset = {overflowable_interval, DT_TRUE};
+    //forward case
+    dt_timestamp_t maximum_overflowable_forward_timestamp = {LONG_MAX , 0};
+    dt_timestamp_t minimum_overflowable_forward_timestamp = {LONG_MIN + 1, 0};
+    dt_timestamp_t maximum_overflowable_forward_timestamp_for_max_nanoseconds = {LONG_MAX - 1, MAX_NANOSECONDS};
+    dt_timestamp_t minimum_overflowable_forward_timestamp_for_max_nanoseconds = {LONG_MIN + 1 + 1, MAX_NANOSECONDS};
+    dt_offset_t maximum_offset_forward = {{ULONG_MAX, 0}, DT_TRUE};
+    dt_offset_t maximum_offset_forward_max_nanoseconds = {{ULONG_MAX, MAX_NANOSECONDS}, DT_TRUE};
 
-    //positive forward case
-    invalid_offset_for_apply_offset.is_forward = DT_TRUE;
-    EXPECT_EQ(dt_apply_offset(&ts_01, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
-    invalid_offset_for_apply_offset = overflawable_offset;
-    invalid_offset_for_apply_offset.duration.seconds--;
-    invalid_offset_for_apply_offset.is_forward = DT_TRUE;
-    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp, &invalid_offset_for_apply_offset, &ts_02), DT_OVERFLOW);
+    memset(&result, 0, sizeof(result));
+    EXPECT_EQ(dt_apply_offset(&maximum_overflowable_forward_timestamp, &maximum_offset_forward, &result), DT_OVERFLOW);
+    memset(&result, 0, sizeof(result));
+    EXPECT_EQ(dt_apply_offset(&minimum_overflowable_forward_timestamp, &maximum_offset_forward, &result), DT_OVERFLOW);
 
-    //negative forward case
-    invalid_offset_for_apply_offset = overflawable_offset;
-    invalid_offset_for_apply_offset.is_forward = DT_TRUE;
-    invalid_offset_for_apply_offset.duration.seconds--;
-    EXPECT_EQ(dt_apply_offset(&overflowable_timestamp_negative, &invalid_offset_for_apply_offset, &ts_02), DT_OK);
+    memset(&result, 0, sizeof(result));
+    EXPECT_EQ(dt_apply_offset(&maximum_overflowable_forward_timestamp_for_max_nanoseconds,
+                              &maximum_offset_forward_max_nanoseconds, &result), DT_OVERFLOW);
+    memset(&result, 0, sizeof(result));
+    EXPECT_EQ(dt_apply_offset(&minimum_overflowable_forward_timestamp_for_max_nanoseconds,
+                              &maximum_offset_forward_max_nanoseconds, &result), DT_OVERFLOW);
 
     //backward case
     dt_timestamp_t maximum_overflowable_backward_timestamp = {LONG_MAX - 1, 0};
@@ -233,13 +236,17 @@ TEST_F(DtCase, apply_offset_overflow)
     dt_offset_t maximum_offset_backward_max_nanoseconds = {{ULONG_MAX, MAX_NANOSECONDS}, DT_FALSE};
     dt_offset_t minimum_offset_backward_max_nanoseconds = {{1, MAX_NANOSECONDS}, DT_FALSE};
 
-    EXPECT_EQ(dt_apply_offset(&maximum_overflowable_backward_timestamp, &maximum_offset_backward, &ts_02), DT_OVERFLOW);
-    EXPECT_EQ(dt_apply_offset(&minimum_overflowable_backward_timestamp, &minimum_offset_backward, &ts_02), DT_OVERFLOW);
+    memset(&result, 0, sizeof(result));
+    EXPECT_EQ(dt_apply_offset(&maximum_overflowable_backward_timestamp, &maximum_offset_backward, &result), DT_OVERFLOW);
+    memset(&result, 0, sizeof(result));
+    EXPECT_EQ(dt_apply_offset(&minimum_overflowable_backward_timestamp, &minimum_offset_backward, &result), DT_OVERFLOW);
 
+    memset(&result, 0, sizeof(result));
     EXPECT_EQ(dt_apply_offset(&maximum_overflowable_backward_timestamp_for_max_nanoseconds,
-                              &maximum_offset_backward_max_nanoseconds, &ts_02), DT_OVERFLOW);
+                              &maximum_offset_backward_max_nanoseconds, &result), DT_OVERFLOW);
+    memset(&result, 0, sizeof(result));
     EXPECT_EQ(dt_apply_offset(&minimum_overflowable_backward_timestamp_for_max_nanoseconds,
-                              &minimum_offset_backward_max_nanoseconds, &ts_02), DT_OVERFLOW);
+                              &minimum_offset_backward_max_nanoseconds, &result), DT_OVERFLOW);
 
 
 

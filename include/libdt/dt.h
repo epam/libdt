@@ -24,7 +24,7 @@ extern "C" {
 
     //! Checks for leap year
     /*!
-     * \param year Year to check (Non-positive years rre always not leap)
+     * \param year Year to check (Non-positive years are always not leap)
      * \return Check result
      */
     dt_bool_t dt_is_leap_year(int year);
@@ -122,7 +122,7 @@ extern "C" {
     dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result);
 
     /*! Validates interval
-     * \param test interval to validation
+     * \param test Interval to validate
      * \return DT_FALSE if test is NULL or test is not valid, otherwise DT_TRUE
     */
     dt_bool_t dt_validate_interval(const dt_interval_t *test);
