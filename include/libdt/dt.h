@@ -24,7 +24,7 @@ extern "C" {
 
     //! Checks for leap year
     /*!
-     * \param year Year to check
+     * \param year Year to check (Non-positive years are always not leap)
      * \return Check result
      */
     dt_bool_t dt_is_leap_year(int year);
@@ -44,6 +44,7 @@ extern "C" {
      * \return Validation result
      */
     //TODO: Leap seconds support!
+    //TODO: Refactor it like validate_timestamp or validate_interval
     dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
                                          unsigned long nano_second);
 
@@ -53,6 +54,14 @@ extern "C" {
      * \defgroup Timestamp Timestamp functions
      * @{
      */
+
+
+    /*!
+     * \brief dt_validate_timestamp Validates timestamp
+     * \param timestamp timestamp to validation
+     * \return DT_TRUE if timestamp is valid, otherwise DT_FALSE
+     */
+    dt_bool_t dt_validate_timestamp(const dt_timestamp_t *timestamp);
 
     //! Returns a current timestamp
     /*!
@@ -70,7 +79,7 @@ extern "C" {
      */
     dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_result_t *result);
 
-    //! Returns an offset between timestamps
+    //! Obtains an offset between timestamps
     /*!
      * \param lhs First timestamp
      * \param rhs Second timestamp
@@ -78,6 +87,13 @@ extern "C" {
      * \return Result status of the operation
      */
     dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result);
+
+    /*!
+     * \brief dt_validate_offset Validates offset
+     * \param offset offset to validating
+     * \return DT_TRUE if offset is valid, otherwise DT_FALSE
+     */
+    dt_bool_t dt_validate_offset(const dt_offset_t *offset);
 
     //! Applies offset on the timestamp
     /*!
@@ -103,7 +119,13 @@ extern "C" {
      * \param result interval to initialize [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_init_interval(long seconds, unsigned long nano_seconds, dt_interval_t *result);
+    dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result);
+
+    /*! Validates interval
+     * \param test Interval to validate
+     * \return DT_FALSE if test is NULL or test is not valid, otherwise DT_TRUE
+    */
+    dt_bool_t dt_validate_interval(const dt_interval_t *test);
 
     //! Compares two intervals
     /*!

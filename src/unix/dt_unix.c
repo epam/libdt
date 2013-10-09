@@ -40,16 +40,6 @@ dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, d
     return DT_OK;
 }
 
-dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
-{
-    if (!timestamp || !time || timestamp->second < 0) {
-        return DT_INVALID_ARGUMENT;
-    }
-
-    *time = timestamp->second;
-    *nano_second = timestamp->nano_second;
-    return DT_OK;
-}
 
 dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *tz, dt_representation_t *representation)
 {
