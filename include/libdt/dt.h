@@ -188,7 +188,7 @@ extern "C" {
                                        dt_representation_t *result);
 
     //! Lookups timezone object for future usage in corresponding api.
-    //! If function succesed timezone object must be freed with dt_timezone_cleanup function
+    //! Timezone object must be freed with dt_timezone_cleanup() function on successful operation 
     /*!
      * \param timezone_name name of timezone for lookup, it can be in olsen database format, or in windows standard time format
      * \param timezone [IN/OUT]pointer to timezone object
