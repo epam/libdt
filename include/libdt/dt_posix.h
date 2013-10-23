@@ -8,7 +8,6 @@
  *
  * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
  * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
- * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
 
 #include <time.h>
@@ -46,8 +45,7 @@ extern "C" {
 #define strptime libdt_strptime
     /*!
      * \brief libdt_strptime Converts string to representation. See man strptime.
-     * Because strptime there is not implemented in windows standard library, we provide there
-     * our implementation
+     * We provide this function because WinAPI does not have one
      * @attention Please pay attention - this function is provided only for win32 platform, in other platforms it must be a part of libc
      * \param buf string to convert
      * \param fmt format which define how to convert buf to tm

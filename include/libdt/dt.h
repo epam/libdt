@@ -197,8 +197,7 @@ extern "C" {
      */
     dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezone);
 
-    //! Free resources connected with timezone object
-    //! @note memory allocated for dt_timezone_t objec won't be free
+    //! Frees resources connected with timezone object
     /*!
      * \param timezone pointer to timezone object
      * \return Result status of the operation

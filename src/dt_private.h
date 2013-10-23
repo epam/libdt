@@ -7,7 +7,6 @@
  *
  * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
  * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
- * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
  */
 
 #include <libdt/dt.h>
