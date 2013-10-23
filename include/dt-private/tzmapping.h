@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
     //! Creates tz_aliases_t collection, by given timezone name
-    //! If function was successed, created instance of collection must be freed with tzmap_free
+    //! You must manually free aliases after usage by tzmap_free() if this function has been called successfully 
     /*!
      * @param tz_name name of time zone for maping
      * @param aliases pointer to store result of function
