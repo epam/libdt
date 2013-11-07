@@ -1,7 +1,9 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #include <stdlib.h>
-#include <dt-private/tzmapping.h>
-#include <timezones_map.h>
 #include <string.h>
+#include "tzmapping.h"
+#include "timezones_map.h"
 
 struct tz_alias_iterator {
     tz_alias_t node;
@@ -40,22 +42,20 @@ static tz_alias_iterator_t **insert_alias(tz_aliases_t *aliases, tz_alias_t *ali
 static tz_alias_iterator_t **insert_mapping(tz_aliases_t *aliases, tz_alias_iterator_t **insertPosition, struct tz_unicode_mapping *tz)
 {
     tz_alias_t alias = {0,};
-    alias.kind = TZMAP_UNKNOWN;
-
-
+    alias.kind = DT_TZMAP_UNKNOWN;
 
     alias.name = (const char *)tz->other;
-    alias.kind = TZMAP_WIN_STANDARD_TIME;
+    alias.kind = DT_TZMAP_WIN_STANDARD_TIME;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
     alias.name = (const char *)tz->type;
-    alias.kind = TZMAP_OLSEN_NAME;
+    alias.kind = DT_TZMAP_OLSEN_NAME;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
     alias.name = (const char *)tz->territory;
-    alias.kind = TZMAP_ABBREVIATION;
+    alias.kind = DT_TZMAP_ABBREVIATION;
 
     insertPosition = insert_alias(aliases, &alias, insertPosition);
 
@@ -112,7 +112,7 @@ dt_status_t tzmap_map(const char *tz_name, tz_aliases_t **aliases)
     insertPosition = add_mapping_to_aliases(tz_name, list, insertPosition);
     while (size != mapping_size(list)) {
         while (tzmap_iterate(list, &it, &alias) == DT_OK) {
-            if (alias->kind == TZMAP_ABBREVIATION) {
+            if (alias->kind == DT_TZMAP_ABBREVIATION) {
                 continue;
             }
             if (strcmp(alias->name, tz_name) == 0) {

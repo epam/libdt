@@ -1,3 +1,5 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #ifndef _DT_TYPES_H
 #define _DT_TYPES_H
 
@@ -16,11 +18,8 @@ typedef enum {
     DT_INVALID_ARGUMENT,                    //!< Invalid argument
     DT_TIMEZONE_NOT_FOUND,                  //!< Timezone not found
     DT_SYSTEM_CALL_ERROR,                   //!< System call error
-    DT_MALLOC_ERROR,                        //!< Memory allocate error
-    DT_TOO_SMALL_BUFFER,                    //!< Too small buffer has been provided to function
-    DT_CONVERT_ERROR,                       //!< Convertations errors
     DT_NO_MORE_ITEMS,                       //!< No more items for enumeration available
-    DT_OVERFLOW,                            //!< Operation caused overflow
+    DT_OVERFLOW,                            //!< Operation caused an overflow
     DT_UNKNOWN_ERROR                        //!< Unknown error
 } dt_status_t;
 
@@ -34,8 +33,7 @@ typedef enum {
 typedef enum {
     DT_LESSER = -1,
     DT_EQUALS = 0,
-    DT_GREATER = 1,
-    DT_COMPARSION_FAIL
+    DT_GREATER = 1
 } dt_compare_result_t;
 
 #define DT_SECONDS_PER_DAY 86400

@@ -1,3 +1,5 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #ifndef DT_CONVERT_H
 #define DT_CONVERT_H
 
@@ -52,11 +54,12 @@ extern "C" {
      */
     dt_status_t dt_timespec_to_interval(const struct timespec *ts, dt_interval_t *result);
 
-    //! Converts a localized representation to POSIX breakdown time structure. Nano seconds will be losted!
+    //! Converts a localized representation to POSIX breakdown time structure. Nano seconds will be lost!
     /*!
      * \param representation Representation object
      * \param tm POSIX breakdown time structure for the representation [OUT]
      * \return Result status of the operation
+     * \note This method does not validate representaion so invalid POSIX breakdown time structure could be returned
      */
     dt_status_t dt_representation_to_tm(const dt_representation_t *representation, struct tm *tm);
 
@@ -66,6 +69,7 @@ extern "C" {
      * \param nano_second Nano-second part of the representation
      * \param representation Representation of POSIX breakdown time structure [OUT]
      * \return Result status of the operation
+     * \note Invalid representation could be returned if an invalid POSIX breakdown time structure has been provided
      */
     dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_representation_t *representation);
 
