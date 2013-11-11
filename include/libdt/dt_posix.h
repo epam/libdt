@@ -1,3 +1,5 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #ifndef _DT_POSIX_H
 #define _DT_POSIX_H
 
@@ -11,15 +13,15 @@
  */
 
 #include <time.h>
-#define DT_POSIX_WRONG_TIME -1//! < When you use standard library you this time stamp is reserved for reporting errors purposes
 
+#define DT_INVALID_POSIX_TIME -1    //!< Libc use this value to indicate an error
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
     /*!
-     * \defgroup STDExtendFunctons Functions, which is extending STD ANSI C Library
+     * \defgroup STDExtendFunctons Functions, which are extending STD ANSI C Library
      * @{
      */
 
@@ -36,7 +38,7 @@ extern "C" {
     /*!
      * @param tm - tm instance which will be used to make timestamp
      * @param tz_name - name of time zone. Must be in format \<Area\>/\<Place\>, such as Europe/Moscow or Asia/Oral, or in Windows standard time format.
-     * @return converted time returned or DT_POSIX_WRONG_TIME in error case.
+     * @return converted time returned or DT_INVALID_POSIX_TIME in error case.
      */
     time_t mktime_tz(const struct tm *tm, const char *tz_name);
 

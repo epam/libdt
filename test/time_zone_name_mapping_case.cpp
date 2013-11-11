@@ -1,5 +1,7 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #include "time_zone_name_mapping_case.h"
-#include <dt-private/tzmapping.h>
+#include "../src/tzmapping.h"
 #include <libdt/dt_types.h>
 #include <set>
 #include <vector>
@@ -61,27 +63,27 @@ void testMappingWithHawaianData(const char *tzName)
         EXPECT_TRUE(alias != NULL);
         bool finded = false;
         switch (alias->kind) {
-            case TZMAP_OLSEN_NAME:
+            case DT_TZMAP_OLSEN_NAME:
                 it = setOlsenForHawaian.find(alias->name);
                 if (it != setOlsenForHawaian.end()) {
                     setOlsenForHawaian.erase(it);
                     finded = true;
                 }
                 break;
-            case TZMAP_WIN_STANDARD_TIME:
+            case DT_TZMAP_WIN_STANDARD_TIME:
                 if (std::string(alias->name) == std::string(windowsStandardTimeHawaianName)) {
                     finded = true;
                     visitedWindowsStandardTimeAlias = true;
                 }
                 break;
-            case TZMAP_ABBREVIATION:
+            case DT_TZMAP_ABBREVIATION:
                 it = setAbbrForHawaian.find(alias->name);
                 if (it != setAbbrForHawaian.end()) {
                     setAbbrForHawaian.erase(it);
                     finded = true;
                 }
                 break;
-            case TZMAP_UNKNOWN:
+            case DT_TZMAP_UNKNOWN:
             default:
                 break;
         }

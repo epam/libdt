@@ -1,3 +1,5 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #ifndef _DT_H
 #define _DT_H
 
@@ -7,12 +9,14 @@
  *
  * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
  * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
- * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
+ *
+ * License: TODO: To be clarified!
  */
 
 #include <time.h>
 #include <libdt/dt_types.h>
 #include <libdt/dt_convert.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,22 +35,6 @@ extern "C" {
 
     //! Returns string represenatation of the datetime error code
     const char *dt_strerror(dt_status_t status);
-
-    //! Validates a date/time representation values set
-    /*!
-     * \param year Year
-     * \param month Month
-     * \param day Day
-     * \param hour Hour
-     * \param minute Minute
-     * \param second Second
-     * \param nano_second Nano-second
-     * \return Validation result
-     */
-    //TODO: Leap seconds support!
-    //TODO: Refactor it like validate_timestamp or validate_interval
-    dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
-                                         unsigned long nano_second);
 
     /*! @}*/
 
@@ -171,6 +159,14 @@ extern "C" {
      * @{
      */
 
+    //! Validates a date/time representation
+    /*!
+     * \param representation Representation to validate
+     * \return DT_TRUE if representation is valid, otherwise DT_FALSE
+     * TODO: Leap seconds support!
+     */
+    dt_bool_t dt_validate_representation(const dt_representation_t *representation);
+
     //! Initializes representetion with error checking
     /*!
      * \param year Year
@@ -188,7 +184,7 @@ extern "C" {
                                        dt_representation_t *result);
 
     //! Lookups timezone object for future usage in corresponding api.
-    //! Timezone object must be freed with dt_timezone_cleanup() function on successful operation 
+    //! Timezone object must be freed with dt_timezone_cleanup() function on successful operation
     /*!
      * \param timezone_name name of timezone for lookup, it can be in olsen database format, or in windows standard time format
      * \param timezone [IN/OUT]pointer to timezone object
