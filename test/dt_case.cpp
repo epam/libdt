@@ -875,8 +875,6 @@ TEST_F(DtCase, from_string)
     const char *dateTimeFormat2 = "%d/%m/%Y %H:%M:%S.%f";
     const char *dateTime3 = "11/09/2001 16:54:12.123";
     const char *dateTimeFormat3 = "%d/%m/%Y %H:%M:%S.%f";
-    const char *dateTime4 = "11/09/2001 16:54:12.123456789";
-    const char *dateTimeFormat4 = "%d/%m/%Y %H:%M:%S.%3f456789";
     const char *dateTime5 = "123 11/09/2001 16:54:12";
     const char *dateTimeFormat5 = "%6f %d/%m/%Y %H:%M:%S";
     const char *dateTime6 = "123 11/09/2001 456 16:54:12 789";
