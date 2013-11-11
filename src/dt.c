@@ -733,10 +733,23 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
         return DT_OVERFLOW;
     }
 
-    while (fmt_start_pos < fmt_len) {
-        // Checking for expired input
-        if (*str_ptr == '\0') {
-            return DT_INVALID_ARGUMENT;
+    while (1) {
+
+        if (fmt_start_pos < fmt_len) {
+            // There is some data in format string
+            if (*str_ptr == '\0') {
+                // No data to parse
+                return DT_INVALID_ARGUMENT;
+            }
+        } else {
+            // Format string has been expired
+            if (*str_ptr != '\0') {
+                // There is some extra data to parse
+                return DT_INVALID_ARGUMENT;
+            } else {
+                // No data to parse
+                break;
+            }
         }
 
         // Searching for fractional format placeholder
@@ -748,6 +761,10 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
             str_ptr = strptime(str_ptr, fmt + fmt_start_pos, &tm);   // FIXME: Warning on UNIX platform!
             if (str_ptr == NULL) {
                 // Parsing error occured
+                return DT_INVALID_ARGUMENT;
+            }
+            if (*str_ptr != '\0') {
+                // There is some extra data to parse
                 return DT_INVALID_ARGUMENT;
             }
             break;

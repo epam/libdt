@@ -880,6 +880,7 @@ TEST_F(DtCase, from_string)
     const char *dateTime6 = "123 11/09/2001 456 16:54:12 789";
     const char *dateTimeFormat6 = "%6f %d/%m/%Y %f %H:%M:%S %f";
 
+    const char *invalidTimeOnly = "08:31a";
     const char *invalidFractionalOnly = "123";
     const char *invalidDateTime1 = "11/09/2001 16:pp:12";
     const char *invalidDateTime2 = "11/09/2001 16:54:";
@@ -887,6 +888,7 @@ TEST_F(DtCase, from_string)
     const char *invalidDateTime4 = "11/09/2001 16:54:12.a";
     const char *invalidDateTime5 = "123 11/aa/2001 456 16:54:12 789";
     const char *invalidDateTime6 = "123 11/09/2001 456 16:54:12 abc";
+    const char *invalidDateTime7 = "123 11/09/2001 456 16:54:12 789a";
 
     dt_representation_t tr = {0,};
 
@@ -895,6 +897,7 @@ TEST_F(DtCase, from_string)
     EXPECT_EQ(dt_from_string(timeOnly, timeOnlyFormat, NULL), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_from_string(timeOnly, overflowableFormat, &tr), DT_OVERFLOW);
 
+    EXPECT_EQ(dt_from_string(invalidTimeOnly, timeOnlyFormat, &tr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_from_string(invalidFractionalOnly, fractionalOnlyFormat, &tr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_from_string(invalidDateTime1, dateTimeFormat1, &tr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_from_string(invalidDateTime2, dateTimeFormat1, &tr), DT_INVALID_ARGUMENT);
@@ -902,6 +905,7 @@ TEST_F(DtCase, from_string)
     EXPECT_EQ(dt_from_string(invalidDateTime4, dateTimeFormat2, &tr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_from_string(invalidDateTime5, dateTimeFormat6, &tr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_from_string(invalidDateTime6, dateTimeFormat6, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime7, dateTimeFormat6, &tr), DT_INVALID_ARGUMENT);
 
     EXPECT_EQ(dt_from_string(timeOnly, timeOnlyFormat, &tr), DT_OK);
     EXPECT_EQ(tr.hour, 8);
