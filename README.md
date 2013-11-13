@@ -59,8 +59,8 @@ operate with date and time.
 
 	$ sudo apt-get install mingw-w64 g++-mingw-w64
         $ mkdir build && cd build
-	$ cmake -DCMAKE_TOOLCHAIN_FILE=../Toolchain-mingw32-x86_64.cmake ../	# For 64-bit build
-	$ cmake -DCMAKE_TOOLCHAIN_FILE=../Toolchain-mingw32-i686.cmake ../	# For 32-bit build
+	$ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32-x86_64.cmake ../	# For 64-bit build
+	$ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32-i686.cmake ../	# For 32-bit build
 	$ make
 
 ## Example of use
