@@ -1,3 +1,5 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #include <stdio.h>  /* for stdout, stderr, perror */
 #include <time.h>   /* for struct tm */
 #include <stdlib.h> /* for exit, malloc, atoi */
@@ -6,7 +8,7 @@
 
 #include <libdt/dt.h>
 #include <libdt/dt_posix.h>
-#include "../dt_private.h"
+#include "../tzmapping.h"
 
 // WinAPI
 #include <windows.h>
@@ -15,7 +17,7 @@
 #include <winnt.h>
 
 
-//Registry timezones database path
+// Registry timezones database path
 static const char REG_TIME_ZONES[] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\";
 static const char DYNAMIC_DST[] = "Dynamic DST";
 static const DWORD YEAR_WRONG_VALUE = 0xFFFFFFFF; // any way wrong value for a year
@@ -232,19 +234,23 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
     }
 
     if (UnixTimeToSystemTime(&time, &tUniversalTime)) {
-        return DT_CONVERT_ERROR;
+        //return DT_CONVERT_ERROR;
+        return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
     if (timezone != NULL && (GetTimeZoneInformationForYearLower(tUniversalTime.wYear, timezone->dtzi, &tzi) == FALSE)) {
-        return DT_CONVERT_ERROR;
+        //return DT_CONVERT_ERROR;
+        return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
     if (SystemTimeToTzSpecificLocalTime(&tzi, &tUniversalTime, &tLocalTime) == FALSE) {
-        return DT_CONVERT_ERROR;
+        //return DT_CONVERT_ERROR;
+        return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
     if (TmFromSystemTime(&tLocalTime, &result) != EXIT_SUCCESS) {
-        return DT_CONVERT_ERROR;
+        //return DT_CONVERT_ERROR;
+        return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
     status = dt_tm_to_representation(&result, nano, representation);
@@ -287,7 +293,8 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
     }
 
     if (SystemTimeFromTm(&tLocalTime, &tm) != EXIT_SUCCESS) {
-        return DT_CONVERT_ERROR;
+        //return DT_CONVERT_ERROR;
+        return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
     if (timezone != NULL && (GetTimeZoneInformationForYearLower(tLocalTime.wYear, timezone->dtzi, &tzi) == FALSE)) {
@@ -296,11 +303,13 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
 
 
     if (TzSpecificLocalTimeToSystemTime((LPTIME_ZONE_INFORMATION)&tzi, (LPSYSTEMTIME)&tLocalTime, (LPSYSTEMTIME)&tUniversalTime) == FALSE) {
-        return DT_CONVERT_ERROR;
+        //return DT_CONVERT_ERROR;
+        return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
     if (SystemTimeToUnixTime(&tUniversalTime, &time) != EXIT_SUCCESS) {
-        return DT_CONVERT_ERROR;
+        //return DT_CONVERT_ERROR;
+        return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
     status = dt_posix_time_to_timestamp(time, nano, first_timestamp);
@@ -538,8 +547,6 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
         return TRUE;
     }
 
-
-
     dwEnumIndex = 0;
 
     for (dwErrorCode = ERROR_SUCCESS; dwErrorCode != ERROR_NO_MORE_ITEMS ||
@@ -565,8 +572,6 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
         *findedYear = YEAR_WRONG_VALUE;
         return FALSE;
     }
-
-
 
     qsort_s(yearsArray.years, yearsArray.size, sizeof(DWORD), years_compare, NULL);
 
@@ -676,56 +681,6 @@ GetTimeZoneInformationForYearLower_cleanup:
     return returnStatus;
 }
 
-
-
-dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
-                         char *str_buffer, size_t str_buffer_size)
-{
-    size_t size = 0;
-    struct tm tm = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    if (!representation || !fmt || !str_buffer || str_buffer_size == 0) {
-        return DT_INVALID_ARGUMENT;
-    }
-
-    status = dt_representation_to_tm(representation, &tm);
-
-    size = strftime(str_buffer, str_buffer_size, fmt, &tm);
-    if (size > 0) {
-        return DT_OK;
-    }
-
-    return status;
-}
-
-dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation)
-{
-    char *result = NULL;
-    struct tm tm = {0};
-    dt_status_t status = DT_UNKNOWN_ERROR;
-
-    if (!representation || !str || !fmt) {
-        return DT_INVALID_ARGUMENT;
-    }
-
-    result = libdt_strptime(str, fmt, &tm);
-    if (result == NULL) {
-        return status;
-    }
-    if (*result != '\0') { // end of string
-        return status;
-    }
-
-    status = dt_tm_to_representation_withoutcheck(&tm, 0, representation);
-    if (status != DT_OK) {
-        return status;
-    }
-
-    return DT_OK;
-
-}
-
 dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezone)
 {
     dt_status_t status = DT_UNKNOWN_ERROR;
@@ -743,7 +698,7 @@ dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezon
     }
 
     while ((status = tzmap_iterate(aliases, &it, &alias)) == DT_OK) {
-        if (alias->kind == PREFFERED_TZMAP_TYPE) {
+        if (alias->kind == DT_PREFFERED_TZMAP_TYPE) {
             native_tz_name = alias->name;
             break;
         }

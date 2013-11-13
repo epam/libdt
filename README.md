@@ -48,6 +48,21 @@ operate with date and time.
         $ make
         $ sudo make install
 
+### Making a debug build and running tests
+
+        $ mkdir build && cd build
+	$ cmake enable_testing -DCMAKE_BUILD_TYPE=Debug ../
+	$ make
+	$ make test
+
+### Making a win32 build on Linux
+
+	$ sudo apt-get install mingw-w64 g++-mingw-w64
+        $ mkdir build && cd build
+	$ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32-x86_64.cmake ../	# For 64-bit build
+	$ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32-i686.cmake ../	# For 32-bit build
+	$ make
+
 ## Example of use
 
 Suppose following code example to be in libdt_example.c file:
@@ -77,7 +92,7 @@ Suppose following code example to be in libdt_example.c file:
                         return 1;
                 }
                 char buf[255];
-                s = dt_to_string(&rp, "%Y-%m-%d %H:%M:%S", buf, sizeof(buf)); // Representation to string conversion
+                s = dt_to_string(&rp, "%Y-%m-%d %H:%M:%S.%f", buf, sizeof(buf)); // Representation to string conversion
                 if (s != DT_OK) {
                         dt_timezone_cleanup(&tz);
                         perror(dt_strerror(s));
@@ -92,12 +107,13 @@ So a compilation command and an output will be:
 
         $ gcc -o libdt_example libdt_example.c -ldt
         $ ./libdt_example
-        2013-10-09 15:54:10
+        2013-10-09 15:54:10.543765895
 
 ## TODO list
 
 * Fractional seconds part support in string conversion functions;
 * Interval initialization from double seconds value;
+* Timezone names mapping API redesign. Timezone lookup without new/delete operators usage;
 
 ## License
 

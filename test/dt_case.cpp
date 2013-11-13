@@ -1,3 +1,5 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #include "dt_case.h"
 #include "libdt/dt.h"
 #include <time.h>
@@ -62,6 +64,8 @@ DtCase::DtCase() :
 
 TEST_F(DtCase, is_leap)
 {
+    EXPECT_EQ(dt_is_leap_year(1579), DT_FALSE);
+    EXPECT_EQ(dt_is_leap_year(1580), DT_TRUE);
     EXPECT_EQ(dt_is_leap_year(0), DT_FALSE);
     EXPECT_EQ(dt_is_leap_year(-1), DT_FALSE);
     EXPECT_NE(dt_is_leap_year(2013), DT_TRUE);
@@ -76,32 +80,95 @@ TEST_F(DtCase, strerror)
     static const char *invalid_argument_error_message = "Invalid argument";
     static const char *timezone_not_found_error_message = "Timezone not found";
     static const char *system_call_error_message = "System call error";
+    static const char *no_more_items_error_message = "No more items in collection";
+    static const char *overflow_error_message = "Operation caused owerflow";
     static const char *unknown_error_message = "Unknown error";
     static const char *invalid_status_error_message = "<Invalid result status>";
+
     EXPECT_EQ(strcmp(dt_strerror(DT_OK), no_error_message), 0);
     EXPECT_EQ(strcmp(dt_strerror(DT_INVALID_ARGUMENT), invalid_argument_error_message), 0);
     EXPECT_EQ(strcmp(dt_strerror(DT_TIMEZONE_NOT_FOUND), timezone_not_found_error_message), 0);
     EXPECT_EQ(strcmp(dt_strerror(DT_SYSTEM_CALL_ERROR), system_call_error_message), 0);
+    EXPECT_EQ(strcmp(dt_strerror(DT_NO_MORE_ITEMS), no_more_items_error_message), 0);
+    EXPECT_EQ(strcmp(dt_strerror(DT_OVERFLOW), overflow_error_message), 0);
     EXPECT_EQ(strcmp(dt_strerror(DT_UNKNOWN_ERROR), unknown_error_message), 0);
     EXPECT_EQ(strcmp(dt_strerror((dt_status_t) 250), invalid_status_error_message), 0);
 }
 
 TEST_F(DtCase, validate_representation)
 {
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 8, 30, 45, 123456789), DT_TRUE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 8, 30, 45, -1), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 8, 30, 45, 1000000000), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 8, 30, -1, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 8, 30, 60, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 8, -1, 45, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 8, 60, 45, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, -1, 30, 45, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 21, 60, 30, 45, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 12, 0, 8, 30, 45, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(2012, 0, 21, 8, 30, 45, 123456789), DT_FALSE);
-    EXPECT_EQ(dt_validate_representation(0, 12, 21, 8, 30, 45, 123456789), DT_FALSE);
+    EXPECT_EQ(dt_validate_representation(NULL), DT_FALSE);
+    dt_representation_t r = {2012, 12, 21, 8, 30, 45, 123456789};
+    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
+    r = (dt_representation_t) {
+        2012, 12, 21, 8, 30, 45, -1
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 21, 8, 30, 45, 1000000000
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 21, 8, 30, -1, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 21, 8, 30, 60, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 21, 8, -1, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 21, 8, 60, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 21, -1, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 21, 60, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 0, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 12, 32, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 0, 21, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        2012, 13, 21, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        0, 12, 21, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
     // Passage from Julian to Gregorian calendar
-    EXPECT_EQ(dt_validate_representation(1582, 10, 10, 8, 30, 45, 123456789), DT_FALSE);
+    r = (dt_representation_t) {
+        1582, 10, 10, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+    r = (dt_representation_t) {
+        1582, 11, 10, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
+    r = (dt_representation_t) {
+        1582, 10, 2, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
+    r = (dt_representation_t) {
+        1582, 10, 20, 8, 30, 45, 123456789
+    };
+    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
 }
 
 TEST_F(DtCase, validate_timestamps)
@@ -121,7 +188,7 @@ TEST_F(DtCase, now_compare_timestamps)
     sleep(1);
     dt_timestamp_t ts_02 = {0,};
     EXPECT_EQ(dt_now(&ts_02), DT_OK);
-    dt_compare_result_t cr = DT_COMPARSION_FAIL;
+    dt_compare_result_t cr = DT_EQUALS;
     EXPECT_EQ(dt_compare_timestamps(NULL, &ts_02, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_timestamps(&ts_01, NULL, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_timestamps(&ts_01, &ts_02, NULL), DT_INVALID_ARGUMENT);
@@ -132,11 +199,22 @@ TEST_F(DtCase, now_compare_timestamps)
     EXPECT_EQ(dt_compare_timestamps(&ts_01, &invalid_timestamp, &cr), DT_INVALID_ARGUMENT);
 
     EXPECT_EQ(dt_compare_timestamps(&ts_01, &ts_02, &cr), DT_OK);
-    EXPECT_LT(cr, 0);
+    EXPECT_EQ(cr, DT_LESSER);
     EXPECT_EQ(dt_compare_timestamps(&ts_02, &ts_01, &cr), DT_OK);
-    EXPECT_GT(cr, 0);
+    EXPECT_EQ(cr, DT_GREATER);
     EXPECT_EQ(dt_compare_timestamps(&ts_01, &ts_01, &cr), DT_OK);
-    EXPECT_EQ(cr, 0);
+    EXPECT_EQ(cr, DT_EQUALS);
+
+    ts_02 = ts_01;
+    if (ts_01.nano_second == 0UL) {
+        ts_02.nano_second++;
+    } else {
+        ts_01.nano_second--;
+    }
+    EXPECT_EQ(dt_compare_timestamps(&ts_01, &ts_02, &cr), DT_OK);
+    EXPECT_EQ(cr, DT_LESSER);
+    EXPECT_EQ(dt_compare_timestamps(&ts_02, &ts_01, &cr), DT_OK);
+    EXPECT_EQ(cr, DT_GREATER);
 }
 
 
@@ -190,8 +268,6 @@ TEST_F(DtCase, offset_between)
     EXPECT_EQ(o.duration.nano_seconds, 876543311L);
 
     EXPECT_EQ(dt_timezone_cleanup(&tz_moscow), DT_OK);
-
-
 }
 
 TEST_F(DtCase, validate_offset)
@@ -201,12 +277,12 @@ TEST_F(DtCase, validate_offset)
     EXPECT_EQ(dt_validate_offset(&invalid_offset), DT_FALSE);
     EXPECT_EQ(dt_validate_offset(&offset), DT_TRUE);
 }
+
 TEST_F(DtCase, apply_offset_overflow)
 {
     dt_timestamp_t result = {1L, 1UL};
 
-
-    //forward case
+    // Forward case
     dt_timestamp_t maximum_overflowable_forward_timestamp = {LONG_MAX , 0};
     dt_timestamp_t minimum_overflowable_forward_timestamp = {LONG_MIN + 1, 0};
     dt_timestamp_t maximum_overflowable_forward_timestamp_for_max_nanoseconds = {LONG_MAX - 1, MAX_NANOSECONDS};
@@ -226,7 +302,7 @@ TEST_F(DtCase, apply_offset_overflow)
     EXPECT_EQ(dt_apply_offset(&minimum_overflowable_forward_timestamp_for_max_nanoseconds,
                               &maximum_offset_forward_max_nanoseconds, &result), DT_OVERFLOW);
 
-    //backward case
+    // Backward case
     dt_timestamp_t maximum_overflowable_backward_timestamp = {LONG_MAX - 1, 0};
     dt_timestamp_t minimum_overflowable_backward_timestamp = {LONG_MIN, 0};
     dt_timestamp_t maximum_overflowable_backward_timestamp_for_max_nanoseconds = {LONG_MAX - 1 - 1, 0};
@@ -247,10 +323,6 @@ TEST_F(DtCase, apply_offset_overflow)
     memset(&result, 0, sizeof(result));
     EXPECT_EQ(dt_apply_offset(&minimum_overflowable_backward_timestamp_for_max_nanoseconds,
                               &minimum_offset_backward_max_nanoseconds, &result), DT_OVERFLOW);
-
-
-
-
 }
 
 TEST_F(DtCase, apply_offset)
@@ -260,7 +332,6 @@ TEST_F(DtCase, apply_offset)
     dt_offset_t o = {{1, 0}, DT_TRUE};
 
     dt_timezone_t tz_moscow = {0,};
-
 
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
@@ -330,7 +401,7 @@ TEST_F(DtCase, apply_offset)
 
 TEST_F(DtCase, posix_time_to_and_from_timestamp)
 {
-    time_t rtm = DT_POSIX_WRONG_TIME;
+    time_t rtm = DT_INVALID_POSIX_TIME;
     time_t now = time(NULL);
     dt_timestamp_t ts = {0,};
     unsigned long nano_second = 0;
@@ -398,7 +469,7 @@ TEST_F(DtCase, compare_interval)
     EXPECT_TRUE(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
     dt_interval_t i_02 = {0,};
     EXPECT_TRUE(dt_init_interval(2L, 123456789L, &i_02) == DT_OK);
-    dt_compare_result_t cr = DT_COMPARSION_FAIL;
+    dt_compare_result_t cr = DT_EQUALS;
 
     EXPECT_EQ(dt_compare_intervals(NULL, &i_02, &cr), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_compare_intervals(&i_01, NULL, &cr), DT_INVALID_ARGUMENT);
@@ -424,7 +495,6 @@ TEST_F(DtCase, compare_interval)
 
 TEST_F(DtCase, sum_intervals)
 {
-
     dt_interval_t i_01 = {0,};
     EXPECT_TRUE(dt_init_interval(1L, 123456789L, &i_01) == DT_OK);
     dt_interval_t i_02 = {0,};
@@ -467,6 +537,18 @@ TEST_F(DtCase, sub_intervals)
     EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, &ri), DT_OK);
     EXPECT_EQ(ri.seconds, 0L);
     EXPECT_EQ(ri.nano_seconds, 223456789L);
+
+    EXPECT_TRUE(dt_init_interval(3L, 200000000L, &i_01) == DT_OK);
+    EXPECT_TRUE(dt_init_interval(1L, 100000000L, &i_02) == DT_OK);
+    EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, &ri), DT_OK);
+    EXPECT_EQ(ri.seconds, 2L);
+    EXPECT_EQ(ri.nano_seconds, 100000000L);
+
+    EXPECT_TRUE(dt_init_interval(3L, 100000000L, &i_01) == DT_OK);
+    EXPECT_TRUE(dt_init_interval(1L, 200000000L, &i_02) == DT_OK);
+    EXPECT_EQ(dt_sub_intervals(&i_01, &i_02, &ri), DT_OK);
+    EXPECT_EQ(ri.seconds, 1L);
+    EXPECT_EQ(ri.nano_seconds, 900000000L);
 }
 
 TEST_F(DtCase, miltiply_interval)
@@ -492,11 +574,14 @@ TEST_F(DtCase, miltiply_interval)
     EXPECT_EQ(dt_mul_interval(&overflowable_interval, MAX_NANOSECONDS, &ri), DT_OVERFLOW);
 
     EXPECT_EQ(dt_mul_interval(&i, 2.5, &ri), DT_OK);
-    EXPECT_EQ(ri.seconds, 8L);
-    EXPECT_EQ(ri.nano_seconds, 750000000L);
+    EXPECT_EQ(ri.seconds, 8UL);
+    EXPECT_EQ(ri.nano_seconds, 750000000UL);
     EXPECT_EQ(dt_mul_interval(&i, 0.75, &ri), DT_OK);
-    EXPECT_EQ(ri.seconds, 2L);
-    EXPECT_EQ(ri.nano_seconds, 625000000L);
+    EXPECT_EQ(ri.seconds, 2UL);
+    EXPECT_EQ(ri.nano_seconds, 625000000UL);
+    EXPECT_EQ(dt_mul_interval(&i, 0.0, &ri), DT_OK);
+    EXPECT_EQ(ri.seconds, 0UL);
+    EXPECT_EQ(ri.nano_seconds, 0UL);
 }
 
 TEST_F(DtCase, init_representation)
@@ -667,6 +752,7 @@ TEST_F(DtCase, representation_day_of_year)
 
 TEST_F(DtCase, representation_to_tm)
 {
+    // TODO: Check for dow/doy on invalid representation
     dt_representation_t r = {0,};
     struct tm tm = {0,};
 
@@ -698,7 +784,7 @@ TEST_F(DtCase, tm_to_representation)
 
     EXPECT_EQ(dt_tm_to_representation(NULL, 123456789, &r), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_tm_to_representation(&tm, 0, NULL), DT_INVALID_ARGUMENT);
-    EXPECT_EQ(dt_tm_to_representation(&tm, 123456789, &r), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_tm_to_representation(&tm, 123456789, &r), DT_OK);  // Invalid POSIX breakdown structure is allowed
     tm.tm_sec = 45;
     EXPECT_EQ(dt_tm_to_representation(&tm, 123456789, &r), DT_OK);
     EXPECT_EQ(r.year, 2012);
@@ -710,83 +796,174 @@ TEST_F(DtCase, tm_to_representation)
     EXPECT_EQ(r.nano_second, 123456789);
 }
 
-TEST_F(DtCase, wrongStringConvert)
+TEST_F(DtCase, to_string)
 {
+    char overflowableFormat[1024] = {0};
+    memset(overflowableFormat, '0', sizeof(overflowableFormat) - 1);
+
     const char *timeOnly = "08:31";
-    const char *timeOnlyWrong = "08:31a";
     const char *timeOnlyFormat = "%H:%M";
-    const char *timeOnlyFormatWrong = "H:M";
-
-    dt_representation_t tr = {0,};
-    size_t buf_size = 1024;
-    char buf[1024] = {0,};
-
-    tr.hour = 8;
-    tr.minute = 612;
-
-    EXPECT_NE(dt_from_string(NULL, timeOnlyFormat, &tr), DT_OK);
-    EXPECT_NE(dt_from_string(timeOnlyWrong, NULL, NULL), DT_OK);
-    EXPECT_NE(dt_from_string(timeOnlyWrong, timeOnlyFormat, &tr), DT_OK);
-    EXPECT_NE(dt_from_string(timeOnly, timeOnlyFormatWrong, &tr), DT_OK);
-
-    EXPECT_NE(dt_to_string(NULL, timeOnlyFormatWrong, buf, buf_size), DT_OK);
-    EXPECT_NE(dt_to_string(&tr, NULL, buf, buf_size), DT_OK);
-    EXPECT_NE(dt_to_string(&tr, timeOnlyFormatWrong, NULL, buf_size), DT_OK);
-    EXPECT_NE(dt_to_string(&tr, timeOnlyFormatWrong, buf, 0), DT_OK);
-}
-
-TEST_F(DtCase, toStringConvert)
-{
-    const char *timeOnly1 = "08:31";
-    const char *timeOnlyFormat1 = "%H:%M";
-    const char *timeOnly2 = "11/09/2001 16:54:12";
-    const char *timeOnlyFormat2 = "%d/%m/%Y %H:%M:%S";
+    const char *dateTime1 = "11/09/2001 16:54:12";
+    const char *dateTimeFormat1 = "%d/%m/%Y %H:%M:%S";
+    const char *dateTime2 = "11/09/2001 16:54:12.987654321 987";
+    const char *dateTimeFormat2 = "%d/%m/%Y %H:%M:%S.%f %3f";
+    const char *dateTime3 = "11/09/2001 16:54:12.987654321 9876 11";
+    const char *dateTimeFormat3 = "%d/%m/%Y %H:%M:%S.%f %4f %d";
+    const char *dateTime4 = "11/09/2001 16:54:12.987654321 987698765 11";
+    const char *dateTimeFormat4 = "%d/%m/%Y %H:%M:%S.%f %4f%5f %d";
+    const char *dateTime5 = "11/09/2001 16:54:12.987654321 987698765%1_ 11";
+    const char *dateTimeFormat5 = "%d/%m/%Y %H:%M:%S.%f %4f%5f%1_ %d";
 
     dt_representation_t tr1 = {0,};
     dt_representation_t tr2 = {0,};
-    size_t buf_size = 1024;
     char buf[1024] = {0,};
+    const size_t buf_size = sizeof(buf);
 
     tr1.hour = 8;
     tr1.minute = 31;
 
-    EXPECT_EQ(dt_to_string(&tr1, timeOnlyFormat1, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_STREQ(timeOnly1, buf);
+    EXPECT_EQ(dt_to_string(NULL, overflowableFormat, buf, buf_size), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_to_string(&tr1, NULL, buf, buf_size), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_to_string(&tr1, overflowableFormat, NULL, buf_size), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_to_string(&tr1, overflowableFormat, buf, 0), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_to_string(&tr1, overflowableFormat, buf, buf_size), DT_OVERFLOW);
 
-    tr2.day = 11;
-    tr2.month = 9;
+    EXPECT_EQ(dt_to_string(&tr1, timeOnlyFormat, buf, buf_size), DT_OK);
+    EXPECT_STREQ(timeOnly, buf);
+
     tr2.year = 2001;
-    tr2.minute = 54;
+    tr2.month = 9;
+    tr2.day = 11;
     tr2.hour = 16;
+    tr2.minute = 54;
     tr2.second = 12;
+    tr2.nano_second = 987654321;
 
-    EXPECT_EQ(dt_to_string(&tr2, timeOnlyFormat2, buf, buf_size), EXIT_SUCCESS);
-    EXPECT_STREQ(timeOnly2, buf);
+    // Checking for overflow
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat1, buf, 10), DT_OVERFLOW);
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat2, buf, 10), DT_OVERFLOW);
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat2, buf, 25), DT_OVERFLOW);
+
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat1, buf, buf_size), DT_OK);
+    EXPECT_STREQ(dateTime1, buf);
+
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat2, buf, buf_size), DT_OK);
+    EXPECT_STREQ(buf, dateTime2);
+
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat3, buf, buf_size), DT_OK);
+    EXPECT_STREQ(buf, dateTime3);
+
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat4, buf, buf_size), DT_OK);
+    EXPECT_STREQ(buf, dateTime4);
+
+    EXPECT_EQ(dt_to_string(&tr2, dateTimeFormat5, buf, buf_size), DT_OK);
+    EXPECT_STREQ(buf, dateTime5);
 }
 
-TEST_F(DtCase, fromStringConvert)
+TEST_F(DtCase, from_string)
 {
-    const char *timeOnly1 = "08:31";
-    const char *timeOnlyFormat1 = "%H:%M";
-    const char *timeOnly2 = "11/09/2001 16:54:12";
-    const char *timeOnlyFormat2 = "%d/%m/%Y %H:%M:%S";
+    char overflowableFormat[1024] = {0};
+    memset(overflowableFormat, '0', sizeof(overflowableFormat) - 1);
 
-    dt_representation_t tr1 = {0,};
-    dt_representation_t tr2 = {0,};
+    const char *timeOnly = "08:31";
+    const char *timeOnlyFormat = "%H:%M";
+    const char *fractionalOnly = "123 456";
+    const char *fractionalOnlyFormat = "%f %f";
+    const char *dateTime1 = "11/09/2001 16:54:12";
+    const char *dateTimeFormat1 = "%d/%m/%Y %H:%M:%S";
+    const char *dateTime2 = "11/09/2001 16:54:12.123456789";
+    const char *dateTimeFormat2 = "%d/%m/%Y %H:%M:%S.%f";
+    const char *dateTime3 = "11/09/2001 16:54:12.123";
+    const char *dateTimeFormat3 = "%d/%m/%Y %H:%M:%S.%f";
+    const char *dateTime5 = "123 11/09/2001 16:54:12";
+    const char *dateTimeFormat5 = "%6f %d/%m/%Y %H:%M:%S";
+    const char *dateTime6 = "123 11/09/2001 456 16:54:12 789";
+    const char *dateTimeFormat6 = "%6f %d/%m/%Y %f %H:%M:%S %f";
 
+    const char *invalidTimeOnly = "08:31a";
+    const char *invalidFractionalOnly = "123";
+    const char *invalidDateTime1 = "11/09/2001 16:pp:12";
+    const char *invalidDateTime2 = "11/09/2001 16:54:";
+    const char *invalidDateTime3 = "11/09/2001 16:54:12.";
+    const char *invalidDateTime4 = "11/09/2001 16:54:12.a";
+    const char *invalidDateTime5 = "123 11/aa/2001 456 16:54:12 789";
+    const char *invalidDateTime6 = "123 11/09/2001 456 16:54:12 abc";
+    const char *invalidDateTime7 = "123 11/09/2001 456 16:54:12 789a";
 
-    EXPECT_EQ(dt_from_string(timeOnly1, timeOnlyFormat1, &tr1), DT_OK);
-    EXPECT_EQ(tr1.hour, 8);
-    EXPECT_EQ(tr1.minute, 31);
+    dt_representation_t tr = {0,};
 
+    EXPECT_EQ(dt_from_string(NULL, timeOnlyFormat, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(timeOnly, NULL, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(timeOnly, timeOnlyFormat, NULL), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(timeOnly, overflowableFormat, &tr), DT_OVERFLOW);
 
-    EXPECT_EQ(dt_from_string(timeOnly2, timeOnlyFormat2, &tr2), EXIT_SUCCESS);
-    EXPECT_EQ(tr2.day, 11);
-    EXPECT_EQ(tr2.month, 9);
-    EXPECT_EQ(tr2.year, 2001);
-    EXPECT_EQ(tr2.minute, 54);
-    EXPECT_EQ(tr2.hour, 16);
-    EXPECT_EQ(tr2.second, 12);
+    EXPECT_EQ(dt_from_string(invalidTimeOnly, timeOnlyFormat, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidFractionalOnly, fractionalOnlyFormat, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime1, dateTimeFormat1, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime2, dateTimeFormat1, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime3, dateTimeFormat2, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime4, dateTimeFormat2, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime5, dateTimeFormat6, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime6, dateTimeFormat6, &tr), DT_INVALID_ARGUMENT);
+    EXPECT_EQ(dt_from_string(invalidDateTime7, dateTimeFormat6, &tr), DT_INVALID_ARGUMENT);
+
+    EXPECT_EQ(dt_from_string(timeOnly, timeOnlyFormat, &tr), DT_OK);
+    EXPECT_EQ(tr.hour, 8);
+    EXPECT_EQ(tr.minute, 31);
+
+    memset(&tr, 0, sizeof(dt_representation_t));
+    EXPECT_EQ(dt_from_string(fractionalOnly, fractionalOnlyFormat, &tr), DT_OK);
+    EXPECT_EQ(tr.nano_second, 456000000);
+
+    memset(&tr, 0, sizeof(dt_representation_t));
+    EXPECT_EQ(dt_from_string(dateTime1, dateTimeFormat1, &tr), DT_OK);
+    EXPECT_EQ(tr.day, 11);
+    EXPECT_EQ(tr.month, 9);
+    EXPECT_EQ(tr.year, 2001);
+    EXPECT_EQ(tr.minute, 54);
+    EXPECT_EQ(tr.hour, 16);
+    EXPECT_EQ(tr.second, 12);
+    EXPECT_EQ(tr.nano_second, 0);
+
+    memset(&tr, 0, sizeof(dt_representation_t));
+    EXPECT_EQ(dt_from_string(dateTime2, dateTimeFormat2, &tr), DT_OK);
+    EXPECT_EQ(tr.day, 11);
+    EXPECT_EQ(tr.month, 9);
+    EXPECT_EQ(tr.year, 2001);
+    EXPECT_EQ(tr.minute, 54);
+    EXPECT_EQ(tr.hour, 16);
+    EXPECT_EQ(tr.second, 12);
+    EXPECT_EQ(tr.nano_second, 123456789);
+
+    memset(&tr, 0, sizeof(dt_representation_t));
+    EXPECT_EQ(dt_from_string(dateTime3, dateTimeFormat3, &tr), DT_OK);
+    EXPECT_EQ(tr.day, 11);
+    EXPECT_EQ(tr.month, 9);
+    EXPECT_EQ(tr.year, 2001);
+    EXPECT_EQ(tr.minute, 54);
+    EXPECT_EQ(tr.hour, 16);
+    EXPECT_EQ(tr.second, 12);
+    EXPECT_EQ(tr.nano_second, 123000000);
+
+    memset(&tr, 0, sizeof(dt_representation_t));
+    EXPECT_EQ(dt_from_string(dateTime5, dateTimeFormat5, &tr), DT_OK);
+    EXPECT_EQ(tr.day, 11);
+    EXPECT_EQ(tr.month, 9);
+    EXPECT_EQ(tr.year, 2001);
+    EXPECT_EQ(tr.minute, 54);
+    EXPECT_EQ(tr.hour, 16);
+    EXPECT_EQ(tr.second, 12);
+    EXPECT_EQ(tr.nano_second, 123000000);
+
+    memset(&tr, 0, sizeof(dt_representation_t));
+    EXPECT_EQ(dt_from_string(dateTime6, dateTimeFormat6, &tr), DT_OK);
+    EXPECT_EQ(tr.day, 11);
+    EXPECT_EQ(tr.month, 9);
+    EXPECT_EQ(tr.year, 2001);
+    EXPECT_EQ(tr.minute, 54);
+    EXPECT_EQ(tr.hour, 16);
+    EXPECT_EQ(tr.second, 12);
+    EXPECT_EQ(tr.nano_second, 789000000);
 }
 
 TEST_F(DtCase, lookup_free_timezone)

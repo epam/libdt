@@ -1,9 +1,10 @@
+// vim: shiftwidth=4 softtabstop=4
+
 #include <libdt/dt_posix.h>
 #include <libdt/dt.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "dt_private.h"
 #include <limits.h>
 #include <stdio.h>
 #include <float.h>
@@ -14,8 +15,10 @@
  *
  * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
  * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
- * License: Public Domain, http://en.wikipedia.org/wiki/Public_domain
+ *
+ * License: TODO: To be clarified!
  */
+
 static const int month_days[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 static const unsigned long MAX_NANOSECONDS = 999999999UL;
 
@@ -33,7 +36,7 @@ dt_bool_t dt_is_leap_year(int year)
         return DT_FALSE;
     }
     if (year < 1582) {
-        // No leap year in Julian calendar
+        // Simple leap year calculation in Julian calendar
         return (abs(year) % 4 == 0);
     } else {
         return ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0);
@@ -46,10 +49,9 @@ const char *dt_strerror(dt_status_t status)
     static const char *invalid_argument_error_message = "Invalid argument";
     static const char *timezone_not_found_error_message = "Timezone not found";
     static const char *system_call_error_message = "System call error";
-    static const char *unknown_error_message = "Unknown error";
-    static const char *malloc_error_message = "malloc returned NULL";
     static const char *no_more_items_error_message = "No more items in collection";
     static const char *overflow_error_message = "Operation caused owerflow";
+    static const char *unknown_error_message = "Unknown error";
     static const char *invalid_status_error_message = "<Invalid result status>";
 
     switch (status) {
@@ -61,36 +63,17 @@ const char *dt_strerror(dt_status_t status)
             return timezone_not_found_error_message;
         case DT_SYSTEM_CALL_ERROR:
             return system_call_error_message;
-        case DT_UNKNOWN_ERROR:
-            return unknown_error_message;
-        case DT_MALLOC_ERROR:
-            return malloc_error_message;
         case DT_NO_MORE_ITEMS:
             return no_more_items_error_message;
         case DT_OVERFLOW:
             return overflow_error_message;
+        case DT_UNKNOWN_ERROR:
+            return unknown_error_message;
         default:
             return invalid_status_error_message;
     }
 }
 
-dt_bool_t dt_validate_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second)
-{
-    // Simple checking for invalid values
-    if (year == 0 || month < 1 || month > 12 || day < 1 || hour > 24 || minute > 59 || second > 59 || nano_second > 999999999UL) {
-        return DT_FALSE;
-    }
-    // Passage from Julian to Gregorian calendar
-    if (year == 1582 && month == 10 && day > 4 && day < 15) {
-        return DT_FALSE;
-    }
-    // Checking leap year
-    if (dt_is_leap_year(year) && month == 2 && day == 29) {
-        return DT_TRUE;
-    }
-    // Checking month days
-    return day <= month_days[month] ? DT_TRUE : DT_FALSE;
-}
 dt_bool_t dt_validate_timestamp(const dt_timestamp_t *timestamp)
 {
     if (timestamp == NULL ||
@@ -359,7 +342,6 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
         return DT_OVERFLOW;
     }
 
-
     result->seconds = (unsigned long)floor(rv);
     if (result->seconds == 0 && v != 0 && rhs != 0) {
         return DT_OVERFLOW;
@@ -368,32 +350,48 @@ dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t 
     return DT_OK;
 }
 
-static dt_status_t dt_init_representation_without_check(int year, int month, int day, int hour, int minute, int second, unsigned long nano_second,
-                                                        dt_representation_t *result)
+dt_bool_t dt_validate_representation(const dt_representation_t *representation)
 {
-    if (!result) {
-        return DT_INVALID_ARGUMENT;
+    if (!representation) {
+        return DT_FALSE;
     }
-
-    memset(result, 0, sizeof(dt_representation_t));
-    result->year = year;
-    result->month = month;
-    result->day = day;
-    result->hour = hour;
-    result->minute = minute;
-    result->second = second;
-    result->nano_second = nano_second;
-    return DT_OK;
+    // Simple checking for invalid values
+    if (representation->year == 0 || representation->month < 1 || representation->month > 12 || representation->day < 1 ||
+            representation->hour > 24 || representation->minute > 59 || representation->second > 59 || representation->nano_second > 999999999UL) {
+        return DT_FALSE;
+    }
+    // Passage from Julian to Gregorian calendar
+    if (representation->year == 1582 && representation->month == 10 && representation->day > 4 && representation->day < 15) {
+        return DT_FALSE;
+    }
+    // Checking leap year
+    if (dt_is_leap_year(representation->year) && representation->month == 2 && representation->day == 29) {
+        return DT_TRUE;
+    }
+    // Checking month days
+    return representation->day <= month_days[representation->month] ? DT_TRUE : DT_FALSE;
 }
 
 dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second,
                                    dt_representation_t *result)
 {
-    if (!dt_validate_representation(year, month, day, hour, minute, second, nano_second)) {
+    if (!result) {
         return DT_INVALID_ARGUMENT;
     }
-    return dt_init_representation_without_check(year, month, day, hour, minute, second, nano_second,
-                                                result);
+    dt_representation_t r = {
+        .year = year,
+        .month = month,
+        .day = day,
+        .hour = hour,
+        .minute = minute,
+        .second = second,
+        .nano_second = nano_second
+    };
+    if (!dt_validate_representation(&r)) {
+        return DT_INVALID_ARGUMENT;
+    }
+    *result = r;
+    return DT_OK;
 }
 
 dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *day_of_week)
@@ -435,31 +433,32 @@ dt_status_t dt_representation_to_tm(const dt_representation_t *representation, s
 {
     int dow = 0;
     int doy = 0;
-    dt_status_t s = DT_UNKNOWN_ERROR;
-
+    dt_status_t status = DT_UNKNOWN_ERROR;
 
     if (!representation || !tm) {
         return DT_INVALID_ARGUMENT;
     }
 
-    s = dt_representation_day_of_week(representation, &dow);
-    if (s != DT_OK) {
-        return s;
-    }
-
-    s = dt_representation_day_of_year(representation, &doy);
-    if (s != DT_OK) {
-        return s;
-    }
     tm->tm_year = representation->year - 1900;
     tm->tm_mon = representation->month - 1;
     tm->tm_mday = representation->day;
     tm->tm_hour = representation->hour;
     tm->tm_min = representation->minute;
     tm->tm_sec = representation->second;
-    tm->tm_wday = dow - 1;
-    tm->tm_yday = doy - 1;
     tm->tm_isdst = -1;
+    if (dt_validate_representation(representation) == DT_TRUE) {
+        // Setting day of week/year if valid representation has been provided
+        status = dt_representation_day_of_week(representation, &dow);
+        if (status != DT_OK) {
+            return status;
+        }
+        tm->tm_wday = dow - 1;
+        status = dt_representation_day_of_year(representation, &doy);
+        if (status != DT_OK) {
+            return status;
+        }
+        tm->tm_yday = doy - 1;
+    }
     return DT_OK;
 }
 
@@ -468,15 +467,15 @@ dt_status_t dt_tm_to_representation(const struct tm *tm, long nano_second, dt_re
     if (!tm || !representation) {
         return DT_INVALID_ARGUMENT;
     }
-    return dt_init_representation(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
-}
-
-dt_status_t dt_tm_to_representation_withoutcheck(const struct tm *tm, long nano_second, dt_representation_t *representation)
-{
-    if (!tm || !representation) {
-        return DT_INVALID_ARGUMENT;
-    }
-    return dt_init_representation_without_check(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, nano_second, representation);
+    memset(representation, 0, sizeof(dt_representation_t));
+    representation->year = 1900 + tm->tm_year;
+    representation->month = tm->tm_mon + 1;
+    representation->day = tm->tm_mday;
+    representation->hour = tm->tm_hour;
+    representation->minute = tm->tm_min;
+    representation->second = tm->tm_sec;
+    representation->nano_second = nano_second;
+    return DT_OK;
 }
 
 struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *result) {
@@ -520,31 +519,31 @@ time_t mktime_tz(const struct tm *tm, const char *tz_name)
     dt_timestamp_t t = {0};
     dt_representation_t rep = {0};
     dt_timezone_t tz = {0,};
-    time_t result = DT_POSIX_WRONG_TIME;
+    time_t result = DT_INVALID_POSIX_TIME;
     unsigned long nano = 0;
 
     if (!tm || !result || !tz_name) {
-        return DT_POSIX_WRONG_TIME;
+        return DT_INVALID_POSIX_TIME;
     }
     if (dt_timezone_lookup(tz_name, &tz) != DT_OK) {
-        return DT_POSIX_WRONG_TIME;
+        return DT_INVALID_POSIX_TIME;
     }
 
     status = dt_tm_to_representation(tm, 0, &rep);
-    if (status != DT_OK) {
+    if (status != DT_OK || dt_validate_representation(&rep) != DT_TRUE) {
         dt_timezone_cleanup(&tz);
-        return DT_POSIX_WRONG_TIME;
+        return DT_INVALID_POSIX_TIME;
     }
 
     status = dt_representation_to_timestamp(&rep, &tz, &t, NULL);
     dt_timezone_cleanup(&tz);
     if (status != DT_OK) {
-        return DT_POSIX_WRONG_TIME;
+        return DT_INVALID_POSIX_TIME;
     }
 
     status = dt_timestamp_to_posix_time(&t, &result, &nano);
     if (status != DT_OK) {
-        return DT_POSIX_WRONG_TIME;
+        return DT_INVALID_POSIX_TIME;
     }
 
 
@@ -572,4 +571,243 @@ dt_bool_t dt_validate_interval(const dt_interval_t *test)
     }
 
     return DT_TRUE;
+}
+
+//! Parses string for fractional seconds format specifier which is "%f" or "%<N>f", where <N> is number from 1 to 9
+/*!
+ * \param str String to parse
+ * \param format_length Format length [OUT]
+ * \param precision Precision [OUT]
+ * \return Format placeholder start position or -1 if no fractional seconds format encountered
+ */
+static int dt_parse_fractional_seconds_format(const char *str, size_t *format_length, size_t *precision)
+{
+    typedef enum {
+        DT_FORMAT_PARSER_INITIAL_STATE,
+        DT_FORMAT_PARSER_PERCENT_FOUND,
+        DT_FORMAT_PARSER_DIGIT_FOUND
+    } dt_format_parser_state;
+
+    dt_format_parser_state state = DT_FORMAT_PARSER_INITIAL_STATE;
+    size_t pos = 0;
+    size_t format_start_pos = 0;
+    size_t parsed_precision = 0;
+
+    while (str[pos] != '\0') {
+        switch (state) {
+            case DT_FORMAT_PARSER_INITIAL_STATE:
+                if (str[pos] == '%') {
+                    format_start_pos = pos;
+                    parsed_precision = 0;
+                    state = DT_FORMAT_PARSER_PERCENT_FOUND;
+                }
+                break;
+            case DT_FORMAT_PARSER_PERCENT_FOUND:
+                if (str[pos] == 'f') {
+                    *format_length = 2;
+                    *precision = parsed_precision;
+                    return format_start_pos;
+                } else if (isdigit(str[pos])) {
+                    parsed_precision = str[pos] - '0';
+                    state = DT_FORMAT_PARSER_DIGIT_FOUND;
+                } else {
+                    state = DT_FORMAT_PARSER_INITIAL_STATE;
+                }
+                break;
+            case DT_FORMAT_PARSER_DIGIT_FOUND:
+                if (str[pos] == 'f') {
+                    *format_length = 3;
+                    *precision = parsed_precision;
+                    return format_start_pos;
+                } else {
+                    state = DT_FORMAT_PARSER_INITIAL_STATE;
+                }
+                break;
+            default:
+                // Invalid parser state
+                return -1;
+        }
+        ++pos;
+    }
+    return -1;
+}
+
+dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
+                         char *str_buffer, size_t str_buffer_size)
+{
+    struct tm tm = {0};
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    size_t fmt_len = 0;
+    char fmt_buffer[255] = {0};
+    int fractional_seconds_format_pos = 0;
+    size_t fmt_start_pos = 0;
+    size_t fractional_seconds_format_length = 0;
+    size_t fractional_seconds_precision = 0;
+    size_t str_buffer_eos_pos = 0;
+    size_t characters_appended = 0;
+    int i = 0;
+
+    if (!representation || !fmt || !str_buffer || str_buffer_size <= 0) {
+        return DT_INVALID_ARGUMENT;
+    }
+
+    // Checking for too long format string
+    fmt_len = strlen(fmt);
+    if (fmt_len >= sizeof(fmt_buffer)) {
+        return DT_OVERFLOW;
+    }
+
+    status = dt_representation_to_tm(representation, &tm);
+    if (status != DT_OK) {
+        return status;
+    }
+
+    while (fmt_start_pos < fmt_len) {
+        // Searching for fractional format placeholder
+        fractional_seconds_format_pos = dt_parse_fractional_seconds_format(fmt + fmt_start_pos,
+                                                                           &fractional_seconds_format_length, &fractional_seconds_precision);
+
+        if (fractional_seconds_format_pos < 0) {
+            // No fractional seconds placeholder found -> serializing date-time value against the rest of the format string
+            characters_appended = strftime(str_buffer + str_buffer_eos_pos, str_buffer_size - str_buffer_eos_pos,
+                                           fmt + fmt_start_pos, &tm);
+            if (characters_appended <= 0) {
+                return DT_OVERFLOW;
+            }
+            str_buffer_eos_pos += characters_appended;
+            break;
+        } else {
+            if (fractional_seconds_format_pos > 0) {
+                // Extracting leading data to the buffer and serializing date-time value according this format
+                memcpy(fmt_buffer, fmt + fmt_start_pos, fractional_seconds_format_pos);
+                fmt_buffer[fractional_seconds_format_pos] = '\0';
+                characters_appended = strftime(str_buffer + str_buffer_eos_pos, str_buffer_size - str_buffer_eos_pos,
+                                               fmt_buffer, &tm);
+                if (characters_appended <= 0) {
+                    return DT_OVERFLOW;
+                }
+                str_buffer_eos_pos += characters_appended;
+            }
+            fmt_start_pos += (fractional_seconds_format_pos + fractional_seconds_format_length);
+
+            // Serializing fractional seconds
+            if (fractional_seconds_precision == 0) {
+                fractional_seconds_precision = 9;
+            }
+            for (i = 0; i < fractional_seconds_precision; ++i) {
+                // Checking for free space in result buffer
+                if (str_buffer_eos_pos >= str_buffer_size - 1) {
+                    return DT_OVERFLOW;
+                }
+                char cur_digit = (int) floor(representation->nano_second / pow(10, 8 - i)) % 10 + '0';
+                str_buffer[str_buffer_eos_pos] = cur_digit;
+                ++str_buffer_eos_pos;
+            }
+            str_buffer[str_buffer_eos_pos] = '\0';
+        }
+    }
+    return DT_OK;
+}
+
+dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation)
+{
+    struct tm tm = {0};
+    dt_status_t status = DT_UNKNOWN_ERROR;
+    size_t fmt_len = 0;
+    const char *str_ptr = str;
+    char fmt_buffer[255] = {0};
+    int fractional_seconds_format_pos = 0;
+    size_t fmt_start_pos = 0;
+    size_t fractional_seconds_format_length = 0;
+    size_t fractional_seconds_precision = 0;
+    size_t fractional_digits_parsed = 0;
+    unsigned long nano_second = 0;
+
+    if (!representation || !str || !fmt) {
+        return DT_INVALID_ARGUMENT;
+    }
+
+    // Checking for too long format string
+    fmt_len = strlen(fmt);
+    if (fmt_len >= sizeof(fmt_buffer)) {
+        return DT_OVERFLOW;
+    }
+
+    while (1) {
+
+        if (fmt_start_pos < fmt_len) {
+            // There is some data in format string
+            if (*str_ptr == '\0') {
+                // No data to parse
+                return DT_INVALID_ARGUMENT;
+            }
+        } else {
+            // Format string has been expired
+            if (*str_ptr != '\0') {
+                // There is some extra data to parse
+                return DT_INVALID_ARGUMENT;
+            } else {
+                // No data to parse
+                break;
+            }
+        }
+
+        // Searching for fractional format placeholder
+        fractional_seconds_format_pos = dt_parse_fractional_seconds_format(fmt + fmt_start_pos,
+                                                                           &fractional_seconds_format_length, &fractional_seconds_precision);
+
+        if (fractional_seconds_format_pos < 0) {
+            // No fractional seconds placeholder found -> parsing the rest of the string against the rest of format
+            str_ptr = strptime(str_ptr, fmt + fmt_start_pos, &tm);   // FIXME: Warning on UNIX platform!
+            if (str_ptr == NULL) {
+                // Parsing error occured
+                return DT_INVALID_ARGUMENT;
+            }
+            if (*str_ptr != '\0') {
+                // There is some extra data to parse
+                return DT_INVALID_ARGUMENT;
+            }
+            break;
+        } else {
+            if (fractional_seconds_format_pos > 0) {
+                // Extracting leading format data to the buffer and parsing date-time value according this format
+                memcpy(fmt_buffer, fmt + fmt_start_pos, fractional_seconds_format_pos);
+                fmt_buffer[fractional_seconds_format_pos] = '\0';
+                str_ptr = strptime(str_ptr, fmt_buffer, &tm);   // FIXME: Warning on UNIX platform!
+                if (str_ptr == NULL) {
+                    // Parsing error occured
+                    return DT_INVALID_ARGUMENT;
+                }
+            }
+            fmt_start_pos += (fractional_seconds_format_pos + fractional_seconds_format_length);
+
+            // Parsing fractional seconds
+            if (fractional_seconds_precision == 0) {
+                fractional_seconds_precision = 9;
+            }
+            nano_second = 0;
+            fractional_digits_parsed = 0;
+            while (fractional_digits_parsed < fractional_seconds_precision) {
+                if (!isdigit(*str_ptr)) {
+                    if (fractional_digits_parsed == 0) {
+                        // Parsing error occured
+                        return DT_INVALID_ARGUMENT;
+                    }
+                    break;
+                }
+                nano_second *= 10UL;
+                nano_second += (unsigned long) * str_ptr - '0';
+                ++str_ptr;
+                ++fractional_digits_parsed;
+            }
+            nano_second *= pow(10, 9 - fractional_digits_parsed);
+        }
+    }
+
+    status = dt_tm_to_representation(&tm, nano_second, representation);
+    if (status != DT_OK) {
+        return status;
+    }
+
+    return DT_OK;
 }
