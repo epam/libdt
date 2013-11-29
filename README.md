@@ -111,7 +111,6 @@ So a compilation command and an output will be:
 
 ## TODO list
 
-* Fractional seconds part support in string conversion functions;
 * Interval initialization from double seconds value;
 * Timezone names mapping API redesign. Timezone lookup should work
   without new/delete operators usage;
@@ -123,9 +122,9 @@ This product is distributed under 2-term BSD-license terms
 Copyright (c) 2013, EPAM Systems. All rights reserved.
 
 Authors: 
-* Ilya Storozhilov <Ilya_Storozhilov@epam.com>,
-* Andrey Kuznetsov <Andrey_Kuznetsov@epam.com>, 
-* Maxim Kot <Maxim_Kot@epam.com>
+* [Ilya Storozhilov](mailto:Ilya_Storozhilov@epam.com);
+* [Andrey Kuznetsov](mailto:Andrey_Kuznetsov@epam.com);
+* [Maxim Kot](mailto:Maxim_Kot@epam.com).
 
 	Redistribution and use in source and binary forms, with or without
 	modification, are permitted provided that the following conditions are met: 
