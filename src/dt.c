@@ -700,6 +700,14 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
             // No fractional seconds placeholder found -> serializing date-time value against the rest of the format string
             characters_appended = strftime(str_buffer + str_buffer_eos_pos, str_buffer_size - str_buffer_eos_pos,
                                            fmt + fmt_start_pos, &tm);
+            if ((characters_appended == 0) && (fmt_len > fmt_start_pos) && (fmt_len - fmt_start_pos < str_buffer_size - str_buffer_eos_pos)) {
+                // if format string in wrong format, windows std library's function strftime return 0
+                str_buffer[str_buffer_eos_pos] = fmt[fmt_start_pos];
+                str_buffer_eos_pos++;
+                fmt_start_pos++;
+                str_buffer[str_buffer_eos_pos] = '\0';
+                continue;
+            }
             if (characters_appended <= 0) {
                 return DT_OVERFLOW;
             }
