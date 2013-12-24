@@ -103,6 +103,8 @@ typedef struct dt_timezone {
     //! @cond Doxygen_Suppress
 #if defined(__CYGWIN__) || defined(WIN32)
     struct _TIME_DYNAMIC_ZONE_INFORMATION *dtzi;
+    void *reg_tz_data;
+    size_t reg_tz_data_size;
 #else
     const struct state *state;
 #endif

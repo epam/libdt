@@ -44,7 +44,7 @@ if(WIN32)
     file(GLOB SRC_LIST ${SRC_LIST} "*win32/strptime/*.c")
 endif(WIN32)
 
-add_library(${PROJECT_NAME} ${SRC_LIST} )
+add_library(${PROJECT_NAME} STATIC ${SRC_LIST} )
 add_dependencies(${PROJECT_NAME} timezones-map format-source)
 
 if(UNIX)

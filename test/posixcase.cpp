@@ -204,17 +204,15 @@ TEST_F(PosixCase, mktime_tz)
 
     testTime = 666; // not a 0
     EXPECT_NE((testTime = mktime_tz(&utcTime, testUTCTimeZone)), DT_INVALID_POSIX_TIME);
-    EXPECT_TRUE (testTime == 0);
+    EXPECT_EQ (0, testTime);
 
     testTime = 666; // not a 0
     EXPECT_NE((testTime = mktime_tz(&gmt5Time, testGMT5TimeZone)), DT_INVALID_POSIX_TIME);
-    EXPECT_TRUE (testTime == 0);
+    EXPECT_EQ (0, testTime);
 
     testTime = 666; // not a 0
     EXPECT_NE((testTime = mktime_tz(&gmtNeg5Time, testGMTNeg5TimeZone)), DT_INVALID_POSIX_TIME);
-    EXPECT_TRUE (testTime == 0);
-
-
+    EXPECT_EQ (0, testTime);
 }
 
 TEST_F(PosixCase, strptime)

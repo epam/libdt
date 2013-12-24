@@ -513,8 +513,11 @@ struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *resu
     dt_representation_t rep = {0};
     dt_timezone_t tz = {0,};
 
-
     if (!time || !result || !tz_name) {
+        return NULL;
+    }
+
+    if (*time == -1) {
         return NULL;
     }
 
@@ -581,7 +584,7 @@ time_t mktime_tz(const struct tm *tm, const char *tz_name)
 
 dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
 {
-    if (dt_validate_timestamp(timestamp) != DT_TRUE || !time || timestamp->second < 0) {
+    if (dt_validate_timestamp(timestamp) != DT_TRUE || !time) {
         return DT_INVALID_ARGUMENT;
     }
 

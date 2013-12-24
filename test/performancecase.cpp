@@ -41,7 +41,7 @@ TEST_F(PerformanceCase, performance_dt_representation_to_timestamp_test)
     dt_timestamp_t t_start = {0,};
     dt_timestamp_t t_stop = {0,};
     dt_offset_t t_duration = {0,};
-    const long operations_count = 1000000;
+    const long operations_count = 10000;
     //Lookup timezones
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
@@ -59,6 +59,8 @@ TEST_F(PerformanceCase, performance_dt_representation_to_timestamp_test)
     nanosec_per_operation /= operations_count;
     std::cout << "duration=" << nanosec_per_operation << std::endl;
     EXPECT_LT(nanosec_per_operation, 100);
+
+    dt_timezone_cleanup(&tz_moscow);
 }
 
 TEST_F(PerformanceCase, performance_dt_timestamp_to_representation_test)
@@ -71,7 +73,7 @@ TEST_F(PerformanceCase, performance_dt_timestamp_to_representation_test)
     dt_timestamp_t t_start = {0,};
     dt_timestamp_t t_stop = {0,};
     dt_offset_t t_duration = {0,};
-    const long operations_count = 1000000;
+    const long operations_count = 10000;
     //Lookup timezones
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
@@ -89,6 +91,8 @@ TEST_F(PerformanceCase, performance_dt_timestamp_to_representation_test)
     nanosec_per_operation /= operations_count;
     std::cout << "duration=" << nanosec_per_operation << std::endl;
     EXPECT_LT(nanosec_per_operation, 100);
+
+    dt_timezone_cleanup(&tz_moscow);
 }
 
 TEST_F(PerformanceCase, performance_std_mktime_test)
@@ -100,7 +104,7 @@ TEST_F(PerformanceCase, performance_std_mktime_test)
     dt_timestamp_t t_start = {0,};
     dt_timestamp_t t_stop = {0,};
     dt_offset_t t_duration = {0,};
-    const long operations_count = 1000000;
+    const long operations_count = 10000;
     //Lookup timezones
     EXPECT_EQ(dt_timezone_lookup(MOSCOW_TZ_NAME, &tz_moscow), DT_OK);
 
@@ -119,6 +123,8 @@ TEST_F(PerformanceCase, performance_std_mktime_test)
     double nanosec_per_operation = ((t_duration.duration.seconds * 1000 * 1000 * 1000) + t_duration.duration.nano_seconds);
     nanosec_per_operation /= operations_count;
     std::cout << "duration=" << nanosec_per_operation << std::endl;
+
+    dt_timezone_cleanup(&tz_moscow);
 }
 
 TEST_F(PerformanceCase, performance_std_gmtime_test)
@@ -129,7 +135,7 @@ TEST_F(PerformanceCase, performance_std_gmtime_test)
     dt_timestamp_t t_start = {0,};
     dt_timestamp_t t_stop = {0,};
     dt_offset_t t_duration = {0,};
-    const long operations_count = 1000000;
+    const long operations_count = 10000;
     struct tm tm = {0,};
     time_t t = time(NULL);
 
@@ -150,6 +156,8 @@ TEST_F(PerformanceCase, performance_std_gmtime_test)
     double nanosec_per_operation = ((t_duration.duration.seconds * 1000 * 1000 * 1000) + t_duration.duration.nano_seconds);
     nanosec_per_operation /= operations_count;
     std::cout << "duration=" << nanosec_per_operation << std::endl;
+
+    dt_timezone_cleanup(&tz_moscow);
 }
 
 
