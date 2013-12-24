@@ -58,7 +58,7 @@ TEST_F(PerformanceCase, performance_dt_representation_to_timestamp_test)
     double nanosec_per_operation = ((t_duration.duration.seconds * 1000 * 1000 * 1000) + t_duration.duration.nano_seconds);
     nanosec_per_operation /= operations_count;
     std::cout << "duration=" << nanosec_per_operation << std::endl;
-    EXPECT_LT(5, nanosec_per_operation * 1000);// < 5 microseconds
+    EXPECT_GT(5, nanosec_per_operation / 1000);// < 5 microseconds
 
     dt_timezone_cleanup(&tz_moscow);
 }
@@ -90,7 +90,7 @@ TEST_F(PerformanceCase, performance_dt_timestamp_to_representation_test)
     double nanosec_per_operation = ((t_duration.duration.seconds * 1000 * 1000 * 1000) + t_duration.duration.nano_seconds);
     nanosec_per_operation /= operations_count;
     std::cout << "duration=" << nanosec_per_operation << std::endl;
-    EXPECT_LT(5, nanosec_per_operation * 1000);// < 5 microseconds
+    EXPECT_GT(5, nanosec_per_operation / 1000);// < 5 microseconds
 
     dt_timezone_cleanup(&tz_moscow);
 }
