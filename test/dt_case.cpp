@@ -447,7 +447,6 @@ TEST_F(DtCase, posix_time_to_and_from_timestamp)
     o.is_forward = DT_FALSE;
     dt_timestamp_t nts = {0,};
     EXPECT_TRUE(dt_apply_offset(&ts, &o, &nts) == DT_OK);
-    EXPECT_EQ(dt_timestamp_to_posix_time(&nts, &rtm, &nano_second), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_timestamp_to_posix_time(&ts, &rtm, &nano_second), DT_OK);
     EXPECT_EQ(rtm, 0);
     EXPECT_EQ(nano_second, 123456789L);
