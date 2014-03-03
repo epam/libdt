@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <limits.h>
 #include <stdio.h>
 #include <float.h>
+#include <ctype.h>
 
 /*
  * Cross-platform date/time handling library for C.
@@ -401,18 +402,20 @@ dt_bool_t dt_validate_representation(const dt_representation_t *representation)
 dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second,
                                    dt_representation_t *result)
 {
+	dt_representation_t r = {
+        /*.year =*/ year,
+        /*.month =*/ month,
+        /*.day =*/ day,
+        /*.hour =*/ hour,
+        /*.minute =*/ minute,
+        /*.second =*/ second,
+        /*.nano_second =*/ nano_second
+    };
+
     if (!result) {
         return DT_INVALID_ARGUMENT;
     }
-    dt_representation_t r = {
-        .year = year,
-        .month = month,
-        .day = day,
-        .hour = hour,
-        .minute = minute,
-        .second = second,
-        .nano_second = nano_second
-    };
+    
     if (!dt_validate_representation(&r)) {
         return DT_INVALID_ARGUMENT;
     }
@@ -671,7 +674,7 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
     size_t fractional_seconds_precision = 0;
     size_t str_buffer_eos_pos = 0;
     size_t characters_appended = 0;
-    int i = 0;
+    size_t i = 0;
 
     if (!representation || !fmt || !str_buffer || str_buffer_size <= 0) {
         return DT_INVALID_ARGUMENT;
@@ -721,11 +724,13 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
                 fractional_seconds_precision = 9;
             }
             for (i = 0; i < fractional_seconds_precision; ++i) {
+				char cur_digit = '\0';
                 // Checking for free space in result buffer
                 if (str_buffer_eos_pos >= str_buffer_size - 1) {
                     return DT_OVERFLOW;
                 }
-                char cur_digit = (int) floor(representation->nano_second / pow(10, 8 - i)) % 10 + '0';
+
+                cur_digit = (int) floor(representation->nano_second / pow(10, 8 - i)) % 10 + '0';
                 str_buffer[str_buffer_eos_pos] = cur_digit;
                 ++str_buffer_eos_pos;
             }
@@ -826,7 +831,7 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
                 ++str_ptr;
                 ++fractional_digits_parsed;
             }
-            nano_second *= pow(10, 9 - fractional_digits_parsed);
+            nano_second *= (unsigned long)pow(10, 9 - fractional_digits_parsed);
         }
     }
 
