@@ -122,6 +122,23 @@ TEST_F(PerformanceCase, performance_std_mktime_test)
     std::cout << "duration=" << nanosec_per_operation << std::endl;
 }
 
+#if defined(__MINGW64_VERSION_MAJOR)
+# if defined(_USE_32BIT_TIME_T)
+#  define gmtime_s _gmtime32_s
+# else
+#  define gmtime_s _gmtime64_s
+# endif
+#elif defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+# define BUILDING_WITH_MINGW32
+# define gmtime_r(tp, tm) (gmtime((tp)))
+# define localtime_r(tp, tm) (localtime((tp)))
+#endif
+
+#if defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
+# define gmtime_r(tp, tm) ((gmtime_s((tm), (tp)) == 0) ? (tm) : NULL)
+# define localtime_r(tp, tm) ((localtime_s((tm), (tp)) == 0) ? (tm) : NULL)
+#endif
+
 TEST_F(PerformanceCase, performance_std_gmtime_test)
 {
     dt_representation_t r = {0,};
@@ -141,7 +158,6 @@ TEST_F(PerformanceCase, performance_std_gmtime_test)
     for (int i = 0; i < operations_count; i++) {
         gmtime_r(&t, &tm);
     }
-
     dt_now(&t_stop);
     dt_offset_between(&t_start, &t_stop, &t_duration);
     double nanosec_per_operation = ((t_duration.duration.seconds * 1000 * 1000 * 1000) + t_duration.duration.nano_seconds);

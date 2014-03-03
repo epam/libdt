@@ -384,7 +384,7 @@ static void RegTziToDynamicTimeZoneInfo(REG_TZI_FORMAT *regtzi, DYNAMIC_TIME_ZON
 
 }
 
-static int getTZIfromRegister(char *tszSubkey, char *tszKey, DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
+static int getTZIfromRegistry(char *tszSubkey, char *tszKey, DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
 {
     HKEY hkey_tz = NULL;
     DWORD dw = 0;
@@ -438,7 +438,7 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
 
     snprintf(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
 
-    if (getTZIfromRegister(tszSubkey, REG_TZI, ptzi, szStandardName) != EXIT_SUCCESS) {
+    if (getTZIfromRegistry(tszSubkey, REG_TZI, ptzi, szStandardName) != EXIT_SUCCESS) {
         return EXIT_FAILURE;
     }
 
@@ -551,12 +551,12 @@ static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor)
 //all not initialized years will be set to YEAR_WRONG_VALUE
 static int InsertYearToArray(DWORD year, YEARS_ARRAY *array)
 {
-    int i = 0;
+    size_t i = 0;
+    DWORD index = array->count;
 
     if (array == 0) {
         return EXIT_FAILURE;
     }
-    DWORD index = array->count;
 
     for (i = 0; i < array->count; i++) {
         if (array->years[i] == year) {
@@ -687,6 +687,7 @@ static BOOL dt_timezone_read_registrer(dt_timezone_t *timezone)
     size_t keyPathSize = sizeof(REG_TIME_ZONES) + sizeof(timeZoneName) + sizeof(DYNAMIC_DST) + sizeof('\\') + sizeof('\0');
     DWORD dwEnumIndex = 0;
     YEARS_ARRAY yearsArray = {0,};
+    dt_tz_data_t *reg_tz_data = NULL;
 
     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK, timezone->dtzi->TimeZoneKeyName, sizeof(timezone->dtzi->TimeZoneKeyName), timeZoneName, sizeof(timeZoneName), "\0", NULL);
     keyPath = malloc(keyPathSize);
@@ -710,7 +711,7 @@ static BOOL dt_timezone_read_registrer(dt_timezone_t *timezone)
     timezone->reg_tz_data_size = yearsArray.count;
     timezone->reg_tz_data = malloc(sizeof(dt_tz_data_t) * timezone->reg_tz_data_size);
     memset(timezone->reg_tz_data, 0, sizeof(dt_tz_data_t) * timezone->reg_tz_data_size);
-    dt_tz_data_t *reg_tz_data = timezone->reg_tz_data;
+    reg_tz_data = timezone->reg_tz_data;
 
     for (dwEnumIndex = 0; dwEnumIndex < yearsArray.count && yearsArray.years[dwEnumIndex] != YEAR_WRONG_VALUE; dwEnumIndex++) {
         readYearTZDataFromRegister(keyPath, dwEnumIndex, yearsArray, reg_tz_data);

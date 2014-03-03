@@ -402,7 +402,7 @@ dt_bool_t dt_validate_representation(const dt_representation_t *representation)
 dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second,
                                    dt_representation_t *result)
 {
-	dt_representation_t r = {
+    dt_representation_t r = {
         /*.year =*/ year,
         /*.month =*/ month,
         /*.day =*/ day,
@@ -415,7 +415,7 @@ dt_status_t dt_init_representation(int year, unsigned short month, unsigned shor
     if (!result) {
         return DT_INVALID_ARGUMENT;
     }
-    
+
     if (!dt_validate_representation(&r)) {
         return DT_INVALID_ARGUMENT;
     }
@@ -735,7 +735,7 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
                 fractional_seconds_precision = 9;
             }
             for (i = 0; i < fractional_seconds_precision; ++i) {
-				char cur_digit = '\0';
+                char cur_digit = '\0';
                 // Checking for free space in result buffer
                 if (str_buffer_eos_pos >= str_buffer_size - 1) {
                     return DT_OVERFLOW;

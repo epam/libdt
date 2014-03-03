@@ -121,81 +121,109 @@ TEST_F(DtCase, strerror)
     EXPECT_EQ(strcmp(dt_strerror((dt_status_t) 250), invalid_status_error_message), 0);
 }
 
-TEST_F(DtCase, validate_representation)
-{
-    EXPECT_EQ(dt_validate_representation(NULL), DT_FALSE);
-    dt_representation_t r = {2012, 12, 21, 8, 30, 45, 123456789};
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, 45, -1
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, 45, 1000000000
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, -1, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, 60, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, -1, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 60, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, -1, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 60, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 0, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 32, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 0, 21, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 13, 21, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        0, 12, 21, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+typedef struct {
+    dt_representation_t represenatation;
+    dt_bool_t expected;
+} validate_representation_test_data_t;
+
+static validate_representation_test_data_t validate_representation_test_data[] = {
+    {
+        {2012, 12, 21, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+    {
+        {2012, 12, 21, 8, 30, 45, -1},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, 30, 45, 1000000000},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, 30, -1, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, 30, 60, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, -1, 45, 123456789},
+        DT_FALSE
+    },
+
+    {
+        {2012, 12, 21, 8, 60, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, -1, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 60, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 0, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 32, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 0, 21, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 13, 21, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {0, 12, 21, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
     // Passage from Julian to Gregorian calendar
-    r = (dt_representation_t) {
-        1582, 10, 10, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        1582, 11, 10, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
-    r = (dt_representation_t) {
-        1582, 10, 2, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
-    r = (dt_representation_t) {
-        1582, 10, 20, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
+    {
+        {1582, 10, 10, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {1582, 11, 10, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+    {
+        {1582, 11, 10, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+    {
+        {1582, 10, 2, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+
+    {
+        {1582, 10, 20, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+
+};
+
+class DtCaseValidateRepresentation : public ::testing::TestWithParam<validate_representation_test_data_t>
+{
+
+};
+
+
+TEST_P(DtCaseValidateRepresentation, validate_representation)
+{
+    dt_representation_t r = GetParam().represenatation;
+    EXPECT_EQ(dt_validate_representation(NULL), DT_FALSE);
+    EXPECT_EQ(dt_validate_representation(&r), GetParam().expected);
 }
+
+//INSTANTIATE_TEST_CASE_P(validate_representation_parametrized, DtCaseValidateRepresentation,
+//                        ::testing::ValuesIn(validate_representation_test_data));
 
 TEST_F(DtCase, validate_timestamps)
 {
