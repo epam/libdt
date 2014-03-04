@@ -664,8 +664,8 @@ static int dt_parse_fractional_seconds_format(const char *str, size_t *format_le
     return -1;
 }
 
-dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
-                         char *str_buffer, size_t str_buffer_size)
+dt_status_t dt_to_string(const dt_representation_t* representation, const char* fmt,
+                         char* str_buffer, size_t str_buffer_size)
 {
     struct tm tm = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;
@@ -698,11 +698,11 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
         // Searching for fractional format placeholder
         fractional_seconds_format_pos = dt_parse_fractional_seconds_format(fmt + fmt_start_pos,
                                                                            &fractional_seconds_format_length, &fractional_seconds_precision);
-
         if (fractional_seconds_format_pos < 0) {
             // No fractional seconds placeholder found -> serializing date-time value against the rest of the format string
             characters_appended = strftime(str_buffer + str_buffer_eos_pos, str_buffer_size - str_buffer_eos_pos,
                                            fmt + fmt_start_pos, &tm);
+
             if ((characters_appended == 0) && (fmt_len > fmt_start_pos) && (fmt_len - fmt_start_pos < str_buffer_size - str_buffer_eos_pos)) {
                 // if format string in wrong format, windows std library's function strftime return 0
                 str_buffer[str_buffer_eos_pos] = fmt[fmt_start_pos];

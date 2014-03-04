@@ -222,8 +222,8 @@ TEST_P(DtCaseValidateRepresentation, validate_representation)
     EXPECT_EQ(dt_validate_representation(&r), GetParam().expected);
 }
 
-//INSTANTIATE_TEST_CASE_P(validate_representation_parametrized, DtCaseValidateRepresentation,
-//                        ::testing::ValuesIn(validate_representation_test_data));
+INSTANTIATE_TEST_CASE_P(validate_representation_parametrized, DtCaseValidateRepresentation,
+                        ::testing::ValuesIn(validate_representation_test_data));
 
 TEST_F(DtCase, validate_timestamps)
 {
@@ -865,7 +865,13 @@ TEST_F(DtCase, to_string)
     const char *dateTime4 = "11/09/2001 16:54:12.987654321 987698765 11";
     const char *dateTimeFormat4 = "%d/%m/%Y %H:%M:%S.%f %4f%5f %d";
     const char *dateTime5 = "11/09/2001 16:54:12.987654321 987698765%1_ 11";
+
+    //For MSVC
+#if ( (defined(_WIN32) || defined(WIN32) ) && ( defined(_MSC_VER) ) )
+    const char *dateTimeFormat5 = "%d/%m/%Y %H:%M:%S.%f %4f%5f%%1_ %d";
+#else // For other supported libc implementations
     const char *dateTimeFormat5 = "%d/%m/%Y %H:%M:%S.%f %4f%5f%1_ %d";
+#endif
 
     dt_representation_t tr1 = {0,};
     dt_representation_t tr2 = {0,};

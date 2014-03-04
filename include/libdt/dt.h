@@ -273,6 +273,7 @@ extern "C" {
      * \param str_buffer Buffer to fill [OUT]
      * \param str_buffer_size A size of the buffer to fill
      * \return Result status of the operation
+     * \note Wrong format handling policy is deciding such as platform depended strftime policy, so watch yours compiler reference for more details.
      */
     dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
                              char *str_buffer, size_t str_buffer_size);
