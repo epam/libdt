@@ -659,7 +659,7 @@ static int createYearsArray(HKEY hkey_tz, YEARS_ARRAY yearsArray)
     return EXIT_SUCCESS;
 }
 
-void readYearTZDataFromRegister(char *keyPath, DWORD dwEnumIndex, YEARS_ARRAY yearsArray, dt_tz_data_t *reg_tz_data)
+void readYearTZDataFromRegistry(char *keyPath, DWORD dwEnumIndex, YEARS_ARRAY yearsArray, dt_tz_data_t *reg_tz_data)
 {
     REG_TZI_FORMAT regtzi = {0,};
     char yearValueName[255] = {0,};
@@ -677,7 +677,7 @@ void readYearTZDataFromRegister(char *keyPath, DWORD dwEnumIndex, YEARS_ARRAY ye
     }
 }
 
-static BOOL dt_timezone_read_registrer(dt_timezone_t *timezone)
+static BOOL dt_timezone_read_registry(dt_timezone_t *timezone)
 {
     HKEY hkey_tz = NULL;
     DWORD dwErrorCode = ERROR_RESOURCE_NOT_FOUND;
@@ -714,7 +714,7 @@ static BOOL dt_timezone_read_registrer(dt_timezone_t *timezone)
     reg_tz_data = timezone->reg_tz_data;
 
     for (dwEnumIndex = 0; dwEnumIndex < yearsArray.count && yearsArray.years[dwEnumIndex] != YEAR_WRONG_VALUE; dwEnumIndex++) {
-        readYearTZDataFromRegister(keyPath, dwEnumIndex, yearsArray, reg_tz_data);
+        readYearTZDataFromRegistry(keyPath, dwEnumIndex, yearsArray, reg_tz_data);
     }
 
     if (yearsArray.size > 0) {
@@ -760,7 +760,7 @@ dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezon
     if (native_tz_name != NULL) {
         timezone->dtzi = malloc(sizeof(*timezone->dtzi));
         if (GetTimeZoneInformationByName(timezone->dtzi, native_tz_name) == EXIT_SUCCESS) {
-            if (dt_timezone_read_registrer(timezone)) {
+            if (dt_timezone_read_registry(timezone)) {
                 status = DT_OK;
             } else {
                 free(timezone->dtzi);
