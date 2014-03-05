@@ -402,24 +402,24 @@ dt_bool_t dt_validate_representation(const dt_representation_t *representation)
 dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second,
                                    dt_representation_t *result)
 {
-    dt_representation_t r = {
-        /*.year =*/ year,
-        /*.month =*/ month,
-        /*.day =*/ day,
-        /*.hour =*/ hour,
-        /*.minute =*/ minute,
-        /*.second =*/ second,
-        /*.nano_second =*/ nano_second
-    };
+    dt_representation_t r = {0,};
 
     if (!result) {
         return DT_INVALID_ARGUMENT;
     }
 
+    r.year = year;
+    r.month = month;
+    r.day = day;
+    r.hour = hour;
+    r.minute = minute;
+    r.second = second;
+    r.nano_second = nano_second;
+
     if (!dt_validate_representation(&r)) {
         return DT_INVALID_ARGUMENT;
     }
-    *result = r;
+    memcpy(result, &r, sizeof(dt_representation_t));
     return DT_OK;
 }
 
