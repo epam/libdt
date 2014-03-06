@@ -665,8 +665,8 @@ static int dt_parse_fractional_seconds_format(const char *str, size_t *format_le
     return -1;
 }
 
-dt_status_t dt_to_string(const dt_representation_t* representation, const char* fmt,
-                         char* str_buffer, size_t str_buffer_size)
+dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
+                         char *str_buffer, size_t str_buffer_size)
 {
     struct tm tm = {0};
     dt_status_t status = DT_UNKNOWN_ERROR;

@@ -202,8 +202,8 @@ extern "C" {
      * \return Result status of the operation
      */
     LIBDT_EXPORT dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
-                                       unsigned long nano_second,
-                                       dt_representation_t *result);
+                                                    unsigned long nano_second,
+                                                    dt_representation_t *result);
 
     //! Lookups timezone object for future usage in corresponding api.
     //! Timezone object must be freed with dt_timezone_cleanup() function on successful operation
@@ -242,7 +242,7 @@ extern "C" {
      * \return Result status of the operation
      */
     LIBDT_EXPORT dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t *timezone,
-                                               dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
+                                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
 
     //! Returns representation's week day number
     /*!
@@ -277,7 +277,7 @@ extern "C" {
      * \note Wrong format handling policy is deciding such as platform depended strftime policy, so watch yours compiler reference for more details.
      */
     LIBDT_EXPORT dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
-                             char *str_buffer, size_t str_buffer_size);
+                                          char *str_buffer, size_t str_buffer_size);
 
     //! Converts string to representation
     /*!
