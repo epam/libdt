@@ -1,5 +1,32 @@
 // vim: shiftwidth=4 softtabstop=4
+/* Copyright (c) 2013, EPAM Systems. All rights reserved.
 
+Authors:
+Ilya Storozhilov <Ilya_Storozhilov@epam.com>,
+Andrey Kuznetsov <Andrey_Kuznetsov@epam.com>,
+Maxim Kot <Maxim_Kot@epam.com>
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+
+#define LIBDT_EXPORTS
 #include <libdt/dt_posix.h>
 #include <libdt/dt.h>
 #include <stdlib.h>
@@ -8,6 +35,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <float.h>
+#include <ctype.h>
 
 /*
  * Cross-platform date/time handling library for C.
@@ -375,21 +403,24 @@ dt_bool_t dt_validate_representation(const dt_representation_t *representation)
 dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second, unsigned long nano_second,
                                    dt_representation_t *result)
 {
+    dt_representation_t r = {0,};
+
     if (!result) {
         return DT_INVALID_ARGUMENT;
     }
-    dt_representation_t r = {
-        .year = year,
-        .month = month,
-        .day = day,
-        .hour = hour,
-        .minute = minute,
-        .second = second,
-        .nano_second = nano_second
-    };
+
+    r.year = year;
+    r.month = month;
+    r.day = day;
+    r.hour = hour;
+    r.minute = minute;
+    r.second = second;
+    r.nano_second = nano_second;
+
     if (!dt_validate_representation(&r)) {
         return DT_INVALID_ARGUMENT;
     }
+
     *result = r;
     return DT_OK;
 }
@@ -484,8 +515,11 @@ struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *resu
     dt_representation_t rep = {0};
     dt_timezone_t tz = {0,};
 
-
     if (!time || !result || !tz_name) {
+        return NULL;
+    }
+
+    if (*time == -1) {
         return NULL;
     }
 
@@ -552,7 +586,7 @@ time_t mktime_tz(const struct tm *tm, const char *tz_name)
 
 dt_status_t dt_timestamp_to_posix_time(const dt_timestamp_t *timestamp, time_t *time, unsigned long *nano_second)
 {
-    if (dt_validate_timestamp(timestamp) != DT_TRUE || !time || timestamp->second < 0) {
+    if (dt_validate_timestamp(timestamp) != DT_TRUE || !time) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -645,7 +679,7 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
     size_t fractional_seconds_precision = 0;
     size_t str_buffer_eos_pos = 0;
     size_t characters_appended = 0;
-    int i = 0;
+    size_t i = 0;
 
     if (!representation || !fmt || !str_buffer || str_buffer_size <= 0) {
         return DT_INVALID_ARGUMENT;
@@ -666,11 +700,19 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
         // Searching for fractional format placeholder
         fractional_seconds_format_pos = dt_parse_fractional_seconds_format(fmt + fmt_start_pos,
                                                                            &fractional_seconds_format_length, &fractional_seconds_precision);
-
         if (fractional_seconds_format_pos < 0) {
             // No fractional seconds placeholder found -> serializing date-time value against the rest of the format string
             characters_appended = strftime(str_buffer + str_buffer_eos_pos, str_buffer_size - str_buffer_eos_pos,
                                            fmt + fmt_start_pos, &tm);
+
+            if ((characters_appended == 0) && (fmt_len > fmt_start_pos) && (fmt_len - fmt_start_pos < str_buffer_size - str_buffer_eos_pos)) {
+                // if format string in wrong format, windows std library's function strftime return 0
+                str_buffer[str_buffer_eos_pos] = fmt[fmt_start_pos];
+                str_buffer_eos_pos++;
+                fmt_start_pos++;
+                str_buffer[str_buffer_eos_pos] = '\0';
+                continue;
+            }
             if (characters_appended <= 0) {
                 return DT_OVERFLOW;
             }
@@ -695,11 +737,13 @@ dt_status_t dt_to_string(const dt_representation_t *representation, const char *
                 fractional_seconds_precision = 9;
             }
             for (i = 0; i < fractional_seconds_precision; ++i) {
+                char cur_digit = '\0';
                 // Checking for free space in result buffer
                 if (str_buffer_eos_pos >= str_buffer_size - 1) {
                     return DT_OVERFLOW;
                 }
-                char cur_digit = (int) floor(representation->nano_second / pow(10, 8 - i)) % 10 + '0';
+
+                cur_digit = (int) floor(representation->nano_second / pow(10, 8 - i)) % 10 + '0';
                 str_buffer[str_buffer_eos_pos] = cur_digit;
                 ++str_buffer_eos_pos;
             }
@@ -800,7 +844,7 @@ dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t
                 ++str_ptr;
                 ++fractional_digits_parsed;
             }
-            nano_second *= pow(10, 9 - fractional_digits_parsed);
+            nano_second *= (unsigned long)pow(10, 9 - fractional_digits_parsed);
         }
     }
 

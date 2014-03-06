@@ -1,8 +1,35 @@
 // vim: shiftwidth=4 softtabstop=4
+/* Copyright (c) 2013, EPAM Systems. All rights reserved.
+
+Authors:
+Ilya Storozhilov <Ilya_Storozhilov@epam.com>,
+Andrey Kuznetsov <Andrey_Kuznetsov@epam.com>,
+Maxim Kot <Maxim_Kot@epam.com>
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #ifndef TZMAPPING_H
 #define TZMAPPING_H
 
+#include <libdt/export.h>
 #include <libdt/dt_types.h>
 
 /*!
@@ -51,7 +78,7 @@ extern "C" {
      * @return DT_OK on success otherwise corresponding status from dt_status_t
      * @sa tzmap_free
      */
-    dt_status_t tzmap_map(const char *tz_name, tz_aliases_t **aliases);
+    LIBDT_EXPORT dt_status_t tzmap_map(const char *tz_name, tz_aliases_t **aliases);
 
     //! Iterates through tz_aliases_t collection
     /*!
@@ -60,14 +87,14 @@ extern "C" {
      * @param alias pointer to store finded alias
      * @return DT_OK on success otherwise corresponding status from dt_status_t
      */
-    dt_status_t tzmap_iterate(const tz_aliases_t *aliases, tz_alias_iterator_t **iterator, tz_alias_t **alias);
+    LIBDT_EXPORT dt_status_t tzmap_iterate(const tz_aliases_t *aliases, tz_alias_iterator_t **iterator, tz_alias_t **alias);
 
     //! Free resources of tz_aliases_t collection
     /*!
      * @param aliases colection which resources will be free
      * @return DT_OK on success otherwise corresponding status from dt_status_t
      */
-    dt_status_t tzmap_free(tz_aliases_t *aliases);
+    LIBDT_EXPORT dt_status_t tzmap_free(tz_aliases_t *aliases);
 
     /*! @}*/
 #ifdef __cplusplus

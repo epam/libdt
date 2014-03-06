@@ -1,5 +1,32 @@
 // vim: shiftwidth=4 softtabstop=4
+/* Copyright (c) 2013, EPAM Systems. All rights reserved.
 
+Authors:
+Ilya Storozhilov <Ilya_Storozhilov@epam.com>,
+Andrey Kuznetsov <Andrey_Kuznetsov@epam.com>,
+Maxim Kot <Maxim_Kot@epam.com>
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+
+#define LIBDT_EXPORTS
 #include <stdio.h>  /* for stdout, stderr, perror */
 #include <time.h>   /* for struct tm */
 #include <stdlib.h> /* for exit, malloc, atoi */
@@ -117,7 +144,7 @@ BOOL
 WINAPI
 GetTimeZoneInformationForYearLower(
     /*__in*/ USHORT wYear,
-    /*__in_opt*/ PDYNAMIC_TIME_ZONE_INFORMATION pdtzi,
+    const dt_timezone_t *timezone,
     /*__out*/ LPTIME_ZONE_INFORMATION ptzi
 );
 //Helper functions prototypes
@@ -126,14 +153,14 @@ static int TmFromSystemTime(const SYSTEMTIME *pTime, struct tm *tm);
 static int SystemTimeFromTm(SYSTEMTIME *pTime, const struct tm *tm);
 static int UnixTimeToSystemTime(const time_t *t, LPSYSTEMTIME pst);
 static int SystemTimeToUnixTime(SYSTEMTIME *systemTime, time_t *dosTime);
-static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaximumYear, DWORD dstMinimumYear, DWORD *findedYear);
 //Tests is current windows version suitable to given version parts
 static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor);
 char *libdt_strptime(const char *buf, const char *fmt, struct tm *tm);
 
 typedef struct _YEARS_ARRAY {
-    size_t size;
-    DWORD *years;
+    size_t count;// valuable elements count
+    size_t size;// include reserved elements
+    DWORD *years; // raw array pointer
 } YEARS_ARRAY;
 
 typedef struct _REG_TZI_FORMAT {
@@ -192,7 +219,7 @@ dt_status_t dt_now(dt_timestamp_t *result)
 
 dt_status_t dt_posix_time_to_timestamp(time_t time, unsigned long nano_second, dt_timestamp_t *result)
 {
-    if (time < 0 || !result) {
+    if (!result || time == -1) {
         return DT_INVALID_ARGUMENT;
     }
 
@@ -238,7 +265,7 @@ dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, cons
         return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
-    if (timezone != NULL && (GetTimeZoneInformationForYearLower(tUniversalTime.wYear, timezone->dtzi, &tzi) == FALSE)) {
+    if (timezone != NULL && (GetTimeZoneInformationForYearLower(tUniversalTime.wYear, timezone, &tzi) == FALSE)) {
         //return DT_CONVERT_ERROR;
         return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
@@ -297,7 +324,7 @@ dt_status_t dt_representation_to_timestamp(const dt_representation_t *representa
         return DT_INVALID_ARGUMENT; // TODO: Maybe to return a DT_SYSTEM_CALL_ERROR?
     }
 
-    if (timezone != NULL && (GetTimeZoneInformationForYearLower(tLocalTime.wYear, timezone->dtzi, &tzi) == FALSE)) {
+    if (timezone != NULL && (GetTimeZoneInformationForYearLower(tLocalTime.wYear, timezone, &tzi) == FALSE)) {
         return DT_TIMEZONE_NOT_FOUND;
     }
 
@@ -357,25 +384,11 @@ static void RegTziToDynamicTimeZoneInfo(REG_TZI_FORMAT *regtzi, DYNAMIC_TIME_ZON
 
 }
 
-static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
+static int getTZIfromRegistry(char *tszSubkey, char *tszKey, DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
 {
     HKEY hkey_tz = NULL;
     DWORD dw = 0;
     REG_TZI_FORMAT regtzi = {0,};
-    size_t subKeySize = 0;
-    char *tszSubkey = NULL;
-
-    if (ptzi == NULL || szStandardName == NULL) {
-        return EXIT_FAILURE;
-    }
-
-    subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
-    tszSubkey = (char *)malloc(subKeySize);
-
-    memset(tszSubkey, 0, subKeySize );
-    memset(ptzi, 0, sizeof(DYNAMIC_TIME_ZONE_INFORMATION));
-
-    snprintf(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
 
     if (ERROR_SUCCESS != (dw = RegOpenKeyA(HKEY_LOCAL_MACHINE, tszSubkey, &hkey_tz))) {
 
@@ -384,7 +397,7 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
         return EXIT_FAILURE;
     }
 
-    GetTziFromKey(tszSubkey, REG_TZI, &regtzi);
+    GetTziFromKey(tszSubkey, tszKey, &regtzi);
 
     dw = sizeof(ptzi->StandardName);
     if (ERROR_SUCCESS != (dw = RegQueryValueExW(hkey_tz, REG_STD, NULL, NULL, (LPBYTE)&ptzi->StandardName, &dw))) {
@@ -404,6 +417,31 @@ static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, con
     MultiByteToWideChar(CP_ACP, MB_COMPOSITE, szStandardName, -1 , ptzi->TimeZoneKeyName, sizeof(ptzi->TimeZoneKeyName));
 
     RegCloseKey(hkey_tz);
+
+    return EXIT_SUCCESS;
+}
+
+static int GetTimeZoneInformationByName(DYNAMIC_TIME_ZONE_INFORMATION *ptzi, const char szStandardName[])
+{
+    size_t subKeySize = 0;
+    char *tszSubkey = NULL;
+
+    if (ptzi == NULL || szStandardName == NULL) {
+        return EXIT_FAILURE;
+    }
+
+    subKeySize = strlen(REG_TIME_ZONES) + strlen(szStandardName) + 1;
+    tszSubkey = (char *)malloc(subKeySize);
+
+    memset(tszSubkey, 0, subKeySize );
+    memset(ptzi, 0, sizeof(DYNAMIC_TIME_ZONE_INFORMATION));
+
+    snprintf(tszSubkey, subKeySize, "%s%s", REG_TIME_ZONES, szStandardName);
+
+    if (getTZIfromRegistry(tszSubkey, REG_TZI, ptzi, szStandardName) != EXIT_SUCCESS) {
+        return EXIT_FAILURE;
+    }
+
     free(tszSubkey);
     return EXIT_SUCCESS;
 }
@@ -511,43 +549,91 @@ static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor)
 //Inserts year to array of years at given index, in each YEARS_ARRAY_SEED years array will be realocated
 //for cover more suitable case of usual years layout
 //all not initialized years will be set to YEAR_WRONG_VALUE
-static int InsertYearToArray(DWORD year, YEARS_ARRAY *array, DWORD index)
+static int InsertYearToArray(DWORD year, YEARS_ARRAY *array)
 {
+    size_t i = 0;
+    DWORD index = array->count;
+
     if (array == 0) {
         return EXIT_FAILURE;
+    }
+
+    for (i = 0; i < array->count; i++) {
+        if (array->years[i] == year) {
+            return EXIT_FAILURE;
+        }
     }
 
     while (index >= array->size) {
         array->years = realloc(array->years, (array->size + YEARS_ARRAY_SEED) * sizeof(DWORD));
 
-        if (array->years == 0) {
+        if (array->years == NULL) {
             return EXIT_FAILURE;
         }
-
-        memset(array->years + (array->size * sizeof(DWORD)), YEAR_WRONG_VALUE, YEARS_ARRAY_SEED * sizeof(DWORD));
+        for (i = array->size; i < array->size + YEARS_ARRAY_SEED; i++) {
+            array->years[i] = YEAR_WRONG_VALUE;
+        }
         array->size += YEARS_ARRAY_SEED;
     }
+    array->count++;
+
     array->years[index] = year;
     return EXIT_SUCCESS;
 }
 
-static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaximumYear, DWORD dstMinimumYear, DWORD *findedYear)
+typedef struct dt_tz_data {
+    DYNAMIC_TIME_ZONE_INFORMATION data;
+    int year;
+} dt_tz_data_t;
+
+static
+BOOL
+WINAPI
+GetTimeZoneInformationForYearLower(
+    /*__in*/ USHORT wYear,
+    const dt_timezone_t *timezone,
+    /*__out*/ LPTIME_ZONE_INFORMATION ptzi
+)
 {
-    DWORD dwEnumIndex = 0;
-    DWORD dw = 0;
-    DWORD dwErrorCode = ERROR_RESOURCE_NOT_FOUND;
-    char yearValueName[255] = {0,};
-    BOOL returnStatus = FALSE;
-    YEARS_ARRAY yearsArray = {0,};
-    if (targetYear >= dstMaximumYear) {
-        *findedYear = dstMaximumYear;
-        return TRUE;
-    } else if (targetYear <= dstMinimumYear) {
-        *findedYear = dstMinimumYear;
-        return TRUE;
+    dt_tz_data_t *reg_tz_data = timezone->reg_tz_data;
+    size_t size = timezone->reg_tz_data_size;
+    size_t i = 0;
+
+    if (wYear < 1601 || ptzi == NULL || timezone == NULL) {
+        return FALSE;
     }
 
-    dwEnumIndex = 0;
+    wcscpy_s(ptzi->StandardName, sizeof(ptzi->StandardName) / sizeof(WCHAR), timezone->dtzi->StandardName);
+    wcscpy_s(ptzi->DaylightName, sizeof(ptzi->DaylightName) / sizeof(WCHAR), timezone->dtzi->DaylightName);
+    ptzi->Bias = timezone->dtzi->Bias;
+    ptzi->DaylightBias = timezone->dtzi->DaylightBias;
+    ptzi->DaylightDate = timezone->dtzi->DaylightDate;
+    ptzi->StandardBias = timezone->dtzi->StandardBias;
+    ptzi->StandardDate = timezone->dtzi->StandardDate;
+
+    for (i = 0; i < size; ++i) {
+        size_t index = size - i - 1;
+        dt_tz_data_t data = reg_tz_data[index];
+
+        ptzi->Bias = data.data.Bias;
+        ptzi->DaylightBias = data.data.DaylightBias;
+        ptzi->DaylightDate = data.data.DaylightDate;
+        ptzi->StandardBias = data.data.StandardBias;
+        ptzi->StandardDate = data.data.StandardDate;
+        if (data.year <= wYear) {
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
+
+static int createYearsArray(HKEY hkey_tz, YEARS_ARRAY yearsArray)
+{
+    DWORD dw = sizeof(DWORD);
+    DWORD wYear = 0;
+    DWORD dwEnumIndex = 0;
+    char yearValueName[255] = {0,};
+    DWORD dwErrorCode = ERROR_RESOURCE_NOT_FOUND;
 
     for (dwErrorCode = ERROR_SUCCESS; dwErrorCode != ERROR_NO_MORE_ITEMS ||
             (dwErrorCode != ERROR_SUCCESS && dwErrorCode != ERROR_NO_MORE_ITEMS);) {
@@ -558,121 +644,83 @@ static BOOL FindCorrespondingYear(HKEY hkey_tz, DWORD targetYear, DWORD dstMaxim
                 || strcmp(yearValueName, DYNAMIC_DST_LAST_ENTRY) == 0) {
             continue;
         }
-
-
-        if (EOF == sscanf_s(yearValueName, "%d", findedYear)) {
+        if (EOF == sscanf_s(yearValueName, "%d", &wYear)) {
             continue;
         }
 
-        InsertYearToArray(*findedYear, &yearsArray, dwEnumIndex);
+        InsertYearToArray(wYear, &yearsArray);
     }
     if (dwErrorCode != ERROR_SUCCESS && dwErrorCode != ERROR_NO_MORE_ITEMS) {
-        returnStatus = FALSE;
         free(yearsArray.years);
-        *findedYear = YEAR_WRONG_VALUE;
-        return FALSE;
+        return EXIT_FAILURE;
     }
 
-    qsort_s(yearsArray.years, yearsArray.size, sizeof(DWORD), years_compare, NULL);
+    qsort_s(yearsArray.years, yearsArray.count, sizeof(DWORD), years_compare, NULL);
+    return EXIT_SUCCESS;
+}
 
-    for (dwEnumIndex = 0; dwEnumIndex < yearsArray.size - 1 && yearsArray.years[dwEnumIndex] != YEAR_WRONG_VALUE; dwEnumIndex++) {
-        *findedYear = yearsArray.years[dwEnumIndex];
-        if (targetYear >= *findedYear) {
-            break;
+void readYearTZDataFromRegistry(char *keyPath, DWORD dwEnumIndex, YEARS_ARRAY yearsArray, dt_tz_data_t *reg_tz_data)
+{
+    REG_TZI_FORMAT regtzi = {0,};
+    char yearValueName[255] = {0,};
+    DWORD wYear = yearsArray.years[dwEnumIndex];
+    reg_tz_data[dwEnumIndex].year = wYear;
+
+    snprintf(yearValueName, sizeof(yearValueName), "%d", wYear);
+    if (ERROR_SUCCESS == GetTziFromKey(keyPath, yearValueName, &regtzi)) {
+        reg_tz_data[dwEnumIndex].year = wYear;
+        reg_tz_data[dwEnumIndex].data.Bias = regtzi.Bias;
+        reg_tz_data[dwEnumIndex].data.DaylightBias = regtzi.DaylightBias;
+        reg_tz_data[dwEnumIndex].data.DaylightDate = regtzi.DaylightDate;
+        reg_tz_data[dwEnumIndex].data.StandardBias = regtzi.StandardBias;
+        reg_tz_data[dwEnumIndex].data.StandardDate = regtzi.StandardDate;
+    }
+}
+
+static BOOL dt_timezone_read_registry(dt_timezone_t *timezone)
+{
+    HKEY hkey_tz = NULL;
+    DWORD dwErrorCode = ERROR_RESOURCE_NOT_FOUND;
+    BOOL  returnStatus = FALSE;
+    char timeZoneName[128] = {0,};
+    char *keyPath = NULL;
+    size_t keyPathSize = sizeof(REG_TIME_ZONES) + sizeof(timeZoneName) + sizeof(DYNAMIC_DST) + sizeof('\\') + sizeof('\0');
+    DWORD dwEnumIndex = 0;
+    YEARS_ARRAY yearsArray = {0,};
+    dt_tz_data_t *reg_tz_data = NULL;
+
+    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK, timezone->dtzi->TimeZoneKeyName, sizeof(timezone->dtzi->TimeZoneKeyName), timeZoneName, sizeof(timeZoneName), "\0", NULL);
+    keyPath = malloc(keyPathSize);
+    snprintf(keyPath, keyPathSize, "%s%s\\%s", REG_TIME_ZONES, timeZoneName, DYNAMIC_DST);
+
+    dwErrorCode = RegOpenKeyA(HKEY_LOCAL_MACHINE, keyPath, &hkey_tz);
+    if (ERROR_SUCCESS != dwErrorCode) {
+        if (ERROR_FILE_NOT_FOUND != dwErrorCode) {
+            return FALSE;
+        } else {
+            timezone->reg_tz_data_size = 0;
+            return TRUE;
         }
+    }
+
+    if (createYearsArray(hkey_tz, yearsArray) != EXIT_SUCCESS) {
+        returnStatus = FALSE;
+        goto GetTimeZoneInformationForYearLower_cleanup;
+    }
+
+    timezone->reg_tz_data_size = yearsArray.count;
+    timezone->reg_tz_data = malloc(sizeof(dt_tz_data_t) * timezone->reg_tz_data_size);
+    memset(timezone->reg_tz_data, 0, sizeof(dt_tz_data_t) * timezone->reg_tz_data_size);
+    reg_tz_data = timezone->reg_tz_data;
+
+    for (dwEnumIndex = 0; dwEnumIndex < yearsArray.count && yearsArray.years[dwEnumIndex] != YEAR_WRONG_VALUE; dwEnumIndex++) {
+        readYearTZDataFromRegistry(keyPath, dwEnumIndex, yearsArray, reg_tz_data);
     }
 
     if (yearsArray.size > 0) {
         free(yearsArray.years);
     }
 
-    if (*findedYear == YEAR_WRONG_VALUE) {
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static
-BOOL
-WINAPI
-GetTimeZoneInformationForYearLower(
-    /*__in*/ USHORT wYear,
-    /*__in_opt*/ PDYNAMIC_TIME_ZONE_INFORMATION pdtzi,
-    /*__out*/ LPTIME_ZONE_INFORMATION ptzi
-)
-{
-    HKEY hkey_tz = NULL;
-    DWORD dw = 0;
-    DWORD dwErrorCode = ERROR_RESOURCE_NOT_FOUND;
-    DWORD dstMinimumYear = 1601;
-    DWORD dstMaximumYear = 30827;
-    DWORD findedYear = YEAR_WRONG_VALUE; //0xFFFFFFFF; any way wrong value
-    REG_TZI_FORMAT regtzi = {0,};
-    BOOL  returnStatus = FALSE;
-    char yearValueName[255] = {0,};
-    char timeZoneName[128] = {0,};
-    char *keyPath = NULL;
-    size_t keyPathSize = sizeof(REG_TIME_ZONES) + sizeof(timeZoneName) + sizeof(DYNAMIC_DST) + sizeof('\\') + sizeof('\0');
-
-    if (wYear < 1601 || pdtzi == NULL || ptzi == NULL) {
-        return FALSE;
-    }
-
-
-    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK, pdtzi->TimeZoneKeyName, sizeof(pdtzi->TimeZoneKeyName), timeZoneName, sizeof(timeZoneName), "\0", NULL);
-    keyPath = malloc(keyPathSize);
-    snprintf(keyPath, keyPathSize, "%s%s\\%s", REG_TIME_ZONES, timeZoneName, DYNAMIC_DST);
-
-    memset(ptzi, 0, sizeof(TIME_ZONE_INFORMATION));
-
-    wcscpy_s(ptzi->StandardName, sizeof(ptzi->StandardName) / sizeof(WCHAR), pdtzi->StandardName);
-    wcscpy_s(ptzi->DaylightName, sizeof(ptzi->DaylightName) / sizeof(WCHAR), pdtzi->DaylightName);
-    dwErrorCode = RegOpenKeyA(HKEY_LOCAL_MACHINE, keyPath, &hkey_tz);
-    if (ERROR_SUCCESS != dwErrorCode) {
-        if (ERROR_FILE_NOT_FOUND != dwErrorCode) {
-            return FALSE;
-        } else {
-            ptzi->Bias = pdtzi->Bias;
-            ptzi->DaylightBias = pdtzi->DaylightBias;
-            ptzi->DaylightDate = pdtzi->DaylightDate;
-            ptzi->StandardBias = pdtzi->StandardBias;
-            ptzi->StandardDate = pdtzi->StandardDate;
-            return TRUE;
-        }
-    }
-    dw = sizeof(DWORD);
-
-    if (ERROR_SUCCESS != RegQueryValueExA(hkey_tz,
-                                          DYNAMIC_DST_FIRST_ENTRY,
-                                          NULL, NULL, (LPBYTE)&dstMinimumYear, &dw)) {
-        returnStatus = FALSE;
-        goto GetTimeZoneInformationForYearLower_cleanup;
-    }
-
-    if (ERROR_SUCCESS != RegQueryValueExA(hkey_tz,
-                                          DYNAMIC_DST_LAST_ENTRY,
-                                          NULL, NULL, (LPBYTE)&dstMaximumYear, &dw)) {
-        returnStatus = FALSE;
-        goto GetTimeZoneInformationForYearLower_cleanup;
-    }
-
-    if (FALSE == FindCorrespondingYear(hkey_tz, wYear , dstMaximumYear, dstMinimumYear, &findedYear)) {
-        goto GetTimeZoneInformationForYearLower_cleanup;
-    }
-
-    snprintf(yearValueName, sizeof(yearValueName), "%d", findedYear);
-
-    if (GetTziFromKey(keyPath, yearValueName, &regtzi) == EXIT_FAILURE) {
-        memset(ptzi, 0, sizeof(TIME_ZONE_INFORMATION));
-        goto GetTimeZoneInformationForYearLower_cleanup;
-    }
-
-    ptzi->Bias = regtzi.Bias;
-    ptzi->DaylightBias = regtzi.DaylightBias;
-    ptzi->DaylightDate = regtzi.DaylightDate;
-    ptzi->StandardBias = regtzi.StandardBias;
-    ptzi->StandardDate = regtzi.StandardDate;
     returnStatus = TRUE;
 GetTimeZoneInformationForYearLower_cleanup:
     RegCloseKey(hkey_tz);
@@ -693,6 +741,9 @@ dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezon
         return DT_INVALID_ARGUMENT;
     }
 
+    timezone->reg_tz_data = NULL;
+    timezone->reg_tz_data_size = 0;
+
     if ((status = tzmap_map(timezone_name, &aliases)) != DT_OK) {
         return status;
     }
@@ -709,7 +760,12 @@ dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezon
     if (native_tz_name != NULL) {
         timezone->dtzi = malloc(sizeof(*timezone->dtzi));
         if (GetTimeZoneInformationByName(timezone->dtzi, native_tz_name) == EXIT_SUCCESS) {
-            status = DT_OK;
+            if (dt_timezone_read_registry(timezone)) {
+                status = DT_OK;
+            } else {
+                free(timezone->dtzi);
+                status = DT_TIMEZONE_NOT_FOUND;
+            }
         } else {
             free(timezone->dtzi);
             status = DT_TIMEZONE_NOT_FOUND;
@@ -725,6 +781,12 @@ dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone)
     if (timezone == NULL || timezone->dtzi == NULL) {
         return DT_INVALID_ARGUMENT;
     }
+    if (timezone->reg_tz_data && timezone->reg_tz_data_size) {
+        free(timezone->reg_tz_data);
+        timezone->reg_tz_data = NULL;
+    }
     free(timezone->dtzi);
+    timezone->reg_tz_data_size = 0;
+
     return DT_OK;
 }

@@ -1,4 +1,30 @@
 // vim: shiftwidth=4 softtabstop=4
+/* Copyright (c) 2013, EPAM Systems. All rights reserved.
+
+Authors:
+Ilya Storozhilov <Ilya_Storozhilov@epam.com>,
+Andrey Kuznetsov <Andrey_Kuznetsov@epam.com>,
+Maxim Kot <Maxim_Kot@epam.com>
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #ifndef _DT_H
 #define _DT_H
@@ -6,13 +32,9 @@
 /*
  * Cross-platform date/time handling library for C.
  * Main header file.
- *
- * Authors: Ilya Storozhilov <Ilya_Storozhilov@epam.com>, Andrey Kuznetsov
- * <Andrey_Kuznetsov@epam.com>, Maxim Kot <Maxim_Kot@epam.com>
- *
- * License: TODO: To be clarified!
  */
 
+#include <libdt/export.h>
 #include <time.h>
 #include <libdt/dt_types.h>
 #include <libdt/dt_convert.h>
@@ -31,10 +53,10 @@ extern "C" {
      * \param year Year to check (Non-positive years are always not leap)
      * \return Check result
      */
-    dt_bool_t dt_is_leap_year(int year);
+    LIBDT_EXPORT dt_bool_t dt_is_leap_year(int year);
 
     //! Returns string represenatation of the datetime error code
-    const char *dt_strerror(dt_status_t status);
+    LIBDT_EXPORT const char *dt_strerror(dt_status_t status);
 
     /*! @}*/
 
@@ -49,14 +71,14 @@ extern "C" {
      * \param timestamp timestamp to validation
      * \return DT_TRUE if timestamp is valid, otherwise DT_FALSE
      */
-    dt_bool_t dt_validate_timestamp(const dt_timestamp_t *timestamp);
+    LIBDT_EXPORT dt_bool_t dt_validate_timestamp(const dt_timestamp_t *timestamp);
 
     //! Returns a current timestamp
     /*!
      * \param result Current timestamp [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_now(dt_timestamp_t *result);
+    LIBDT_EXPORT dt_status_t dt_now(dt_timestamp_t *result);
 
     //! Compares two timestamps
     /*!
@@ -65,7 +87,7 @@ extern "C" {
      * \param result Zero if timestamps are equal, less than zero if first timestamp is before second and more than zero otherwise [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_result_t *result);
+    LIBDT_EXPORT dt_status_t dt_compare_timestamps(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_compare_result_t *result);
 
     //! Obtains an offset between timestamps
     /*!
@@ -74,14 +96,14 @@ extern "C" {
      * \param result Offset b/w timestamps [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result);
+    LIBDT_EXPORT dt_status_t dt_offset_between(const dt_timestamp_t *lhs, const dt_timestamp_t *rhs, dt_offset_t *result);
 
     /*!
      * \brief dt_validate_offset Validates offset
      * \param offset offset to validating
      * \return DT_TRUE if offset is valid, otherwise DT_FALSE
      */
-    dt_bool_t dt_validate_offset(const dt_offset_t *offset);
+    LIBDT_EXPORT dt_bool_t dt_validate_offset(const dt_offset_t *offset);
 
     //! Applies offset on the timestamp
     /*!
@@ -90,7 +112,7 @@ extern "C" {
      * \param result Result offset [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result);
+    LIBDT_EXPORT dt_status_t dt_apply_offset(const dt_timestamp_t *lhs, const dt_offset_t *rhs, dt_timestamp_t *result);
 
     /*! @}*/
 
@@ -107,13 +129,13 @@ extern "C" {
      * \param result interval to initialize [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result);
+    LIBDT_EXPORT dt_status_t dt_init_interval(unsigned long seconds, unsigned long nano_seconds, dt_interval_t *result);
 
     /*! Validates interval
      * \param test Interval to validate
      * \return DT_FALSE if test is NULL or test is not valid, otherwise DT_TRUE
     */
-    dt_bool_t dt_validate_interval(const dt_interval_t *test);
+    LIBDT_EXPORT dt_bool_t dt_validate_interval(const dt_interval_t *test);
 
     //! Compares two intervals
     /*!
@@ -122,7 +144,7 @@ extern "C" {
      * \param result Zero if intervals are equal, less than zero if first intervals is less than second and more than zero otherwise [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_result_t *result);
+    LIBDT_EXPORT dt_status_t dt_compare_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_compare_result_t *result);
 
     //! Summarizes two intervals
     /*!
@@ -131,7 +153,7 @@ extern "C" {
      * \param result Result interval [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result);
+    LIBDT_EXPORT dt_status_t dt_sum_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result);
 
     //! Subtracts two intervals
     /*!
@@ -141,7 +163,7 @@ extern "C" {
      * \param result Result interval [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result);
+    LIBDT_EXPORT dt_status_t dt_sub_intervals(const dt_interval_t *lhs, const dt_interval_t *rhs, dt_interval_t *result);
 
     //! Multiplies an interval
     /*!
@@ -150,7 +172,7 @@ extern "C" {
      * \param result Result interval [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t *result);
+    LIBDT_EXPORT dt_status_t dt_mul_interval(const dt_interval_t *lhs, double rhs, dt_interval_t *result);
 
     /*! @}*/
 
@@ -165,7 +187,7 @@ extern "C" {
      * \return DT_TRUE if representation is valid, otherwise DT_FALSE
      * TODO: Leap seconds support!
      */
-    dt_bool_t dt_validate_representation(const dt_representation_t *representation);
+    LIBDT_EXPORT dt_bool_t dt_validate_representation(const dt_representation_t *representation);
 
     //! Initializes representetion with error checking
     /*!
@@ -179,9 +201,9 @@ extern "C" {
      * \param result Representation to init [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
-                                       unsigned long nano_second,
-                                       dt_representation_t *result);
+    LIBDT_EXPORT dt_status_t dt_init_representation(int year, unsigned short month, unsigned short day, unsigned short hour, unsigned short minute, unsigned short second,
+                                                    unsigned long nano_second,
+                                                    dt_representation_t *result);
 
     //! Lookups timezone object for future usage in corresponding api.
     //! Timezone object must be freed with dt_timezone_cleanup() function on successful operation
@@ -191,14 +213,14 @@ extern "C" {
      * \return Result status of the operation
      * \sa dt_timezone_cleanup
      */
-    dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezone);
+    LIBDT_EXPORT dt_status_t dt_timezone_lookup(const char *timezone_name, dt_timezone_t *timezone);
 
     //! Frees resources connected with timezone object
     /*!
      * \param timezone pointer to timezone object
      * \return Result status of the operation
      */
-    dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone);
+    LIBDT_EXPORT dt_status_t dt_timezone_cleanup(dt_timezone_t *timezone);
 
     //! Represents a timestamp using a timezone name
     /*!
@@ -207,7 +229,7 @@ extern "C" {
      * \param representation Timestamp representation [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *timezone, dt_representation_t *representation);
+    LIBDT_EXPORT dt_status_t dt_timestamp_to_representation(const dt_timestamp_t *timestamp, const dt_timezone_t *timezone, dt_representation_t *representation);
 
     //! Returns a timestamps for a representation in timezone by it's name
     /*!
@@ -219,8 +241,8 @@ extern "C" {
      * \param second_timestamp Optional second representation's timestamp (can be NULL, not supported at the moment) [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t *timezone,
-                                               dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
+    LIBDT_EXPORT dt_status_t dt_representation_to_timestamp(const dt_representation_t *representation, const dt_timezone_t *timezone,
+                                                            dt_timestamp_t *first_timestamp, dt_timestamp_t *second_timestamp);
 
     //! Returns representation's week day number
     /*!
@@ -228,7 +250,7 @@ extern "C" {
      * \param day_of_week Representation's day of week (1-7, 1 is Sunday) [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *day_of_week);
+    LIBDT_EXPORT dt_status_t dt_representation_day_of_week(const dt_representation_t *representation, int *day_of_week);
 
     //! Returns representation's day of year
     /*!
@@ -236,7 +258,7 @@ extern "C" {
      * \param day_of_year Representation's day of year (1-365/366) [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *day_of_year);
+    LIBDT_EXPORT dt_status_t dt_representation_day_of_year(const dt_representation_t *representation, int *day_of_year);
 
     /*! @}*/
 
@@ -252,9 +274,10 @@ extern "C" {
      * \param str_buffer Buffer to fill [OUT]
      * \param str_buffer_size A size of the buffer to fill
      * \return Result status of the operation
+     * \note Wrong format handling policy is deciding such as platform depended strftime policy, so watch yours compiler reference for more details.
      */
-    dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
-                             char *str_buffer, size_t str_buffer_size);
+    LIBDT_EXPORT dt_status_t dt_to_string(const dt_representation_t *representation, const char *fmt,
+                                          char *str_buffer, size_t str_buffer_size);
 
     //! Converts string to representation
     /*!
@@ -263,7 +286,7 @@ extern "C" {
      * \param representation Representation object to fill [OUT]
      * \return Result status of the operation
      */
-    dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation);
+    LIBDT_EXPORT dt_status_t dt_from_string(const char *str, const char *fmt, dt_representation_t *representation);
 
     /*! @}*/
 

@@ -1,4 +1,30 @@
 // vim: shiftwidth=4 softtabstop=4
+/* Copyright (c) 2013, EPAM Systems. All rights reserved.
+
+Authors:
+Ilya Storozhilov <Ilya_Storozhilov@epam.com>,
+Andrey Kuznetsov <Andrey_Kuznetsov@epam.com>,
+Maxim Kot <Maxim_Kot@epam.com>
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #include "dt_case.h"
 #include "libdt/dt.h"
@@ -95,81 +121,109 @@ TEST_F(DtCase, strerror)
     EXPECT_EQ(strcmp(dt_strerror((dt_status_t) 250), invalid_status_error_message), 0);
 }
 
-TEST_F(DtCase, validate_representation)
-{
-    EXPECT_EQ(dt_validate_representation(NULL), DT_FALSE);
-    dt_representation_t r = {2012, 12, 21, 8, 30, 45, 123456789};
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, 45, -1
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, 45, 1000000000
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, -1, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 30, 60, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, -1, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 8, 60, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, -1, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 21, 60, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 0, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 12, 32, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 0, 21, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        2012, 13, 21, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        0, 12, 21, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
+typedef struct {
+    dt_representation_t represenatation;
+    dt_bool_t expected;
+} validate_representation_test_data_t;
+
+static validate_representation_test_data_t validate_representation_test_data[] = {
+    {
+        {2012, 12, 21, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+    {
+        {2012, 12, 21, 8, 30, 45, -1},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, 30, 45, 1000000000},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, 30, -1, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, 30, 60, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 8, -1, 45, 123456789},
+        DT_FALSE
+    },
+
+    {
+        {2012, 12, 21, 8, 60, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, -1, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 21, 60, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 0, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 12, 32, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 0, 21, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {2012, 13, 21, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {0, 12, 21, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
     // Passage from Julian to Gregorian calendar
-    r = (dt_representation_t) {
-        1582, 10, 10, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_FALSE);
-    r = (dt_representation_t) {
-        1582, 11, 10, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
-    r = (dt_representation_t) {
-        1582, 10, 2, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
-    r = (dt_representation_t) {
-        1582, 10, 20, 8, 30, 45, 123456789
-    };
-    EXPECT_EQ(dt_validate_representation(&r), DT_TRUE);
+    {
+        {1582, 10, 10, 8, 30, 45, 123456789},
+        DT_FALSE
+    },
+    {
+        {1582, 11, 10, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+    {
+        {1582, 11, 10, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+    {
+        {1582, 10, 2, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+
+    {
+        {1582, 10, 20, 8, 30, 45, 123456789},
+        DT_TRUE
+    },
+
+};
+
+class DtCaseValidateRepresentation : public ::testing::TestWithParam<validate_representation_test_data_t>
+{
+
+};
+
+
+TEST_P(DtCaseValidateRepresentation, validate_representation)
+{
+    dt_representation_t r = GetParam().represenatation;
+    EXPECT_EQ(dt_validate_representation(NULL), DT_FALSE);
+    EXPECT_EQ(dt_validate_representation(&r), GetParam().expected);
 }
+
+INSTANTIATE_TEST_CASE_P(validate_representation_parametrized, DtCaseValidateRepresentation,
+                        ::testing::ValuesIn(validate_representation_test_data));
 
 TEST_F(DtCase, validate_timestamps)
 {
@@ -421,7 +475,6 @@ TEST_F(DtCase, posix_time_to_and_from_timestamp)
     o.is_forward = DT_FALSE;
     dt_timestamp_t nts = {0,};
     EXPECT_TRUE(dt_apply_offset(&ts, &o, &nts) == DT_OK);
-    EXPECT_EQ(dt_timestamp_to_posix_time(&nts, &rtm, &nano_second), DT_INVALID_ARGUMENT);
     EXPECT_EQ(dt_timestamp_to_posix_time(&ts, &rtm, &nano_second), DT_OK);
     EXPECT_EQ(rtm, 0);
     EXPECT_EQ(nano_second, 123456789L);
@@ -812,7 +865,13 @@ TEST_F(DtCase, to_string)
     const char *dateTime4 = "11/09/2001 16:54:12.987654321 987698765 11";
     const char *dateTimeFormat4 = "%d/%m/%Y %H:%M:%S.%f %4f%5f %d";
     const char *dateTime5 = "11/09/2001 16:54:12.987654321 987698765%1_ 11";
+
+    //For MSVC
+#if ( (defined(_WIN32) || defined(WIN32) ) && ( defined(_MSC_VER) ) )
+    const char *dateTimeFormat5 = "%d/%m/%Y %H:%M:%S.%f %4f%5f%%1_ %d";
+#else // For other supported libc implementations
     const char *dateTimeFormat5 = "%d/%m/%Y %H:%M:%S.%f %4f%5f%1_ %d";
+#endif
 
     dt_representation_t tr1 = {0,};
     dt_representation_t tr2 = {0,};
