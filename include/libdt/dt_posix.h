@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
  *
  */
 
+#include <libdt/export.h>
 #include <time.h>
 
 #define DT_INVALID_POSIX_TIME -1    //!< Libc use this value to indicate an error
@@ -56,7 +57,7 @@ extern "C" {
      * @param result - variable for result. Value will be set to local time representation
      * @return pointer to result tm instance, or NULL in error case.
      */
-    struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *result);
+    LIBDT_EXPORT struct tm *localtime_tz(const time_t *time, const char *tz_name, struct tm *result);
 
     //! Converts local time in specific Time Zone to time_t. See man mktime.
     /*!
@@ -64,7 +65,7 @@ extern "C" {
      * @param tz_name - name of time zone. Must be in format \<Area\>/\<Place\>, such as Europe/Moscow or Asia/Oral, or in Windows standard time format.
      * @return converted time returned or DT_INVALID_POSIX_TIME in error case.
      */
-    time_t mktime_tz(const struct tm *tm, const char *tz_name);
+    LIBDT_EXPORT time_t mktime_tz(const struct tm *tm, const char *tz_name);
 
 #if defined(__CYGWIN__) || defined(WIN32)
 #ifndef strptime
@@ -78,7 +79,7 @@ extern "C" {
      * \param tm output tm instance
      * \return NULL on failure, otherwise pointer to last not interpretated symbol from buf
      */
-    char *strptime(const char *buf, const char *fmt, struct tm *tm);
+    LIBDT_EXPORT char *strptime(const char *buf, const char *fmt, struct tm *tm);
 #endif
 #endif
 

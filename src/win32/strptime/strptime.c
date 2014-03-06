@@ -29,6 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define LIBDT_EXPORTS
+#include <libdt/dt_posix.h>
 #include <ctype.h>
 #include <string.h>
 #include <time.h>

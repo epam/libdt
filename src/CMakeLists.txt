@@ -44,8 +44,12 @@ if(WIN32)
     file(GLOB SRC_LIST ${SRC_LIST} "*win32/strptime/*.c")
 endif(WIN32)
 
-add_library(${PROJECT_NAME} STATIC ${SRC_LIST} )
+add_library(${PROJECT_NAME} ${SRC_LIST} )
 add_dependencies(${PROJECT_NAME} timezones-map format-source)
+
+if (BUILD_SHARED_LIBS)
+    set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL  "LIBDT_DLL_BUILD" )
+endif(BUILD_SHARED_LIBS)
 
 if(UNIX)
 if(NOT CYGWIN)
