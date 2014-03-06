@@ -145,7 +145,6 @@ WINAPI
 GetTimeZoneInformationForYearLower(
     /*__in*/ USHORT wYear,
     const dt_timezone_t *timezone,
-    /*__in_opt PDYNAMIC_TIME_ZONE_INFORMATION pdtzi,*/
     /*__out*/ LPTIME_ZONE_INFORMATION ptzi
 );
 //Helper functions prototypes
@@ -159,9 +158,9 @@ static BOOL IsSuitableWindowsVersion(DWORD dwMajor, DWORD dwMinor);
 char *libdt_strptime(const char *buf, const char *fmt, struct tm *tm);
 
 typedef struct _YEARS_ARRAY {
-    size_t count;// size in fact
+    size_t count;// valuable elements count
     size_t size;// include reserved elements
-    DWORD *years;
+    DWORD *years; // raw array pointer
 } YEARS_ARRAY;
 
 typedef struct _REG_TZI_FORMAT {

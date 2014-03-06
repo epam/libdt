@@ -420,7 +420,8 @@ dt_status_t dt_init_representation(int year, unsigned short month, unsigned shor
     if (!dt_validate_representation(&r)) {
         return DT_INVALID_ARGUMENT;
     }
-    memcpy(result, &r, sizeof(dt_representation_t));
+
+    *result = r;
     return DT_OK;
 }
 
