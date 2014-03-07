@@ -43,29 +43,42 @@ operate with date and time.
 
 ### Building and installation
 
+```bash
+
 	$ mkdir build && cd build
 	$ cmake ../
 	$ make
 	$ sudo make install
+```
+
 
 ### Making a debug build and running tests
 
+```bash
 	$ mkdir build && cd build
 	$ cmake enable_testing -DCMAKE_BUILD_TYPE=Debug ../
 	$ make
 	$ make test
+```
+
 
 ### Making a win32 build on Linux
+
+```bash
 
 	$ sudo apt-get install mingw-w64 g++-mingw-w64
 	$ mkdir build && cd build
 	$ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32-x86_64.cmake ../	# For 64-bit build
 	$ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-mingw32-i686.cmake ../	# For 32-bit build
 	$ make
+```
+
 
 ## Example of use
 
 Suppose following code example to be in libdt_example.c file:
+
+```cpp
 
 	#include <stdio.h>
 	#include <libdt/dt.h>
@@ -102,12 +115,18 @@ Suppose following code example to be in libdt_example.c file:
 		dt_timezone_cleanup(&tz);
 		return 0;
 	}
+```
+
 
 So a compilation command and an output will be:
+
+```bash
 
 	$ gcc -o libdt_example libdt_example.c -ldt
 	$ ./libdt_example
 	2013-10-09 15:54:10.543765895
+```
+
 
 ## TODO list
 
