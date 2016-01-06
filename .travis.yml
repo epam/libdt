@@ -1,5 +1,9 @@
 language: cpp
-
+addons:
+  apt:
+    packages:
+      - cmake
+      - doxygen
 compiler:
   - gcc
 
@@ -12,11 +16,10 @@ script:
   - export SRC_DIR=$(pwd)/../
   - export INST_DIR=$(pwd)/installdir
   - cmake -DCMAKE_INSTALL_PREFIX=$INST_DIR -DGTEST_SOURCE_DIR=$GTEST_SOURCE_DIR ..
-  - make tests
+  - make tests doc
   - $BUILD_DIR/output/tests
 
 after_success:
-  - make install
   - make package
 
 notifications:
