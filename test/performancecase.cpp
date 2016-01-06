@@ -32,7 +32,7 @@ PerformanceCase::PerformanceCase()
 {
 }
 
-TEST_F(PerformanceCase, performance_dt_representation_to_timestamp_test)
+TEST_F(PerformanceCase, DISABLED_performance_dt_representation_to_timestamp_test)
 {
     dt_representation_t r = {0,};
     dt_timestamp_t t = {0,};
