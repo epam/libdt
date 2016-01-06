@@ -1,0 +1,23 @@
+language: cpp
+
+compiler:
+  - gcc
+
+script:
+  - mkdir build && cd build
+  - mkdir installdir
+  - export BUILD_DIR=$(pwd)
+  - export SRC_DIR=$(pwd)/../
+  - export INST_DIR=$(pwd)/installdir
+  - cmake -DCMAKE_INSTALL_PREFIX=$INST_DIR ..
+  - make
+
+after_success:
+  - make package
+  - make install
+
+notifications:
+ email:
+  - batbko@gmail.com
+  - work.maydjin@gmail.com
+
