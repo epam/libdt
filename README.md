@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/epam/libdt.svg)](https://travis-ci.org/epam/libdt)
+
 # ANSI C cross-platform date/time library
 
 ## Introduction

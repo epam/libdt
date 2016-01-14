@@ -1,0 +1,30 @@
+language: cpp
+addons:
+  apt:
+    packages:
+      - cmake
+      - doxygen
+compiler:
+  - gcc
+
+script:
+  - mkdir build && cd build
+  - mkdir installdir
+  - git clone https://github.com/google/googletest --depth 1 -b release-1.7.0
+  - export GTEST_SOURCE_DIR=$(pwd)/googletest
+  - export BUILD_DIR=$(pwd)
+  - export SRC_DIR=$(pwd)/../
+  - export INST_DIR=$(pwd)/installdir
+  - cmake -DCMAKE_INSTALL_PREFIX=$INST_DIR -DGTEST_SOURCE_DIR=$GTEST_SOURCE_DIR ..
+  - make tests doc
+  - $BUILD_DIR/output/tests
+
+after_success:
+  - make package
+
+notifications:
+ email:
+  - batbko@gmail.com
+  - work.maydjin@gmail.com
+  - maxim_kot@epam.com
+
