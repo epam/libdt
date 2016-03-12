@@ -129,13 +129,6 @@ So a compilation command and an output will be:
 	2013-10-09 15:54:10.543765895
 ```
 
-
-## TODO list
-
-* Interval initialization from double seconds value;
-* Timezone names mapping API redesign. Timezone lookup should work
-  without new/delete operators usage;
-
 ## License
 
 This product is distributed under 2-term BSD-license terms
